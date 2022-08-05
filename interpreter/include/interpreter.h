@@ -25,6 +25,7 @@ namespace interpreter
 		InterpreterState m_state;
 		std::stack<Calculator*> m_programStack;
 
+
 		Interpreter();
 		~Interpreter();
 
@@ -38,5 +39,13 @@ namespace interpreter
 
 		void PrepareCalculation(scripting::ISymbol* symbol);
 		void CalcutateStep();
+
+		void HandleContinueInstruction();
+		void HandleBreakInstruction();
+
+	private:
+		bool m_breakInstruction = false;
+		bool m_continueInstruction = false;
+		bool m_returnInstruction = false;
 	};
 }

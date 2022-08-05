@@ -150,6 +150,8 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 	const char* whileStatement[] = { "WhileStatement", 0 };
 	const char* varDef[] = { "VarDef", 0 };
 	const char* funcCall[] = { "FuncCall", ";", 0 };
+	const char* breakStatement[] = { "break", ";", 0 };
+	const char* continueStatement[] = { "continue", ";", 0 };
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol,assignment, cs)) {
 		if (!m_calc) {
@@ -198,6 +200,24 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 			calculator.m_interpreter.Push(m_calc);
 		}
 		calculator.m_calculation = m_calc->m_calculation;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, breakStatement, cs)) {
+		calculator.m_interpreter.HandleBreakInstruction();
+		calculator.m_calculation.m_state = Calculation::Done;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, breakStatement, cs)) {
+		calculator.m_interpreter.HandleBreakInstruction();
+		calculator.m_calculation.m_state = Calculation::Done;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, continueStatement, cs)) {
+		calculator.m_interpreter.HandleContinueInstruction();
+		calculator.m_calculation.m_state = Calculation::Done;
 		return;
 	}
 
@@ -1307,6 +1327,18 @@ interpreter::InstructionsBlockCalc::~InstructionsBlockCalc()
 
 void interpreter::WhileStatementCalc::Calculate(Calculator& calculator)
 {
+	if (m_breakInstruction) {
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_interpreter.m_scope = m_currentInterpreterScope;
+		return;
+	}
+
+	if (m_continueInstruction) {
+		calculator.m_interpreter.m_scope = m_currentInterpreterScope;
+		FreeUpResouces();
+		return;
+	}
+
 	const scripting::CompositeSymbol* cs = dynamic_cast<const scripting::CompositeSymbol*>(&calculator.m_symbol);
 
 	if (!m_expressionCalc) {
@@ -1335,6 +1367,8 @@ void interpreter::WhileStatementCalc::Calculate(Calculator& calculator)
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
 		return;
 	}
+
+	m_currentInterpreterScope = calculator.m_interpreter.m_scope;
 
 	if (!m_instructionsBlockCalc) {
 		InstructionsBlockCalc* calc = new InstructionsBlockCalc();

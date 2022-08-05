@@ -73,11 +73,51 @@ void interpreter::Interpreter::PrepareCalculation(scripting::ISymbol* symbol)
 void interpreter::Interpreter::CalcutateStep()
 {
 	if (m_programStack.empty()) {
+		if (m_breakInstruction || m_continueInstruction || m_returnInstruction) {
+			m_state = InterpreterState::Failed;
+		}
 		m_state = InterpreterState::Done;
 		return;
 	}
 
 	Calculator* top = m_programStack.top();
+
+	if (m_breakInstruction) {
+		WhileStatementCalc* whileCalc = dynamic_cast<WhileStatementCalc*>(&top->m_calculator);
+		if (whileCalc) {
+			whileCalc->m_breakInstruction = true;
+			m_breakInstruction = false;
+			return;
+		}
+
+		m_programStack.pop();
+		top->FreeUpResources();
+
+		if (m_programStack.empty()) {
+			delete top;
+		}
+
+		return;
+	}
+
+	if (m_continueInstruction) {
+		WhileStatementCalc* whileCalc = dynamic_cast<WhileStatementCalc*>(&top->m_calculator);
+		if (whileCalc) {
+			whileCalc->m_continueInstruction = true;
+			m_continueInstruction = false;
+			return;
+		}
+
+		m_programStack.pop();
+		top->FreeUpResources();
+
+		if (m_programStack.empty()) {
+			delete top;
+		}
+
+		return;
+	}
+
 	top->Calculate();
 
 	if (top->m_calculation.m_state != Calculation::CalculationState::Pending) {
@@ -96,6 +136,16 @@ void interpreter::Interpreter::CalcutateStep()
 			delete top;
 		}
 	}
+}
+
+void interpreter::Interpreter::HandleContinueInstruction()
+{
+	m_continueInstruction = true;
+}
+
+void interpreter::Interpreter::HandleBreakInstruction()
+{
+	m_breakInstruction = true;
 }
 
 void interpreter::Interpreter::PushScope()

@@ -219,6 +219,11 @@ namespace interpreter
 		Calculator* m_instructionsBlockCalc = nullptr;
 		Calculator* m_expressionCalc = nullptr;
 
+		ValueWrapper m_currentInterpreterScope;
+
+		bool m_breakInstruction = false;
+		bool m_continueInstruction = false;
+
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
 		~WhileStatementCalc() override;
