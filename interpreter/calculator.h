@@ -278,11 +278,43 @@ namespace interpreter
 	{
 		Calculator* m_funcCalc = nullptr;
 		Calculator* m_argsList = nullptr;
+		Calculator* m_blockCalc = nullptr;
 
 		ValueWrapper m_curInterpreterScope;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
 		~FuncCallCalc() override;
+	};
+
+	struct FuncDefCalc : public ICalculator
+	{
+		Calculator* m_parameterListCalc = nullptr;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~FuncDefCalc() override;
+	};
+
+	struct ParametersCalc : public ICalculator
+	{
+		Calculator* m_parametersCalc = nullptr;
+
+		std::vector<std::string> m_parameters;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~ParametersCalc() override;
+	};
+
+	struct ParameterListCalc : public ICalculator
+	{
+		Calculator* m_paramsCalc = nullptr;
+
+		std::vector<std::string> m_parameters;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~ParameterListCalc() override;
 	};
 }

@@ -7,6 +7,7 @@
 #include "list.h"
 #include "IFunc.h"
 #include "garbageCollector.h"
+#include "func.h"
 
 #include <cstring>
 
@@ -733,6 +734,8 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 	const char* number[] = { "Number", 0 };
 	const char* str[] = { "String", 0 };
 	const char* name[] = { "Name", 0 };
+	const char* funcDef[] = { "FuncDef", 0 };
+	const char* funcCall[] = { "FuncCall", 0 };
 	const char* list[] = { "[", "]", 0 };
 	const char* object[] = { "{", "}", 0 };
 
@@ -772,6 +775,28 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 
 		ObjectValue* obj = new ObjectValue();
 		calculator.m_calculation.m_value = ValueWrapper(*obj);
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, funcDef, cs)) {
+		if (!m_calc) {
+			FuncDefCalc* funcDefCalc = new FuncDefCalc();
+			m_calc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[0], *funcDefCalc);
+			calculator.m_interpreter.Push(m_calc);
+		}
+		
+		calculator.m_calculation = m_calc->m_calculation;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, funcCall, cs)) {
+		if (!m_calc) {
+			FuncCallCalc* funcCallCalc = new FuncCallCalc();
+			m_calc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[0], *funcCallCalc);
+			calculator.m_interpreter.Push(m_calc);
+		}
+
+		calculator.m_calculation = m_calc->m_calculation;
 		return;
 	}
 
@@ -1711,6 +1736,8 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 	}
 
 	IFunc* func = dynamic_cast<IFunc*>(m_funcCalc->m_calculation.m_value.GetManagedValue());
+	Func* scriptingFunc = dynamic_cast<Func*>(func);
+
 	if (!func) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
 		return;
@@ -1738,20 +1765,36 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 
 	Scope* scope = dynamic_cast<Scope*>(calculator.m_interpreter.m_scope.GetManagedValue());
 
-	FuncResult res = func->Execute(*scope);
+	if (!scriptingFunc) {
+		FuncResult res = func->Execute(*scope);
 
-	if (res.m_state != FuncResult::FuncExecutionState::Pending) {
-		calculator.m_interpreter.m_scope = m_curInterpreterScope;
+		if (res.m_state != FuncResult::FuncExecutionState::Pending) {
+			calculator.m_interpreter.m_scope = m_curInterpreterScope;
+		}
+
+		if (res.m_state == FuncResult::FuncExecutionState::Failed) {
+			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
+			return;
+		}
+
+		if (res.m_state == FuncResult::FuncExecutionState::Finished) {
+			calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+			calculator.m_calculation.m_value = res.m_returnValue;
+			return;
+		}
 	}
+	else {
+		if (!m_blockCalc) {
+			InstructionsBlockCalc* blockCalc = new InstructionsBlockCalc();
+			m_blockCalc = new Calculator(calculator.m_interpreter, scriptingFunc->m_body, *blockCalc);
+			calculator.m_interpreter.Push(m_blockCalc);
+		}
 
-	if (res.m_state == FuncResult::FuncExecutionState::Failed) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
+		calculator.m_calculation = m_blockCalc->m_calculation;
 
-	if (res.m_state == FuncResult::FuncExecutionState::Finished) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = res.m_returnValue;
+		if (calculator.m_calculation.m_state != Calculation::CalculationState::Pending) {
+			calculator.m_interpreter.m_scope = m_curInterpreterScope;
+		}
 		return;
 	}
 
@@ -1766,11 +1809,152 @@ void interpreter::FuncCallCalc::FreeUpResouces()
 	if (m_funcCalc) {
 		delete m_funcCalc;
 	}
+	if (m_blockCalc) {
+		delete m_blockCalc;
+	}
 
 	m_argsList = nullptr;
 	m_funcCalc = nullptr;
+	m_blockCalc = nullptr;
 }
 
 interpreter::FuncCallCalc::~FuncCallCalc()
+{
+}
+
+void interpreter::ParametersCalc::Calculate(Calculator& calculator)
+{
+	const scripting::CompositeSymbol* cs;
+
+	const char* name[] = { "Name", 0 };
+	const char* multiParams[] = { "Parameters", ",", "Name", 0 };
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, name, cs)) {
+		m_parameters.push_back(cs->m_childSymbols[0]->m_symbolData.m_string);
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, multiParams, cs)) {
+		if (!m_parametersCalc) {
+			ParametersCalc* parametersCalc = new ParametersCalc();
+			m_parametersCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[0], *parametersCalc);
+			calculator.m_interpreter.Push(m_parametersCalc);
+		}
+
+		if (m_parametersCalc->m_calculation.m_state == Calculation::CalculationState::Pending) {
+			return;
+		}
+
+		ParametersCalc& parametersCalc = dynamic_cast<ParametersCalc&>(m_parametersCalc->m_calculator);
+		m_parameters = parametersCalc.m_parameters;
+		m_parameters.push_back(cs->m_childSymbols[2]->m_symbolData.m_string);
+
+
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		return;
+	}
+	calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
+}
+
+void interpreter::ParametersCalc::FreeUpResouces()
+{
+	if (m_parametersCalc) {
+		delete m_parametersCalc;
+	}
+
+	m_parametersCalc = nullptr;
+}
+
+interpreter::ParametersCalc::~ParametersCalc()
+{
+}
+
+void interpreter::ParameterListCalc::Calculate(Calculator& calculator)
+{
+	const scripting::CompositeSymbol* cs;
+
+	const char* empty[] = { "(", ")", 0 };
+	const char* multiParams[] = { "(", "Parameters", ")", 0 };
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, empty, cs)) {
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, multiParams, cs)) {
+		if (!m_paramsCalc) {
+			ParametersCalc* paramsCalc = new ParametersCalc();
+			m_paramsCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[1], *paramsCalc);
+			calculator.m_interpreter.Push(m_paramsCalc);
+		}
+
+		if (m_paramsCalc->m_calculation.m_state != Calculation::CalculationState::Done) {
+			return;
+		}
+
+		ParametersCalc& argsCalc = dynamic_cast<ParametersCalc&>(m_paramsCalc->m_calculator);
+		m_parameters = argsCalc.m_parameters;
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		return;
+	}
+
+	calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
+}
+
+void interpreter::ParameterListCalc::FreeUpResouces()
+{
+	if (m_paramsCalc) {
+		delete m_paramsCalc;
+	}
+
+	m_paramsCalc = nullptr;
+}
+
+interpreter::ParameterListCalc::~ParameterListCalc()
+{
+}
+
+void interpreter::FuncDefCalc::Calculate(Calculator& calculator)
+{
+	const scripting::CompositeSymbol* cs;
+	const char* funcDef[] = { "func", "ParameterList", "InstructionsBlock", 0 };
+
+	if (!symbolUtils::MatchChildren(&calculator.m_symbol, funcDef, cs)) {
+		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
+		return;
+	}
+
+	if (!m_parameterListCalc) {
+		ParameterListCalc* parameterListCalc = new ParameterListCalc();
+		m_parameterListCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[1], *parameterListCalc);
+		calculator.m_interpreter.Push(m_parameterListCalc);
+	}
+
+	if (m_parameterListCalc->m_calculation.m_state == Calculation::CalculationState::Pending) {
+		return;
+	}
+
+	ParameterListCalc& parameterListCalc = dynamic_cast<ParameterListCalc&>(m_parameterListCalc->m_calculator);
+
+	Func* f = new Func(*cs->m_childSymbols[2]);
+	ValueWrapper fWrapped(*f);
+	f->InitFuncDefScope(calculator.m_interpreter.m_scope);
+	f->m_paramNames = parameterListCalc.m_parameters;
+
+	calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+	calculator.m_calculation.m_value = fWrapped;
+}
+
+void interpreter::FuncDefCalc::FreeUpResouces()
+{
+	if (m_parameterListCalc) {
+		delete m_parameterListCalc;
+	}
+
+	m_parameterListCalc = nullptr;
+}
+
+interpreter::FuncDefCalc::~FuncDefCalc()
 {
 }

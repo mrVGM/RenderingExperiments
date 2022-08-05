@@ -11,8 +11,6 @@ namespace interpreter
 		None,
 		Number,
 		String,
-		List,
-		Func,
 		Object,
 	};
 

@@ -89,7 +89,7 @@ bool interpreter::ValueWrapper::Equals(const ValueWrapper& other) const
 
 bool interpreter::ValueWrapper::IsManaged() const
 {
-	return GetType() == ScriptingValueType::Object || GetType() == ScriptingValueType::List || GetType() == ScriptingValueType::Func;
+	return GetType() == ScriptingValueType::Object;
 }
 
 bool interpreter::ValueWrapper::IsNone() const

@@ -35,8 +35,8 @@ void interpreter::Scope::SetProperty(std::string name, ValueWrapper value)
 			break;
 		}
 
-		if (!m_parent.IsNone()) {
-			cur = dynamic_cast<Scope*>(m_parent.GetManagedValue());
+		if (!cur->m_parent.IsNone()) {
+			cur = dynamic_cast<Scope*>(cur->m_parent.GetManagedValue());
 		}
 		else {
 			cur = nullptr;
@@ -54,8 +54,8 @@ interpreter::ValueWrapper interpreter::Scope::GetProperty(std::string name) cons
 			return it->second;
 		}
 
-		if (!m_parent.IsNone()) {
-			cur = dynamic_cast<Scope*>(m_parent.GetManagedValue());
+		if (!cur->m_parent.IsNone()) {
+			cur = dynamic_cast<Scope*>(cur->m_parent.GetManagedValue());
 		}
 		else {
 			cur = nullptr;
