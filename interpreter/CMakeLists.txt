@@ -19,9 +19,8 @@ add_library (Interpreter
 	"list.cpp"
 	"object.h"
 	"object.cpp"
-	
-	
 	"include/IFunc.h"
+	"IFunc.cpp"
 )
 
 target_include_directories(Interpreter INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

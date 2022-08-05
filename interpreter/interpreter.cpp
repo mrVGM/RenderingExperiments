@@ -3,11 +3,38 @@
 #include "symbol.h"
 #include "calculator.h"
 #include "scope.h"
+#include "IFunc.h"
+#include "scriptingValue.h"
+
+#include <iostream>
+
+struct PrintFunc : public interpreter::IFunc
+{
+	PrintFunc()
+	{
+		m_paramNames.push_back("str");
+	}
+
+	interpreter::FuncResult Execute(interpreter::Scope& scope) override
+	{
+		interpreter::ValueWrapper val = scope.GetValue(m_paramNames[0]);
+		std::cout << val.GetString() << std::endl;
+		interpreter::FuncResult res;
+		res.m_state = interpreter::FuncResult::Finished;
+		return res;
+	}
+};
+
 
 interpreter::Interpreter::Interpreter()
 {
 	Scope* scope = new Scope();
 	m_scope = ValueWrapper(*scope);
+
+	PrintFunc* printFunc = new PrintFunc();
+	ValueWrapper print(*printFunc);
+
+	scope->BindValue("print", print);
 }
 
 interpreter::Interpreter::~Interpreter()

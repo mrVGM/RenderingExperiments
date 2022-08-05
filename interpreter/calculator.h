@@ -245,4 +245,39 @@ namespace interpreter
 		void FreeUpResouces() override;
 		~VarDefCalc() override;
 	};
+
+	struct ArgumentsCalc : public ICalculator
+	{
+		Calculator* m_exprCalc = nullptr;
+		Calculator* m_argumentsCalc = nullptr;
+
+		std::vector<ValueWrapper> m_args;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~ArgumentsCalc() override;
+	};
+
+	struct ArgumentListCalc : public ICalculator
+	{
+		Calculator* m_argsCalc = nullptr;
+
+		std::vector<ValueWrapper> m_args;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~ArgumentListCalc() override;
+	};
+
+	struct FuncCallCalc : public ICalculator
+	{
+		Calculator* m_funcCalc = nullptr;
+		Calculator* m_argsList = nullptr;
+
+		ValueWrapper m_curInterpreterScope;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~FuncCallCalc() override;
+	};
 }
