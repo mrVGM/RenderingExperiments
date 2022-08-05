@@ -1,0 +1,28 @@
+{
+	apply (
+		[func]
+		(func [])
+	)
+}
+
+{
+	load_primitive (
+		[name]
+		(apply [
+			(import ["primitives.txt" name])
+		])
+	)
+}
+
+{
+	create_object (
+		[type transform material]
+		(id [
+			[
+				(load_primitive [type])
+				transform
+				material
+			]
+		])
+	)
+}

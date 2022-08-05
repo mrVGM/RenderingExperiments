@@ -1,0 +1,54 @@
+{ map (import ["utils.txt" "map"]) }
+{ concat (import ["utils.txt" "concat"]) }
+{ zip (import ["utils.txt" "zip"]) }
+{ plane (import ["geometry.txt" "plane"]) }
+
+{
+	vec3 (
+		[x y z]
+		(concat [
+			[x y z]
+			[]
+		])
+	)
+}
+
+{
+	add_vectors (
+		[x y]
+		(map [
+			(zip [x y])
+			(
+				[elem]
+				(+ [
+					(fst [elem])
+					(snd [elem])
+				])
+			)
+		])
+	)
+}
+
+{
+	subtract_vectors (
+		[x y]
+		(map [
+			(zip [x y])
+			(
+				[elem]
+				(- [
+					(fst [elem])
+					(snd [elem])
+				])
+			)
+		])
+	)
+}
+
+{
+	test
+	(
+		[]
+		(plane [[0 0 0] 1])
+	)
+}

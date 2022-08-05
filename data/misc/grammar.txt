@@ -1,0 +1,77 @@
+"Start" "Initial" "Terminal"
+
+"Initial" "Instructions"
+"Expression" "BinaryExpression"
+"Expression" "ArithmeticExpression"
+
+"ArithmeticExpression" "Sum"
+"BinaryExpression" "Disjunction"
+
+"RawValue" "RawValue" "." "Name"
+"RawValue" "RawValue" "[" "Expression" "]"
+
+"RawValue" "Number"
+"RawValue" "String"
+"RawValue" "FuncDef"
+"RawValue" "[" "]"
+"RawValue" "{" "}"
+"RawValue" "FuncCall"
+"RawValue" "Name"
+
+"FuncCall" "RawValue" "ArgumentList"
+
+"ArgumentList" "(" ")"
+"ArgumentList" "(" "Arguments" ")"
+"Arguments" "Expression"
+"Arguments" "Arguments" "," "Expression"
+
+"FuncDef" "func" "ParameterList" "InstructionsBlock"
+"ParameterList" "(" ")"
+"ParameterList" "(" "Parameters" ")"
+"Parameters" "Name"
+"Parameters" "Parameters" "," "Name"
+
+"InstructionsBlock" "{" "Instructions" "}"
+"Instructions" "Instruction"
+"Instructions" "Instructions" "Instruction"
+
+"Instruction" "FuncCall" ";"
+"Instruction" "Assignment"
+"Instruction" "VarDef"
+"Instruction" "IfStatement"
+"Instruction" "WhileStatement"
+"Instruction" "return" ";"
+"Instruction" "return" "Expression" ";"
+"Instruction" "break" ";"
+"Instruction" "continue" ";"
+
+"VarDef" "let" "Name" "=" "Expression" ";"
+"Assignment" "RawValue" "=" "Expression" ";"
+"IfStatement" "if" "(" "Expression" ")" "InstructionsBlock"
+"WhileStatement" "while" "(" "Expression" ")" "InstructionsBlock"
+
+"Sum" "Sum" "+" "Product"
+"Sum" "Sum" "-" "Product"
+"Sum" "Product"
+"Product" "Product" "*" "NumberValue"
+"Product" "Product" "/" "NumberValue"
+"Product" "Product" "%" "NumberValue"
+"Product" "NumberValue"
+"NumberValue" "-" "NumberValue"
+"NumberValue" "(" "Sum" ")"
+"NumberValue" "RawValue"
+
+"Comparison" "ArithmeticExpression" "==" "ArithmeticExpression"
+"Comparison" "ArithmeticExpression" "<" "ArithmeticExpression"
+"Comparison" "ArithmeticExpression" "<=" "ArithmeticExpression"
+"Comparison" "ArithmeticExpression" ">" "ArithmeticExpression"
+"Comparison" "ArithmeticExpression" ">=" "ArithmeticExpression"
+
+"Disjunction" "Disjunction" "||" "Conjunction"
+"Disjunction" "Conjunction"
+"Conjunction" "Conjunction" "&&" "BinaryValue"
+"Conjunction" "BinaryValue"
+"BinaryValue" "!" "BinaryValue"
+"BinaryValue" "(" "Disjunction" ")"
+"BinaryValue" "Comparison"
+

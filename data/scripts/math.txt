@@ -1,0 +1,144 @@
+{ map (import ["utils.txt" "map"])}
+{ reduce (import ["utils.txt" "reduce"])}
+{ zip (import ["utils.txt" "zip"])}
+{ concat (import ["utils.txt" "concat"])}
+{ get_at (import ["utils.txt" "get_at"])}
+
+
+{
+	vector_length_squared (
+		[vec!]
+		(reduce [
+			vec
+			(
+				[x y] 
+				(+ [
+					x
+					(* [y y])
+				])
+			)
+			0
+		])
+	)
+}
+
+{
+	vector_length (
+		[vec!]
+		(pow [
+			(vector_length_squared [vec])
+			0.5
+		])
+	)
+}
+
+{
+	multiply_vector (
+		[vec! coef!]
+		(map [
+			vec
+			(
+				[x]
+				(* [coef x])
+			)
+		])
+	)
+}
+
+{
+	normalize_vector (
+		[vec!]
+		(if [
+			(< [
+				(vector_length_squared [vec])
+				0.0000001
+			])
+			vec
+			(multiply_vector [
+				vec
+				(/ [
+					1
+					(vector_length [vec])
+				])
+			])
+		])
+	)
+}
+
+{
+	cross_product (
+		[vec1! vec2!]
+		(concat [
+			[
+				(- [
+					(* [(get_at [vec1 1]) (get_at [vec2 2])])
+					(* [(get_at [vec1 2]) (get_at [vec2 1])])
+				])
+
+				(- [
+					(* [(get_at [vec1 2]) (get_at [vec2 0])])
+					(* [(get_at [vec1 0]) (get_at [vec2 2])])
+				])
+
+				(- [
+					(* [(get_at [vec1 0]) (get_at [vec2 1])])
+					(* [(get_at [vec1 1]) (get_at [vec2 0])])
+				])
+			]
+			[]
+		])
+	)
+}
+
+{
+	subtract_vectors (
+		[vec1! vec2!]
+		(map [
+			(zip [vec1 vec2])
+			(
+				[x]
+				(- [(fst [x]) (snd [x])])
+			)
+		])
+	)
+}
+
+{
+	normal_of_points (
+		[p1! p2! p3!]
+		(normalize_vector [
+			(cross_product [
+				(subtract_vectors [p3 p1])
+				(subtract_vectors [p2 p1])
+			])
+		])
+	)
+}
+
+{
+	sin (
+		[x]
+		(native_sin [x 1])
+	)
+}
+
+{
+	asin (
+		[x]
+		(native_sin [x -1])
+	)
+}
+
+{
+	cos (
+		[x]
+		(native_cos [x 1])
+	)
+}
+
+{
+	acos (
+		[x]
+		(native_cos [x -1])
+	)
+}

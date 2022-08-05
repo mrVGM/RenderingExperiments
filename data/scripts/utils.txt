@@ -1,0 +1,93 @@
+{
+	map (
+		[arr func]
+		(if [
+			(empty? [arr])
+			[]
+			(pair [
+				(func[(fst[arr])])
+				(map[(snd [arr]) func])
+			])
+		])
+	)
+}
+
+{
+	reduce (
+		[list func base]
+		(if [
+			(empty? [list])
+			base
+			(reduce [
+				(snd [list])
+				func
+				(func [
+					base
+					(fst [list])
+				])
+			])
+		])
+	)
+}
+
+{
+	get_at (
+		[list n]
+		(if [
+			(= [n 0])
+			(fst [list])
+			(get_at [
+				(snd [list])
+				(- [n 1])
+			])
+		])
+	)
+}
+
+{
+	concat (
+		[x y]
+		(if [
+			(empty? [x])
+			y
+			(pair [
+				(fst [x])
+				(concat [(snd [x]) y])
+			])
+		])
+	)
+}
+
+{
+	zip (
+		[a b]
+		(if [
+			(empty? [a])
+			[]
+			(pair [
+				(pair [
+					(fst [a])
+					(fst [b])
+				])
+				(zip [
+					(snd [a])
+					(snd [b])
+				])
+			])
+		])
+	)
+}
+
+{
+	repeat (
+		[x n]
+		(if [
+			(= [n 0])
+			[]
+			(pair [
+				x
+				(repeat [x (- [n 1])])
+			])
+		])
+	)
+}
