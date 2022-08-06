@@ -18,7 +18,7 @@ struct PrintFunc : public interpreter::IFunc
 	interpreter::FuncResult Execute(interpreter::Scope& scope) override
 	{
 		interpreter::ValueWrapper val = scope.GetValue(m_paramNames[0]);
-		std::cout << val.GetString() << std::endl;
+		std::cout << val.ToString() << std::endl;
 		interpreter::FuncResult res;
 		res.m_state = interpreter::FuncResult::Finished;
 		return res;

@@ -1,6 +1,11 @@
 let f = func() {
-	print("finished");
-	return 4;
+	let i = 0;
+	let s = 0;
+	while (i < 6) {
+		s = s + i;
+		i = i + 1;
+	}
+	return s;
 };
 
-let a = f();
+print(f());

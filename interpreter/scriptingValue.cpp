@@ -1,6 +1,8 @@
 #include "scriptingValue.h"
 #include "garbageCollector.h"
 
+#include <sstream>
+
 interpreter::ValueWrapper::ValueWrapper()
 {
 }
@@ -84,7 +86,44 @@ interpreter::ValueWrapper::~ValueWrapper()
 
 bool interpreter::ValueWrapper::Equals(const ValueWrapper& other) const
 {
-	return m_type == other.m_type;
+	if (m_type != other.m_type) {
+		return false;
+	}
+
+	switch (m_type) {
+	case ScriptingValueType::None:
+		return true;
+	case ScriptingValueType::Number:
+		return GetNum() == other.GetNum();
+	case ScriptingValueType::String:
+		return GetString() == other.GetString();
+	case ScriptingValueType::Object:
+		return GetManagedValue() == other.GetManagedValue();
+	}
+
+	return false;
+}
+
+std::string interpreter::ValueWrapper::ToString() const
+{
+	std::stringstream ss;
+
+	switch (m_type) {
+	case ScriptingValueType::None:
+		ss << "<None>";
+		break;
+	case ScriptingValueType::Number:
+		ss << GetNum();
+		break;
+	case ScriptingValueType::String:
+		ss << "\"" << GetString() << "\"";
+		break;
+	case ScriptingValueType::Object:
+		ss << "<Object>";
+		break;
+	}
+
+	return ss.str();
 }
 
 bool interpreter::ValueWrapper::IsManaged() const

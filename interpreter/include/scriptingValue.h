@@ -43,6 +43,7 @@ namespace interpreter
 		~ValueWrapper();
 
 		bool Equals(const ValueWrapper& other) const;
+		std::string ToString() const;
 
 		bool IsManaged() const;
 		bool IsNone() const;
