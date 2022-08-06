@@ -154,6 +154,9 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 	const char* breakStatement[] = { "break", ";", 0 };
 	const char* continueStatement[] = { "continue", ";", 0 };
 
+	const char* returnStatement[] = { "return", ";", 0 };
+	const char* returnValueStatement[] = { "return", "Expression", ";", 0 };
+
 	if (symbolUtils::MatchChildren(&calculator.m_symbol,assignment, cs)) {
 		if (!m_calc) {
 			AssignmentCalc* assignmentCalc = new AssignmentCalc();
@@ -218,6 +221,28 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, continueStatement, cs)) {
 		calculator.m_interpreter.HandleContinueInstruction();
+		calculator.m_calculation.m_state = Calculation::Done;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, returnStatement, cs)) {
+		calculator.m_interpreter.HandleReturnInstruction(ValueWrapper());
+		calculator.m_calculation.m_state = Calculation::Done;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, returnValueStatement, cs)) {
+		if (!m_calc) {
+			ExpressionCalc* exprCalc = new ExpressionCalc();
+			m_calc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[1], *exprCalc);
+			calculator.m_interpreter.Push(m_calc);
+		}
+
+		if (m_calc->m_calculation.m_state == Calculation::CalculationState::Pending) {
+			return;
+		}
+
+		calculator.m_interpreter.HandleReturnInstruction(m_calc->m_calculation.m_value);
 		calculator.m_calculation.m_state = Calculation::Done;
 		return;
 	}
@@ -1701,6 +1726,11 @@ interpreter::ArgumentListCalc::~ArgumentListCalc()
 
 void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 {
+	if (m_returnInstruction) {
+		calculator.m_calculation.m_state = Calculation::Done;
+		return;
+	}
+
 	const scripting::CompositeSymbol* cs;
 
 	const char* funcCall[] = { "RawValue", "ArgumentList", 0 };

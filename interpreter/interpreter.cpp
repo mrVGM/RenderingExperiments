@@ -118,6 +118,26 @@ void interpreter::Interpreter::CalcutateStep()
 		return;
 	}
 
+	if (m_returnInstruction) {
+		FuncCallCalc* funcCallCalc = dynamic_cast<FuncCallCalc*>(&top->m_calculator);
+		if (funcCallCalc) {
+			funcCallCalc->m_returnInstruction = true;
+			top->m_calculation.m_value = m_returnValue;
+			m_returnValue = ValueWrapper();
+			m_returnInstruction = false;
+			return;
+		}
+
+		m_programStack.pop();
+		top->FreeUpResources();
+
+		if (m_programStack.empty()) {
+			delete top;
+		}
+
+		return;
+	}
+
 	top->Calculate();
 
 	if (top->m_calculation.m_state != Calculation::CalculationState::Pending) {
@@ -146,6 +166,12 @@ void interpreter::Interpreter::HandleContinueInstruction()
 void interpreter::Interpreter::HandleBreakInstruction()
 {
 	m_breakInstruction = true;
+}
+
+void interpreter::Interpreter::HandleReturnInstruction(const ValueWrapper& returnValue)
+{
+	m_returnInstruction = true;
+	m_returnValue = returnValue;
 }
 
 void interpreter::Interpreter::PushScope()

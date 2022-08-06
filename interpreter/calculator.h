@@ -281,6 +281,7 @@ namespace interpreter
 		Calculator* m_blockCalc = nullptr;
 
 		ValueWrapper m_curInterpreterScope;
+		bool m_returnInstruction = false;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;

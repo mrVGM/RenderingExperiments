@@ -1,6 +1,6 @@
 let f = func() {
 	print("finished");
+	return 4;
 };
 
-
-f();
+let a = f();

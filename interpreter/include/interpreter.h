@@ -42,10 +42,12 @@ namespace interpreter
 
 		void HandleContinueInstruction();
 		void HandleBreakInstruction();
+		void HandleReturnInstruction(const ValueWrapper& returnValue);
 
 	private:
 		bool m_breakInstruction = false;
 		bool m_continueInstruction = false;
 		bool m_returnInstruction = false;
+		ValueWrapper m_returnValue;
 	};
 }
