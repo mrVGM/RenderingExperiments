@@ -26,15 +26,9 @@ struct PrintFunc : public interpreter::IFunc
 };
 
 
-interpreter::Interpreter::Interpreter()
+interpreter::Interpreter::Interpreter(const ValueWrapper& scope) :
+	m_scope(scope)
 {
-	Scope* scope = new Scope();
-	m_scope = ValueWrapper(*scope);
-
-	PrintFunc* printFunc = new PrintFunc();
-	ValueWrapper print(*printFunc);
-
-	scope->BindValue("print", print);
 }
 
 interpreter::Interpreter::~Interpreter()

@@ -43,11 +43,16 @@ const std::vector<nlohmann::json>& data::DataLib::GetFileEntries() const
 	return m_fileEntries;
 }
 
-std::string data::DataLib::ReadFile(const char* id)
+std::string data::DataLib::ReadFileById(const char* id)
 {
 	nlohmann::json entry = GetFileEntry(id);
 	std::string path = libDir + entry.value("path", "");
 
+	return ReadFileByPath(path);
+}
+
+std::string data::DataLib::ReadFileByPath(std::string path)
+{
 	FILE* f;
 	fopen_s(&f, path.c_str(), "r");
 	if (f == nullptr) {

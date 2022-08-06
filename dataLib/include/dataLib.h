@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include "json.hpp"
+
+#include <string>
 #include <vector>
 
 namespace data
@@ -18,7 +19,8 @@ namespace data
 		nlohmann::json GetFileEntry(const char* id) const;
 		const std::vector<nlohmann::json>& GetFileEntries () const;
 
-		std::string ReadFile(const char* id);
+		std::string ReadFileById(const char* id);
+		std::string ReadFileByPath(std::string path);
 
 		void WriteBinFile(const char* id, const void *data, size_t size);
 		size_t ReadBinFile(const char* id, void *data, size_t size);

@@ -26,7 +26,7 @@ namespace interpreter
 		std::stack<Calculator*> m_programStack;
 
 
-		Interpreter();
+		Interpreter(const ValueWrapper& scope);
 		~Interpreter();
 
 		Scope& GetCurrentScope();

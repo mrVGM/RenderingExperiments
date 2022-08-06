@@ -22,7 +22,11 @@ add_library (Interpreter
 	"include/IFunc.h"
 	"IFunc.cpp"
 	"func.h"
-	"func.cpp")
+	"func.cpp"
+	"include/ISession.h"
+	"ISession.cpp"
+	"session.h"
+ "session.cpp")
 
 target_include_directories(Interpreter INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Interpreter PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
