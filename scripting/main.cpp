@@ -1,22 +1,18 @@
-﻿// CMakeTest.cpp : Defines the entry point for the application.
-//
-
-#include "dataLib.h"
+﻿#include "dataLib.h"
 #include "grammar.h"
 
 #include "parser.h"
 #include "codeSource.h"
 #include "interpreter.h"
 
+#include <filesystem>
 #include <iostream>
-
-#define DATA_LIB_DIR_TEMP "C:\\Users\\Vasil\\dev\\CMakeTest\\data\\"
-
-using namespace std;
+#include <string>
 
 int main()
 {
-	data::Init(DATA_LIB_DIR_TEMP);
+	std::filesystem::path dataPath = std::filesystem::current_path().append("..\\..\\..\\..\\data\\");
+	data::Init(dataPath.string().c_str());
 
 	std::string grammar = data::GetLibrary().ReadFile("grammar");
 
@@ -35,8 +31,6 @@ int main()
 	bool validPT = pt.Validate();
 
 	scripting::ISymbol* s =  p.Parse(cs);
-
-	cout << "Valid PT? " << validPT << endl;
 
 	interpreter::Interpreter interpreter;
 	interpreter.Calculate(s);
