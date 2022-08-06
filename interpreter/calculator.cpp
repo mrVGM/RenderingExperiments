@@ -1727,6 +1727,7 @@ interpreter::ArgumentListCalc::~ArgumentListCalc()
 void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 {
 	if (m_returnInstruction) {
+		calculator.m_interpreter.m_scope = m_curInterpreterScope;
 		calculator.m_calculation.m_state = Calculation::Done;
 		return;
 	}
