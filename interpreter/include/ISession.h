@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 
 namespace interpreter
 {
@@ -9,6 +10,6 @@ namespace interpreter
 		virtual void RunFile(std::string name) = 0;
 	};
 
-	ISession& OpenSession(std::string scriptsDir);
+	ISession& OpenSession(std::string scriptsDir, std::ostream& outputStream);
 	void CloseSession();
 }

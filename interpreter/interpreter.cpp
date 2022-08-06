@@ -8,26 +8,8 @@
 
 #include <iostream>
 
-struct PrintFunc : public interpreter::IFunc
-{
-	PrintFunc()
-	{
-		m_paramNames.push_back("str");
-	}
-
-	interpreter::FuncResult Execute(interpreter::Scope& scope) override
-	{
-		interpreter::ValueWrapper val = scope.GetValue(m_paramNames[0]);
-		std::cout << val.ToString() << std::endl;
-		interpreter::FuncResult res;
-		res.m_state = interpreter::FuncResult::Finished;
-		return res;
-	}
-};
-
-
 interpreter::Interpreter::Interpreter(const ValueWrapper& scope) :
-	m_scope(scope)
+	m_initialScope(scope)
 {
 }
 
@@ -56,6 +38,7 @@ void interpreter::Interpreter::Calculate(scripting::ISymbol* symbol)
 
 void interpreter::Interpreter::PrepareCalculation(scripting::ISymbol* symbol)
 {
+	m_scope = m_initialScope;
 	m_state = InterpreterState::Pending;
 
 	InitialCalc* initialCalc = new InitialCalc();

@@ -22,6 +22,10 @@ void interpreter::Session::RunFile(std::string name)
 	Scope* sc = new Scope();
 	ValueWrapper scope(*sc);
 
+	PrintFunc* pf = new PrintFunc(m_outputStream);
+	ValueWrapper print(*pf);
+	sc->BindValue("print", print);
+
 	Interpreter interpreter(scope);
 
 	interpreter.PrepareCalculation(parsed);
@@ -31,9 +35,10 @@ void interpreter::Session::RunFile(std::string name)
 	}
 }
 
-interpreter::Session::Session(std::string rootDir, scripting::Parser& parser) :
+interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, std::ostream& outputStream) :
 	m_rootDir(rootDir),
-	m_parser(parser)
+	m_parser(parser),
+	m_outputStream(outputStream)
 {
 }
 

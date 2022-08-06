@@ -8,4 +8,4 @@ let f = func() {
 	return s;
 };
 
-let a = f();
+print(f());

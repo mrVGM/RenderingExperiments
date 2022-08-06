@@ -20,9 +20,10 @@ namespace interpreter
 
 	struct Interpreter
 	{
+		ValueWrapper m_initialScope;
 		ValueWrapper m_scope;
 
-		InterpreterState m_state;
+		InterpreterState m_state = InterpreterState::Pending;
 		std::stack<Calculator*> m_programStack;
 
 

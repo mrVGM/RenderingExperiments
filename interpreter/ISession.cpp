@@ -16,7 +16,7 @@ namespace _sessionData
 	interpreter::Session* m_session = nullptr;
 }
 
-interpreter::ISession& interpreter::OpenSession(std::string scriptsDir)
+interpreter::ISession& interpreter::OpenSession(std::string scriptsDir, std::ostream& outputStream)
 {
 	if (_sessionData::m_session) {
 		return *_sessionData::m_session;
@@ -33,7 +33,7 @@ interpreter::ISession& interpreter::OpenSession(std::string scriptsDir)
 
 	_sessionData::m_parser = new scripting::Parser(*_sessionData::m_grammar, *_sessionData::m_parserTable);
 
-	_sessionData::m_session = new Session(_sessionData::m_scriptsDir, *_sessionData::m_parser);
+	_sessionData::m_session = new Session(_sessionData::m_scriptsDir, *_sessionData::m_parser, outputStream);
 	return *_sessionData::m_session;
 }
 
