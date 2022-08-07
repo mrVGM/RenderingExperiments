@@ -42,7 +42,6 @@ namespace interpreter
 		ValueWrapper& operator=(const ValueWrapper& other);
 		~ValueWrapper();
 
-		bool Equals(const ValueWrapper& other) const;
 		std::string ToString() const;
 
 		bool IsManaged() const;
@@ -57,6 +56,24 @@ namespace interpreter
 		ScriptingValueType GetType() const;
 		void SetProperty(std::string name, ValueWrapper value);
 		ValueWrapper GetProperty(std::string name);
+
+		bool Equals(const ValueWrapper& other) const;
+		bool IsTrue() const;
+
+		static ValueWrapper Plus(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Minus(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Multiply(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Divide(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Quotient(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Negate(const ValueWrapper& v1);
+		static ValueWrapper Equal(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Less(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper LessOrEqual(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Greater(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper GreaterOrEqual(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper And(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Or(const ValueWrapper& v1, const ValueWrapper& v2);
+		static ValueWrapper Not(const ValueWrapper& v1);
 	};
 
 	struct IManagedValue

@@ -459,16 +459,8 @@ void interpreter::SumCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_sumCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number ||
-			m_productCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value =
-			ValueWrapper(m_sumCalc->m_calculation.m_value.GetNum() + m_productCalc->m_calculation.m_value.GetNum());
-
+		calculator.m_calculation.m_value = ValueWrapper::Plus(m_sumCalc->m_calculation.m_value, m_productCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -490,16 +482,8 @@ void interpreter::SumCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_sumCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number ||
-			m_productCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value =
-			ValueWrapper(m_sumCalc->m_calculation.m_value.GetNum() - m_productCalc->m_calculation.m_value.GetNum());
-
+		calculator.m_calculation.m_value = ValueWrapper::Minus(m_sumCalc->m_calculation.m_value, m_productCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -561,15 +545,8 @@ void interpreter::ProductCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_numberCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number ||
-			m_productCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value =
-			ValueWrapper(m_productCalc->m_calculation.m_value.GetNum() * m_numberCalc->m_calculation.m_value.GetNum());
+		calculator.m_calculation.m_value = ValueWrapper::Multiply(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -592,20 +569,8 @@ void interpreter::ProductCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_numberCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number ||
-			m_productCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
-		if (m_numberCalc->m_calculation.m_value.GetNum() == 0.0) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value =
-			ValueWrapper(m_productCalc->m_calculation.m_value.GetNum() / m_numberCalc->m_calculation.m_value.GetNum());
+		calculator.m_calculation.m_value = ValueWrapper::Divide(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -628,31 +593,8 @@ void interpreter::ProductCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_numberCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number ||
-			m_productCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
-		if (m_numberCalc->m_calculation.m_value.GetNum() == 0.0) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
-		double a = m_productCalc->m_calculation.m_value.GetNum();
-		double b = m_numberCalc->m_calculation.m_value.GetNum();
-
-		while (a > b) {
-			a -= b;
-		}
-
-		while (a < b) {
-			a += b;
-		}
-		
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper(a - b);
+		calculator.m_calculation.m_value = ValueWrapper::Quotient(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -711,13 +653,8 @@ void interpreter::NumberValueCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_calc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper(-1 * m_calc->m_calculation.m_value.GetNum());
+		calculator.m_calculation.m_value = ValueWrapper::Negate(m_calc->m_calculation.m_value);
 		return;
 	}
 
@@ -1011,19 +948,9 @@ void interpreter::DisjunctionCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_disjunctionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_value = Calculation::Failed;
-			return;
-		}
-
-		if (m_conjunctionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_value = Calculation::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		bool val = m_disjunctionCalc->m_calculation.m_value.GetNum() || m_conjunctionCalc->m_calculation.m_value.GetNum();
-		calculator.m_calculation.m_value = ValueWrapper(val);
+		calculator.m_calculation.m_value = ValueWrapper::Or(m_disjunctionCalc->m_calculation.m_value, m_conjunctionCalc->m_calculation.m_value);
+
 		return;
 	}
 
@@ -1087,19 +1014,8 @@ void interpreter::ConjunctionCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_binaryValueCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_value = Calculation::Failed;
-			return;
-		}
-
-		if (m_conjunctionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_value = Calculation::Failed;
-			return;
-		}
-
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		bool val = m_conjunctionCalc->m_calculation.m_value.GetNum() && m_binaryValueCalc->m_calculation.m_value.GetNum();
-		calculator.m_calculation.m_value = ValueWrapper(val);
+		calculator.m_calculation.m_value = ValueWrapper::And(m_conjunctionCalc->m_calculation.m_value, m_binaryValueCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -1143,16 +1059,9 @@ void interpreter::BinaryValueCalc::Calculate(Calculator& calculator)
 			return;
 		}
 
-		if (m_binValCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-			calculator.m_calculation.m_state = Calculation::Failed;
-			return;
-		}
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper::Not(m_binValCalc->m_calculation.m_value);
 
-		bool res = m_binValCalc->m_calculation.m_value.GetNum();
-		res = !res;
-
-		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(res);
 		return;
 	}
 
@@ -1267,45 +1176,32 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 	}
 
 	if (b_equal) {
-		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(m_leftExpressionCalc->m_calculation.m_value.Equals(m_rightExpressionCalc->m_calculation.m_value));
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
-
-	if (m_leftExpressionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
-
-	if (m_rightExpressionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
-
-	double leftNum = m_leftExpressionCalc->m_calculation.m_value.GetNum();
-	double rightNum = m_rightExpressionCalc->m_calculation.m_value.GetNum();
-
+	
 	if (b_less) {
-		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(leftNum < rightNum);
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper::Less(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_lessOrEqual) {
-		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(leftNum <= rightNum);
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper::LessOrEqual(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_greater) {
-		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(leftNum > rightNum);
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper::Greater(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_greaterOrEqual) {
-		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(leftNum >= rightNum);
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper::GreaterOrEqual(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -1344,17 +1240,7 @@ void interpreter::IfStatementCalc::Calculate(Calculator& calculator)
 		return;
 	}
 
-	if (m_expressionCalc->m_calculation.m_state == Calculation::CalculationState::Failed) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
-
-	if (m_expressionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
-
-	bool clause = m_expressionCalc->m_calculation.m_value.GetNum();
+	bool clause = m_expressionCalc->m_calculation.m_value.IsTrue();
 
 	if (!clause) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
@@ -1445,17 +1331,7 @@ void interpreter::WhileStatementCalc::Calculate(Calculator& calculator)
 		return;
 	}
 
-	if (m_expressionCalc->m_calculation.m_state == Calculation::CalculationState::Failed) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
-
-	if (m_expressionCalc->m_calculation.m_value.GetType() != ScriptingValueType::Number) {
-		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
-		return;
-	}
-
-	bool clause = m_expressionCalc->m_calculation.m_value.GetNum();
+	bool clause = m_expressionCalc->m_calculation.m_value.IsTrue();
 
 	if (!clause) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;

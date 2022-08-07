@@ -104,6 +104,156 @@ bool interpreter::ValueWrapper::Equals(const ValueWrapper& other) const
 	return false;
 }
 
+bool interpreter::ValueWrapper::IsTrue() const
+{
+	if (GetType() == ScriptingValueType::Number) {
+		return GetNum();
+	}
+	return false;
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Plus(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() + v2.GetNum());
+	}
+
+	if (v1.GetType() == ScriptingValueType::String && v2.GetType() == ScriptingValueType::String) {
+		return ValueWrapper(v1.GetString() + v2.GetString());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Minus(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() - v2.GetNum());
+	}
+
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Multiply(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() * v2.GetNum());
+	}
+
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Divide(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		if (v2.GetNum() == 0.0) {
+			return ValueWrapper();
+		}
+		return ValueWrapper(v1.GetNum() / v2.GetNum());
+	}
+
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Quotient(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		if (v2.GetNum() == 0.0) {
+			return ValueWrapper();
+		}
+
+		double a = v1.GetNum();
+		double b = v2.GetNum();
+
+		while (a > b) {
+			a -= b;
+		}
+
+		while (a < b) {
+			a += b;
+		}
+
+		return ValueWrapper(a - b);
+	}
+
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Negate(const ValueWrapper& v1)
+{
+	if (v1.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(-v1.GetNum());
+	}
+
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Equal(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.Equals(v2)) {
+		return ValueWrapper(1);
+	}
+	else {
+		return ValueWrapper(0);
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Less(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() < v2.GetNum());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::LessOrEqual(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() <= v2.GetNum());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Greater(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() > v2.GetNum());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::GreaterOrEqual(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() >= v2.GetNum());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::And(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() && v2.GetNum());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Or(const ValueWrapper& v1, const ValueWrapper& v2)
+{
+	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(v1.GetNum() || v2.GetNum());
+	}
+	return ValueWrapper();
+}
+
+interpreter::ValueWrapper interpreter::ValueWrapper::Not(const ValueWrapper& v1)
+{
+	if (v1.GetType() == ScriptingValueType::Number) {
+		return ValueWrapper(!v1.GetNum());
+	}
+	return ValueWrapper();
+}
+
 std::string interpreter::ValueWrapper::ToString() const
 {
 	std::stringstream ss;

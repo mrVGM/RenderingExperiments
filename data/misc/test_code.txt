@@ -1,3 +1,12 @@
 let breakable = none;
 
-print(breakable);
+let str1 = "asd";
+let str2 = "fgh";
+
+let clause = none;
+
+if (none) {
+	print("NOPE");
+}
+
+print(str1 + str2);
