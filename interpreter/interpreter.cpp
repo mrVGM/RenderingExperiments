@@ -15,6 +15,24 @@ interpreter::Interpreter::Interpreter(const ValueWrapper& scope) :
 
 interpreter::Interpreter::~Interpreter()
 {
+	FreeUpResources();
+}
+
+void interpreter::Interpreter::FreeUpResources()
+{
+	Calculator* top = nullptr;
+	while (!m_programStack.empty()) {
+		top = m_programStack.top();
+		m_programStack.pop();
+		top->FreeUpResources();
+	}
+
+	if (top) {
+		delete top;
+	}
+
+	m_returnValue = ValueWrapper();
+	m_scope = ValueWrapper();
 }
 
 interpreter::Scope& interpreter::Interpreter::GetCurrentScope()

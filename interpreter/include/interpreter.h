@@ -30,6 +30,8 @@ namespace interpreter
 		Interpreter(const ValueWrapper& scope);
 		~Interpreter();
 
+		void FreeUpResources();
+
 		Scope& GetCurrentScope();
 		void PushScope();
 		void PopScope();

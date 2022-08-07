@@ -25,6 +25,8 @@ void interpreter::Session::RunFile(std::string name)
 		while (m_interpreter->m_state == InterpreterState::Pending) {
 			m_interpreter->CalcutateStep();
 		}
+
+		m_interpreter->FreeUpResources();
 	}
 }
 
