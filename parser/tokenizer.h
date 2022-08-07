@@ -47,11 +47,11 @@ namespace scripting
 		std::vector<ISymbol*> Tokenize(std::vector<ISymbol*>& src) override;
 	};
 
-	struct OperatorTokenizer : public ITokenizer
+	struct KeywordTokenizer : public ITokenizer
 	{
-		std::string m_operator;
+		std::string m_keyword;
 
-		OperatorTokenizer(std::string operatorName);
+		KeywordTokenizer(const std::string& keyword);
 		std::vector<ISymbol*> Tokenize(std::vector<ISymbol*>& src) override;
 	};
 }

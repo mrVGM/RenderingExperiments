@@ -516,116 +516,6 @@ std::vector<scripting::ISymbol*> scripting::NameTokenizer::Tokenize(std::vector<
 	return res;
 }
 
-scripting::OperatorTokenizer::OperatorTokenizer(std::string operatorName) :
-	m_operator(operatorName)
-{
-}
-
-std::vector <scripting::ISymbol* > scripting::OperatorTokenizer::Tokenize(std::vector<ISymbol*>& src)
-{
-	CodeSource* codeSource = src[0]->m_codeSource;
-
-	std::function<CompositeSymbol* ()> createOperator = [&]() {
-		CompositeSymbol* operatorSymbol = codeSource->CreateCompositeSymbol();
-		return operatorSymbol;
-	};
-
-	std::vector<ISymbol*> res;
-	typedef std::function<void(ISymbol&)> handler;
-
-	handler* curHandler;
-
-	int charIndex = 0;
-	handler notInOperator, inOperator;
-
-	CompositeSymbol* name = nullptr;
-
-	std::vector<ISymbol*> read;
-
-	notInOperator = [&](ISymbol& next) {
-		if (next.m_name.size() > 1) {
-			res.push_back(&next);
-			return;
-		}
-
-		char c = next.m_name[0];
-		if (c != m_operator[0]) {
-			res.push_back(&next);
-			return;
-		}
-
-		if (m_operator.size() == 1) {
-			res.push_back(&next);
-			return;
-		}
-
-		read.clear();
-		read.push_back(&next);
-		charIndex = 1;
-
-		curHandler = &inOperator;
-	};
-
-	inOperator = [&](ISymbol& next) {
-		std::function<void(void)> pushReadIntoRes = [&]() {
-			for (int i = 0; i < read.size(); ++i) {
-				res.push_back(read[i]);
-			}
-			res.push_back(&next);
-			curHandler = &notInOperator;
-
-			read.clear();
-			charIndex = 0;
-		};
-
-		if (next.m_name.size() > 1) {
-			pushReadIntoRes();
-			return;
-		}
-
-		char c = next.m_name[0];
-		if (c != m_operator[charIndex]) {
-			pushReadIntoRes();
-			return;
-		}
-
-		read.push_back(&next);
-		++charIndex;
-
-		if (m_operator.size() == charIndex) {
-			CompositeSymbol* oper = createOperator();
-			oper->m_name = m_operator;
-			for (int i = 0; i < read.size(); ++i) {
-				oper->m_childSymbols.push_back(read[i]);
-			}
-			res.push_back(oper);
-
-			read.clear();
-			charIndex = 0;
-
-			curHandler = &notInOperator;
-			return;
-		}
-	};
-
-	curHandler = &notInOperator;
-
-	for (int i = 0; i < src.size(); ++i) {
-		(*curHandler)(*src[i]);
-	}
-
-	if (curHandler == &inOperator) {
-		res.push_back(name);
-	}
-
-	for (int i = 0; i < read.size(); ++i) {
-		res.push_back(read[i]);
-	};
-
-	m_error = false;
-	return res;
-}
-
 std::vector<scripting::ISymbol*> scripting::UnsignedNumberTokenizer::Tokenize(std::vector<ISymbol*>& src)
 {
 	CodeSource* codeSource = src[0]->m_codeSource;
@@ -737,5 +627,26 @@ std::vector<scripting::ISymbol*> scripting::UnsignedNumberTokenizer::Tokenize(st
 			m_error = true;
 		}
 	}
+	return res;
+}
+
+scripting::KeywordTokenizer::KeywordTokenizer(const std::string& keyword) :
+	m_keyword(keyword)
+{
+}
+
+std::vector<scripting::ISymbol*> scripting::KeywordTokenizer::Tokenize(std::vector<ISymbol*>& src)
+{
+	CodeSource* codeSource = src[0]->m_codeSource;
+
+	std::vector<ISymbol*> res;
+	
+	for (int i = 0; i < src.size(); ++i) {
+		if (src[i]->m_name == "Name" && src[i]->m_symbolData.m_string == m_keyword) {
+			src[i]->m_name = m_keyword;
+		}
+		res.push_back(src[i]);
+	}
+
 	return res;
 }

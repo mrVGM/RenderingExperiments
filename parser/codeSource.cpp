@@ -34,28 +34,14 @@ bool scripting::CodeSource::TokenizeForParser()
 	UnsignedNumberTokenizer numberTokenizer;
 	NameTokenizer nameTokenizer;
 
-	std::vector<OperatorTokenizer> operatorTokenizers;
-	operatorTokenizers.push_back(OperatorTokenizer("."));
-	operatorTokenizers.push_back(OperatorTokenizer(","));
-	operatorTokenizers.push_back(OperatorTokenizer(";"));
-	operatorTokenizers.push_back(OperatorTokenizer("="));
-	operatorTokenizers.push_back(OperatorTokenizer("+"));
-	operatorTokenizers.push_back(OperatorTokenizer("-"));
-	operatorTokenizers.push_back(OperatorTokenizer("*"));
-	operatorTokenizers.push_back(OperatorTokenizer("/"));
-	operatorTokenizers.push_back(OperatorTokenizer("%"));
-	operatorTokenizers.push_back(OperatorTokenizer("<"));
-	operatorTokenizers.push_back(OperatorTokenizer(">"));
-	operatorTokenizers.push_back(OperatorTokenizer("|"));
-	operatorTokenizers.push_back(OperatorTokenizer("&"));
-	operatorTokenizers.push_back(OperatorTokenizer("!"));
-	operatorTokenizers.push_back(OperatorTokenizer("if"));
-	operatorTokenizers.push_back(OperatorTokenizer("let"));
-	operatorTokenizers.push_back(OperatorTokenizer("func"));
-	operatorTokenizers.push_back(OperatorTokenizer("while"));
-	operatorTokenizers.push_back(OperatorTokenizer("break"));
-	operatorTokenizers.push_back(OperatorTokenizer("return"));
-	operatorTokenizers.push_back(OperatorTokenizer("continue"));
+	std::vector<KeywordTokenizer> keywordTokenizers;
+	keywordTokenizers.push_back(KeywordTokenizer("if"));
+	keywordTokenizers.push_back(KeywordTokenizer("let"));
+	keywordTokenizers.push_back(KeywordTokenizer("func"));
+	keywordTokenizers.push_back(KeywordTokenizer("while"));
+	keywordTokenizers.push_back(KeywordTokenizer("break"));
+	keywordTokenizers.push_back(KeywordTokenizer("return"));
+	keywordTokenizers.push_back(KeywordTokenizer("continue"));
 
 	std::vector<ISymbol*> symbols = newLineTokenizer.Tokenize(m_symbols);
 	if (newLineTokenizer.m_error) {
@@ -87,17 +73,17 @@ bool scripting::CodeSource::TokenizeForParser()
 		return false;
 	}
 
-	for (int i = 0; i < operatorTokenizers.size(); ++i) {
-		OperatorTokenizer& cur = operatorTokenizers[i];
+	symbols = nameTokenizer.Tokenize(symbols);
+	if (nameTokenizer.m_error) {
+		return false;
+	}
+
+	for (int i = 0; i < keywordTokenizers.size(); ++i) {
+		KeywordTokenizer& cur = keywordTokenizers[i];
 		symbols = cur.Tokenize(symbols);
 		if (cur.m_error) {
 			return false;
 		}
-	}
-
-	symbols = nameTokenizer.Tokenize(symbols);
-	if (nameTokenizer.m_error) {
-		return false;
 	}
 
 	symbols = numberTokenizer.Tokenize(symbols);

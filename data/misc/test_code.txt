@@ -1,27 +1,13 @@
-if (1 == 1) {
-	print("Equal Works");
+let breakable = 0;
+
+let i = 0;
+while (1) {
+	breakable = breakable + i;
+	i = i + 1;
+
+	if (i == 5) {
+		break;
+	}
 }
 
-if (1 < 2) {
-	print("Less Works");
-}
-
-if (1 > 0) {
-	print("Greater Works");
-}
-
-if (1 <= 1) {
-	print("LEQ Works");
-}
-
-if (1 >= 1) {
-	print("GEQ Works");
-}
-
-if (1 >= 1 && 1 == 1) {
-	print("Conjunction Works");
-}
-
-if (1 >= 1 || 1 == 1) {
-	print("Disjunction Works");
-}
+print(breakable);
