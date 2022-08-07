@@ -6,9 +6,11 @@
 #include "interpreter.h"
 #include "IFunc.h"
 #include "scope.h"
+#include "codeSource.h"
 
 #include <string>
 #include <ostream>
+#include <map>
 
 namespace interpreter
 {
@@ -37,6 +39,9 @@ namespace interpreter
 		scripting::Parser& m_parser;
 		std::ostream& m_outputStream;
 		interpreter::Interpreter* m_interpreter = nullptr;
+
+		std::map<std::string, scripting::CodeSource*> m_loadedCodeFiles;
+		scripting::CodeSource& GetCode(std::string path);
 
 		void RunFile(std::string name) override;
 

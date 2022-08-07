@@ -4,19 +4,31 @@
 #include "dataLib.h"
 #include "scope.h"
 
-void interpreter::Session::RunFile(std::string name)
+scripting::CodeSource& interpreter::Session::GetCode(std::string path)
 {
-	std::string fullPath = m_rootDir + name;
-	
+	std::map<std::string, scripting::CodeSource*>::iterator it = m_loadedCodeFiles.find(path);
+	if (it != m_loadedCodeFiles.end()) {
+		return *(it->second);
+	}
+
+	std::string fullPath = m_rootDir + path;
+
 	std::string code = data::GetLibrary().ReadFileByPath(fullPath);
 
-	scripting::CodeSource cs;
-	cs.m_code = code;
-	cs.m_filename = fullPath;
+	scripting::CodeSource* cs = new scripting::CodeSource();
+	cs->m_code = code;
+	cs->m_filename = fullPath;
 
-	cs.Tokenize();
-	cs.TokenizeForParser();
+	cs->Tokenize();
+	cs->TokenizeForParser();
 
+	m_loadedCodeFiles[path] = cs;
+	return *cs;
+}
+
+void interpreter::Session::RunFile(std::string name)
+{
+	scripting::CodeSource& cs = GetCode(name);
 	scripting::ISymbol* parsed = m_parser.Parse(cs);
 
 	if (parsed) {
@@ -48,4 +60,8 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 interpreter::Session::~Session()
 {
 	delete m_interpreter;
+
+	for (std::map<std::string, scripting::CodeSource*>::iterator it = m_loadedCodeFiles.begin(); it != m_loadedCodeFiles.end(); ++it) {
+		delete it->second;
+	}
 }
