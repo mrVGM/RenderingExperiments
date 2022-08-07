@@ -105,7 +105,7 @@ void rendering::Window::Create()
 
 	CreateWindowW(
 		_windowData::m_className,
-		L"My Window",
+		L"Render Window",
 		dwStyle,
 		windowRect.left, windowRect.top,
 		windowRect.right - windowRect.left,

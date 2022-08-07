@@ -6,9 +6,29 @@
 
 #include "window.h"
 
-int main()
+#include <thread>
+
+void run()
 {
 	rendering::Window window;
+
+	MSG msg;
+
+	while (true) {
+		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+			if (!GetMessage(&msg, NULL, 0, 0)) {
+				break;
+			}
+
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+}
+
+int main()
+{
+	std::thread t(run);
 
 	std::filesystem::path dataPath = std::filesystem::current_path().append("..\\..\\..\\..\\data\\");
 	data::Init(dataPath.string().c_str());
