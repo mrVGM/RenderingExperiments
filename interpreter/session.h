@@ -36,6 +36,7 @@ namespace interpreter
 		std::string m_rootDir;
 		scripting::Parser& m_parser;
 		std::ostream& m_outputStream;
+		interpreter::Interpreter* m_interpreter = nullptr;
 
 		void RunFile(std::string name) override;
 

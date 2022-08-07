@@ -19,19 +19,12 @@ void interpreter::Session::RunFile(std::string name)
 
 	scripting::ISymbol* parsed = m_parser.Parse(cs);
 
-	Scope* sc = new Scope();
-	ValueWrapper scope(*sc);
+	if (parsed) {
+		m_interpreter->PrepareCalculation(parsed);
 
-	PrintFunc* pf = new PrintFunc(m_outputStream);
-	ValueWrapper print(*pf);
-	sc->BindValue("print", print);
-
-	Interpreter interpreter(scope);
-
-	interpreter.PrepareCalculation(parsed);
-
-	while (interpreter.m_state == InterpreterState::Pending) {
-		interpreter.CalcutateStep();
+		while (m_interpreter->m_state == InterpreterState::Pending) {
+			m_interpreter->CalcutateStep();
+		}
 	}
 }
 
@@ -40,8 +33,17 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	m_parser(parser),
 	m_outputStream(outputStream)
 {
+	Scope* sc = new Scope();
+	ValueWrapper scope(*sc);
+
+	PrintFunc* pf = new PrintFunc(m_outputStream);
+	ValueWrapper print(*pf);
+	sc->BindValue("print", print);
+
+	m_interpreter = new interpreter::Interpreter(scope);
 }
 
 interpreter::Session::~Session()
 {
+	delete m_interpreter;
 }
