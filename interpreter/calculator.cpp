@@ -1746,6 +1746,8 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 			calculator.m_calculation.m_value = res.m_returnValue;
 			return;
 		}
+
+		return;
 	}
 	else {
 		if (!m_blockCalc) {

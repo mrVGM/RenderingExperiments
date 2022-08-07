@@ -18,7 +18,7 @@ namespace interpreter
 			Failed
 		};
 
-		FuncExecutionState m_state;
+		FuncExecutionState m_state = FuncExecutionState::Pending;
 		ValueWrapper m_returnValue;
 	};
 

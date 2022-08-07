@@ -1,12 +1,2 @@
-let breakable = none;
-
-let str1 = "asd";
-let str2 = "fgh";
-
-let clause = none;
-
-if (1 != 2) {
-	print("NOPE");
-}
-
-print(str1 + str2);
+let x = require("lib.txt");
+print(x);

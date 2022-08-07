@@ -9,12 +9,13 @@ interpreter::ValueWrapper interpreter::IFunc::GetScopeTemplate()
 interpreter::ValueWrapper interpreter::IFunc::GetArgsTemplateScope()
 {
 	Scope* scope = new Scope();
+	ValueWrapper res(*scope);
 	
 	for (int i = 0; i < m_paramNames.size(); ++i) {
 		scope->BindValue(m_paramNames[i], ValueWrapper());
 	}
 
-	return ValueWrapper(*scope);
+	return res;
 }
 
 void interpreter::IFunc::SetProperty(std::string name, ValueWrapper value)

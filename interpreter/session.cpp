@@ -3,6 +3,7 @@
 #include "codeSource.h"
 #include "dataLib.h"
 #include "scope.h"
+#include "object.h"
 
 struct PrintFunc : public interpreter::IFunc
 {
@@ -19,6 +20,80 @@ struct PrintFunc : public interpreter::IFunc
 		m_outputStream << val.ToString() << std::endl;
 		interpreter::FuncResult res;
 		res.m_state = interpreter::FuncResult::Finished;
+		return res;
+	}
+};
+
+struct RequireFunc : public interpreter::IFunc
+{
+	interpreter::Session& m_session;
+
+	RequireFunc(interpreter::Session& session) :
+		m_session(session)
+	{
+		m_paramNames.push_back("path");
+	}
+
+	interpreter::ValueWrapper GetScopeTemplate() override
+	{
+		using namespace interpreter;
+		Scope* contextScope = new Scope();
+		ValueWrapper context(*contextScope);
+
+		contextScope->BindValue("running", ValueWrapper());
+
+		interpreter::ValueWrapper argsScope = GetArgsTemplateScope();
+
+		Scope* args = static_cast<Scope*>(argsScope.GetManagedValue());
+		args->SetParentScope(context);
+
+		return argsScope;
+	}
+
+	interpreter::FuncResult Execute(interpreter::Scope& scope) override
+	{
+		using namespace interpreter;
+
+		ValueWrapper running = scope.GetProperty("running");
+		if (running.IsNone()) {
+			ValueWrapper path = scope.GetProperty("path");
+			if (path.GetType() != ScriptingValueType::String) {
+				FuncResult res;
+				res.m_state = FuncResult::Failed;
+				return res;
+			}
+
+			scripting::CodeSource& cs = m_session.GetCode(path.GetString());
+
+			scripting::ISymbol* s = m_session.m_parser.Parse(cs);
+			if (!s) {
+				FuncResult res;
+				res.m_state = FuncResult::Failed;
+				return res;
+			}
+
+			Scope* tmp = new Scope();
+			ValueWrapper runningScope(*tmp);
+
+			ObjectValue* obj = new ObjectValue();
+			ValueWrapper objValue(*obj);
+
+			tmp->BindValue("export", objValue);
+			tmp->SetParentScope(m_session.m_motherScope);
+
+			m_session.m_intepreterStack.push(Interpreter(runningScope));
+			m_session.m_intepreterStack.top().PrepareCalculation(s);
+
+			scope.SetProperty("running", runningScope);
+			return FuncResult();
+		}
+
+		ValueWrapper runningScope = scope.GetProperty("running");
+		ValueWrapper exports = runningScope.GetProperty("export");
+
+		FuncResult res;
+		res.m_state = FuncResult::Finished;
+		res.m_returnValue = exports;
 		return res;
 	}
 };
@@ -84,6 +159,10 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	PrintFunc* pf = new PrintFunc(m_outputStream);
 	ValueWrapper print(*pf);
 	sc->BindValue("print", print);
+
+	RequireFunc* rf = new RequireFunc(*this);
+	ValueWrapper require(*rf);
+	sc->BindValue("require", require);
 }
 
 interpreter::Session::~Session()
