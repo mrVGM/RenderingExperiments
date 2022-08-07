@@ -5,7 +5,7 @@ let str2 = "fgh";
 
 let clause = none;
 
-if (none) {
+if (1 != 2) {
 	print("NOPE");
 }
 

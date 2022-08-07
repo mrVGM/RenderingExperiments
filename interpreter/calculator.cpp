@@ -1118,12 +1118,14 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 	const scripting::CompositeSymbol* cs;
 
 	const char* equal[] = { "ArithmeticExpression", "=", "=", "ArithmeticExpression", 0 };
+	const char* notEqual[] = { "ArithmeticExpression", "!", "=", "ArithmeticExpression", 0 };
 	const char* lessOrEqual[] = { "ArithmeticExpression", "<", "=", "ArithmeticExpression", 0 };
 	const char* greaterOrEqual[] = { "ArithmeticExpression", ">", "=", "ArithmeticExpression", 0 };
 	const char* less[] = { "ArithmeticExpression", "<", "ArithmeticExpression", 0 };
 	const char* greater[] = { "ArithmeticExpression", ">", "ArithmeticExpression", 0 };
 
 	bool b_equal = false;
+	bool b_notEqual = false;
 	bool b_less = false;
 	bool b_greater = false;
 	bool b_lessOrEqual = false;
@@ -1131,6 +1133,10 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, equal, cs)) {
 		b_equal = true;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, notEqual, cs)) {
+		b_notEqual = true;
 	}
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, less, cs)) {
@@ -1151,7 +1157,7 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 
 	int leftIndex = 0;
 	int rightIndex = 2;
-	if (b_equal || b_lessOrEqual || b_greaterOrEqual) {
+	if (b_equal || b_notEqual || b_lessOrEqual || b_greaterOrEqual) {
 		rightIndex = 3;
 	}
 
@@ -1178,6 +1184,13 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 	if (b_equal) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
 		calculator.m_calculation.m_value = ValueWrapper::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		return;
+	}
+
+	if (b_notEqual) {
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		ValueWrapper tmp = ValueWrapper::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = ValueWrapper::Not(tmp);
 		return;
 	}
 	
