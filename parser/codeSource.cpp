@@ -46,12 +46,8 @@ bool scripting::CodeSource::TokenizeForParser()
 	operatorTokenizers.push_back(OperatorTokenizer("%"));
 	operatorTokenizers.push_back(OperatorTokenizer("<"));
 	operatorTokenizers.push_back(OperatorTokenizer(">"));
-	operatorTokenizers.push_back(OperatorTokenizer(">="));
-	operatorTokenizers.push_back(OperatorTokenizer("<="));
-	operatorTokenizers.push_back(OperatorTokenizer("<="));
-	operatorTokenizers.push_back(OperatorTokenizer("=="));
-	operatorTokenizers.push_back(OperatorTokenizer("||"));
-	operatorTokenizers.push_back(OperatorTokenizer("&&"));
+	operatorTokenizers.push_back(OperatorTokenizer("|"));
+	operatorTokenizers.push_back(OperatorTokenizer("&"));
 	operatorTokenizers.push_back(OperatorTokenizer("!"));
 	operatorTokenizers.push_back(OperatorTokenizer("if"));
 	operatorTokenizers.push_back(OperatorTokenizer("let"));

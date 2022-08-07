@@ -31,6 +31,8 @@ interpreter::ISession& interpreter::OpenSession(std::string scriptsDir, std::ost
 	_sessionData::m_parserTable = new scripting::ParserTable();
 	_sessionData::m_grammar->GenerateParserTable(*_sessionData::m_parserTable);
 
+	bool validTable = _sessionData::m_parserTable->Validate();
+
 	_sessionData::m_parser = new scripting::Parser(*_sessionData::m_grammar, *_sessionData::m_parserTable);
 
 	_sessionData::m_session = new Session(_sessionData::m_scriptsDir, *_sessionData::m_parser, outputStream);

@@ -971,7 +971,7 @@ void interpreter::DisjunctionCalc::Calculate(Calculator& calculator)
 	const scripting::CompositeSymbol* cs;
 
 	const char* single[] = { "Conjunction", 0 };
-	const char* multi[] = { "Disjunction", "||", "Conjunction", 0};
+	const char* multi[] = { "Disjunction", "|", "|", "Conjunction", 0};
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, single, cs)) {
 		if (!m_conjunctionCalc) {
@@ -987,7 +987,7 @@ void interpreter::DisjunctionCalc::Calculate(Calculator& calculator)
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, multi, cs)) {
 		if (!m_conjunctionCalc) {
 			ConjunctionCalc* conjunctionCalc = new ConjunctionCalc();
-			m_conjunctionCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[2], *conjunctionCalc);
+			m_conjunctionCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[3], *conjunctionCalc);
 			calculator.m_interpreter.Push(m_conjunctionCalc);
 		}
 
@@ -1047,7 +1047,7 @@ void interpreter::ConjunctionCalc::Calculate(Calculator& calculator)
 	const scripting::CompositeSymbol* cs;
 
 	const char* single[] = { "BinaryValue", 0 };
-	const char* multi[] = { "Conjunction", "&&", "BinaryValue", 0 };
+	const char* multi[] = { "Conjunction", "&", "&", "BinaryValue", 0 };
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, single, cs)) {
 		if (!m_binaryValueCalc) {
@@ -1063,7 +1063,7 @@ void interpreter::ConjunctionCalc::Calculate(Calculator& calculator)
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, multi, cs)) {
 		if (!m_binaryValueCalc) {
 			BinaryValueCalc* binValueCalc = new BinaryValueCalc();
-			m_binaryValueCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[2], *binValueCalc);
+			m_binaryValueCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[3], *binValueCalc);
 			calculator.m_interpreter.Push(m_binaryValueCalc);
 		}
 
@@ -1200,17 +1200,55 @@ void interpreter::BinaryValueCalc::FreeUpResouces()
 
 void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 {
-	const scripting::CompositeSymbol* cs = dynamic_cast<const scripting::CompositeSymbol*>(&calculator.m_symbol);
+	const scripting::CompositeSymbol* cs;
+
+	const char* equal[] = { "ArithmeticExpression", "=", "=", "ArithmeticExpression", 0 };
+	const char* lessOrEqual[] = { "ArithmeticExpression", "<", "=", "ArithmeticExpression", 0 };
+	const char* greaterOrEqual[] = { "ArithmeticExpression", ">", "=", "ArithmeticExpression", 0 };
+	const char* less[] = { "ArithmeticExpression", "<", "ArithmeticExpression", 0 };
+	const char* greater[] = { "ArithmeticExpression", ">", "ArithmeticExpression", 0 };
+
+	bool b_equal = false;
+	bool b_less = false;
+	bool b_greater = false;
+	bool b_lessOrEqual = false;
+	bool b_greaterOrEqual = false;
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, equal, cs)) {
+		b_equal = true;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, less, cs)) {
+		b_less = true;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, lessOrEqual, cs)) {
+		b_lessOrEqual = true;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, greater, cs)) {
+		b_greater = true;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, greaterOrEqual, cs)) {
+		b_greaterOrEqual = true;
+	}
+
+	int leftIndex = 0;
+	int rightIndex = 2;
+	if (b_equal || b_lessOrEqual || b_greaterOrEqual) {
+		rightIndex = 3;
+	}
 
 	if (!m_rightExpressionCalc) {
 		ArithmethicExpressionCalc* arithmeticExprCalc = new ArithmethicExpressionCalc();
-		m_rightExpressionCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[2], *arithmeticExprCalc);
+		m_rightExpressionCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[rightIndex], *arithmeticExprCalc);
 		calculator.m_interpreter.Push(m_rightExpressionCalc);
 	}
 
 	if (!m_leftExpressionCalc) {
 		ArithmethicExpressionCalc* arithmeticExprCalc = new ArithmethicExpressionCalc();
-		m_leftExpressionCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[0], *arithmeticExprCalc);
+		m_leftExpressionCalc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[leftIndex], *arithmeticExprCalc);
 		calculator.m_interpreter.Push(m_leftExpressionCalc);
 	}
 
@@ -1222,7 +1260,7 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 		return;
 	}
 
-	if (cs->m_childSymbols[1]->m_name == "==") {
+	if (b_equal) {
 		calculator.m_calculation.m_state = Calculation::Done;
 		calculator.m_calculation.m_value = ValueWrapper(m_leftExpressionCalc->m_calculation.m_value.Equals(m_rightExpressionCalc->m_calculation.m_value));
 		return;
@@ -1241,25 +1279,25 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 	double leftNum = m_leftExpressionCalc->m_calculation.m_value.GetNum();
 	double rightNum = m_rightExpressionCalc->m_calculation.m_value.GetNum();
 
-	if (cs->m_childSymbols[1]->m_name == "<") {
+	if (b_less) {
 		calculator.m_calculation.m_state = Calculation::Done;
 		calculator.m_calculation.m_value = ValueWrapper(leftNum < rightNum);
 		return;
 	}
 
-	if (cs->m_childSymbols[1]->m_name == "<=") {
+	if (b_lessOrEqual) {
 		calculator.m_calculation.m_state = Calculation::Done;
 		calculator.m_calculation.m_value = ValueWrapper(leftNum <= rightNum);
 		return;
 	}
 
-	if (cs->m_childSymbols[1]->m_name == ">") {
+	if (b_greater) {
 		calculator.m_calculation.m_state = Calculation::Done;
 		calculator.m_calculation.m_value = ValueWrapper(leftNum > rightNum);
 		return;
 	}
 
-	if (cs->m_childSymbols[1]->m_name == ">=") {
+	if (b_greaterOrEqual) {
 		calculator.m_calculation.m_state = Calculation::Done;
 		calculator.m_calculation.m_value = ValueWrapper(leftNum >= rightNum);
 		return;
