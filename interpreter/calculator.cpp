@@ -763,10 +763,16 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 	const char* funcCall[] = { "FuncCall", 0 };
 	const char* list[] = { "[", "]", 0 };
 	const char* object[] = { "{", "}", 0 };
+	const char* none[] = { "none", 0 };
 
 	const char* prop[] = { "RawValue", ".", "Name", 0 };
 	const char* propExpr[] = { "RawValue", "[", "Expression", "]", 0 };
 
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, none, cs)) {
+		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
+		calculator.m_calculation.m_value = ValueWrapper();
+		return;
+	}
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, number, cs)) {
 		calculator.m_calculation.m_state = Calculation::Done;

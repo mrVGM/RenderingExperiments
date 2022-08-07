@@ -35,13 +35,14 @@ bool scripting::CodeSource::TokenizeForParser()
 	NameTokenizer nameTokenizer;
 
 	std::vector<KeywordTokenizer> keywordTokenizers;
-	keywordTokenizers.push_back(KeywordTokenizer("if"));
-	keywordTokenizers.push_back(KeywordTokenizer("let"));
-	keywordTokenizers.push_back(KeywordTokenizer("func"));
-	keywordTokenizers.push_back(KeywordTokenizer("while"));
-	keywordTokenizers.push_back(KeywordTokenizer("break"));
-	keywordTokenizers.push_back(KeywordTokenizer("return"));
 	keywordTokenizers.push_back(KeywordTokenizer("continue"));
+	keywordTokenizers.push_back(KeywordTokenizer("return"));
+	keywordTokenizers.push_back(KeywordTokenizer("break"));
+	keywordTokenizers.push_back(KeywordTokenizer("while"));
+	keywordTokenizers.push_back(KeywordTokenizer("func"));
+	keywordTokenizers.push_back(KeywordTokenizer("none"));
+	keywordTokenizers.push_back(KeywordTokenizer("let"));
+	keywordTokenizers.push_back(KeywordTokenizer("if"));
 
 	std::vector<ISymbol*> symbols = newLineTokenizer.Tokenize(m_symbols);
 	if (newLineTokenizer.m_error) {
