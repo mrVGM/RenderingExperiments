@@ -226,7 +226,7 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 	}
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, returnStatement, cs)) {
-		calculator.m_interpreter.HandleReturnInstruction(ValueWrapper());
+		calculator.m_interpreter.HandleReturnInstruction(Value());
 		calculator.m_calculation.m_state = Calculation::Done;
 		return;
 	}
@@ -460,7 +460,7 @@ void interpreter::SumCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Plus(m_sumCalc->m_calculation.m_value, m_productCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Plus(m_sumCalc->m_calculation.m_value, m_productCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -483,7 +483,7 @@ void interpreter::SumCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Minus(m_sumCalc->m_calculation.m_value, m_productCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Minus(m_sumCalc->m_calculation.m_value, m_productCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -546,7 +546,7 @@ void interpreter::ProductCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Multiply(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Multiply(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -570,7 +570,7 @@ void interpreter::ProductCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Divide(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Divide(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -594,7 +594,7 @@ void interpreter::ProductCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Quotient(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Quotient(m_productCalc->m_calculation.m_value, m_numberCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -654,7 +654,7 @@ void interpreter::NumberValueCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Negate(m_calc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Negate(m_calc->m_calculation.m_value);
 		return;
 	}
 
@@ -707,19 +707,19 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, none, cs)) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper();
+		calculator.m_calculation.m_value = Value();
 		return;
 	}
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, number, cs)) {
 		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(cs->m_childSymbols[0]->m_symbolData.m_number);
+		calculator.m_calculation.m_value = Value(cs->m_childSymbols[0]->m_symbolData.m_number);
 		return;
 	}
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, str, cs)) {
 		calculator.m_calculation.m_state = Calculation::Done;
-		calculator.m_calculation.m_value = ValueWrapper(cs->m_childSymbols[0]->m_symbolData.m_string);
+		calculator.m_calculation.m_value = Value(cs->m_childSymbols[0]->m_symbolData.m_string);
 		return;
 	}
 
@@ -734,7 +734,7 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 		calculator.m_calculation.m_state = Calculation::Done;
 
 		ListValue* l = new ListValue();
-		calculator.m_calculation.m_value = ValueWrapper(*l);
+		calculator.m_calculation.m_value = Value(*l);
 		return;
 	}
 
@@ -742,7 +742,7 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 		calculator.m_calculation.m_state = Calculation::Done;
 
 		ObjectValue* obj = new ObjectValue();
-		calculator.m_calculation.m_value = ValueWrapper(*obj);
+		calculator.m_calculation.m_value = Value(*obj);
 		return;
 	}
 
@@ -949,7 +949,7 @@ void interpreter::DisjunctionCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Or(m_disjunctionCalc->m_calculation.m_value, m_conjunctionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Or(m_disjunctionCalc->m_calculation.m_value, m_conjunctionCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -1015,7 +1015,7 @@ void interpreter::ConjunctionCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::And(m_conjunctionCalc->m_calculation.m_value, m_binaryValueCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::And(m_conjunctionCalc->m_calculation.m_value, m_binaryValueCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -1060,7 +1060,7 @@ void interpreter::BinaryValueCalc::Calculate(Calculator& calculator)
 		}
 
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Not(m_binValCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Not(m_binValCalc->m_calculation.m_value);
 
 		return;
 	}
@@ -1183,38 +1183,38 @@ void interpreter::ComparisonCalc::Calculate(Calculator& calculator)
 
 	if (b_equal) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_notEqual) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		ValueWrapper tmp = ValueWrapper::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
-		calculator.m_calculation.m_value = ValueWrapper::Not(tmp);
+		Value tmp = Value::Equal(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Not(tmp);
 		return;
 	}
 	
 	if (b_less) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Less(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Less(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_lessOrEqual) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::LessOrEqual(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::LessOrEqual(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_greater) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::Greater(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::Greater(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
 	if (b_greaterOrEqual) {
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
-		calculator.m_calculation.m_value = ValueWrapper::GreaterOrEqual(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
+		calculator.m_calculation.m_value = Value::GreaterOrEqual(m_leftExpressionCalc->m_calculation.m_value, m_rightExpressionCalc->m_calculation.m_value);
 		return;
 	}
 
@@ -1405,7 +1405,7 @@ void interpreter::LValueCalc::Calculate(Calculator& calculator)
 	const char* propExpr[] = { "RawValue", "[", "Expression", "]", 0 };
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, justName, cs)) {
-		m_prop = ValueWrapper(cs->m_childSymbols[0]->m_symbolData.m_string);
+		m_prop = Value(cs->m_childSymbols[0]->m_symbolData.m_string);
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
 		return;
 	}
@@ -1429,7 +1429,7 @@ void interpreter::LValueCalc::Calculate(Calculator& calculator)
 
 		std::string propName = cs->m_childSymbols[2]->m_symbolData.m_string;
 
-		m_prop = ValueWrapper(propName);
+		m_prop = Value(propName);
 		m_outerObject = m_calc->m_calculation.m_value;
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;
 
@@ -1717,7 +1717,7 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 		volatile GarbageCollector::GCInstructionsBatch batch;
 
 		m_curInterpreterScope = calculator.m_interpreter.m_scope;
-		ValueWrapper funcScope = func->GetScopeTemplate();
+		Value funcScope = func->GetScopeTemplate();
 
 		Scope* scope = dynamic_cast<Scope*>(funcScope.GetManagedValue());
 		for (int i = 0; i < argsList.m_args.size(); ++i) {
@@ -1904,7 +1904,7 @@ void interpreter::FuncDefCalc::Calculate(Calculator& calculator)
 	ParameterListCalc& parameterListCalc = dynamic_cast<ParameterListCalc&>(m_parameterListCalc->m_calculator);
 
 	Func* f = new Func(*cs->m_childSymbols[2]);
-	ValueWrapper fWrapped(*f);
+	Value fWrapped(*f);
 	f->InitFuncDefScope(calculator.m_interpreter.m_scope);
 	f->m_paramNames = parameterListCalc.m_parameters;
 

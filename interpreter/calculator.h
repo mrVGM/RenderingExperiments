@@ -1,7 +1,7 @@
 #pragma once
 
 #include "symbol.h"
-#include "scriptingValue.h"
+#include "value.h"
 
 #include <string>
 
@@ -19,7 +19,7 @@ namespace interpreter
 		};
 
 		CalculationState m_state = Calculation::Pending;
-		ValueWrapper m_value;
+		Value m_value;
 
 		static Calculation GetFailed();
 	};
@@ -219,7 +219,7 @@ namespace interpreter
 		Calculator* m_instructionsBlockCalc = nullptr;
 		Calculator* m_expressionCalc = nullptr;
 
-		ValueWrapper m_currentInterpreterScope;
+		Value m_currentInterpreterScope;
 
 		bool m_breakInstruction = false;
 		bool m_continueInstruction = false;
@@ -231,8 +231,8 @@ namespace interpreter
 
 	struct LValueCalc : public ICalculator
 	{
-		ValueWrapper m_prop;
-		ValueWrapper m_outerObject;
+		Value m_prop;
+		Value m_outerObject;
 
 		Calculator* m_calc = nullptr;
 		Calculator* m_expr = nullptr;
@@ -256,7 +256,7 @@ namespace interpreter
 		Calculator* m_exprCalc = nullptr;
 		Calculator* m_argumentsCalc = nullptr;
 
-		std::vector<ValueWrapper> m_args;
+		std::vector<Value> m_args;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
@@ -267,7 +267,7 @@ namespace interpreter
 	{
 		Calculator* m_argsCalc = nullptr;
 
-		std::vector<ValueWrapper> m_args;
+		std::vector<Value> m_args;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
@@ -280,7 +280,7 @@ namespace interpreter
 		Calculator* m_argsList = nullptr;
 		Calculator* m_blockCalc = nullptr;
 
-		ValueWrapper m_curInterpreterScope;
+		Value m_curInterpreterScope;
 		bool m_returnInstruction = false;
 
 		void Calculate(Calculator& calculator) override;

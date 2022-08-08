@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scriptingValue.h"
+#include "value.h"
 
 #include <vector>
 #include <string>
@@ -19,7 +19,7 @@ namespace interpreter
 		};
 
 		FuncExecutionState m_state = FuncExecutionState::Pending;
-		ValueWrapper m_returnValue;
+		Value m_returnValue;
 	};
 
 	struct IFunc : public IManagedValue
@@ -27,10 +27,10 @@ namespace interpreter
 		std::vector<std::string> m_paramNames;
 		
 		virtual FuncResult Execute(Scope& scope) = 0;
-		virtual ValueWrapper GetScopeTemplate();
-		ValueWrapper GetArgsTemplateScope();
+		virtual Value GetScopeTemplate();
+		Value GetArgsTemplateScope();
 
-		void SetProperty(std::string name, ValueWrapper value) override;
-		ValueWrapper GetProperty(std::string name) const override;
+		void SetProperty(std::string name, Value value) override;
+		Value GetProperty(std::string name) const override;
 	};
 }

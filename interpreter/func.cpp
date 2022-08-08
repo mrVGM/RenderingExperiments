@@ -11,16 +11,16 @@ interpreter::Func::Func(const scripting::ISymbol& body) :
 {
 }
 
-void interpreter::Func::InitFuncDefScope(const ValueWrapper& funcDefScope)
+void interpreter::Func::InitFuncDefScope(const Value& funcDefScope)
 {
 	volatile GarbageCollector::GCInstructionsBatch batch;
 	m_funcDefScope = funcDefScope;
 	m_funcDefScope.SetImplicitRef(this);
 }
 
-interpreter::ValueWrapper interpreter::Func::GetScopeTemplate()
+interpreter::Value interpreter::Func::GetScopeTemplate()
 {
-	ValueWrapper argsScope = GetArgsTemplateScope();
+	Value argsScope = GetArgsTemplateScope();
 	Scope* scope = dynamic_cast<Scope*>(argsScope.GetManagedValue());
 	scope->SetParentScope(m_funcDefScope);
 

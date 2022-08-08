@@ -2,7 +2,7 @@
 
 #include "garbageCollector.h"
 
-void interpreter::ListValue::PushValue(ValueWrapper value)
+void interpreter::ListValue::PushValue(Value value)
 {
 	if (!value.IsManaged()) {
 		m_list.push_back(value);
@@ -12,25 +12,25 @@ void interpreter::ListValue::PushValue(ValueWrapper value)
 	volatile GarbageCollector::GCInstructionsBatch batch;
 
 	m_list.push_back(value);
-	ValueWrapper& tmp = m_list.back();
+	Value& tmp = m_list.back();
 
 	tmp.SetImplicitRef(this);
 }
 
-interpreter::ValueWrapper interpreter::ListValue::GetValueAt(int index) const
+interpreter::Value interpreter::ListValue::GetValueAt(int index) const
 {
 	if (index < 0) {
-		return ValueWrapper();
+		return Value();
 	}
 
 	if (index > m_list.size()) {
-		return ValueWrapper();
+		return Value();
 	}
 
 	return m_list[index];
 }
 
-void interpreter::ListValue::SetValueAt(int index, ValueWrapper valueWrapper)
+void interpreter::ListValue::SetValueAt(int index, Value valueWrapper)
 {
 	if (index < 0) {
 		return;
@@ -45,14 +45,14 @@ void interpreter::ListValue::SetValueAt(int index, ValueWrapper valueWrapper)
 	m_list[index].SetImplicitRef(this);
 }
 
-void interpreter::ListValue::SetProperty(std::string name, ValueWrapper value)
+void interpreter::ListValue::SetProperty(std::string name, Value value)
 {
 }
 
-interpreter::ValueWrapper interpreter::ListValue::GetProperty(std::string name) const
+interpreter::Value interpreter::ListValue::GetProperty(std::string name) const
 {
 	if (name == "length") {
-		return ValueWrapper(m_list.size());
+		return Value(m_list.size());
 	}
-	return ValueWrapper();
+	return Value();
 }

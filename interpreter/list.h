@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scriptingValue.h"
+#include "value.h"
 
 #include <vector>
 
@@ -8,13 +8,13 @@ namespace interpreter
 {
 	struct ListValue : public IManagedValue
 	{
-		std::vector<ValueWrapper> m_list;
+		std::vector<Value> m_list;
 
-		void SetProperty(std::string name, ValueWrapper value) override;
-		ValueWrapper GetProperty(std::string name) const override;
+		void SetProperty(std::string name, Value value) override;
+		Value GetProperty(std::string name) const override;
 
-		void PushValue(ValueWrapper value);
-		ValueWrapper GetValueAt(int index) const;
-		void SetValueAt(int index, ValueWrapper valueWrapper);
+		void PushValue(Value value);
+		Value GetValueAt(int index) const;
+		void SetValueAt(int index, Value valueWrapper);
 	};
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "symbol.h"
-#include <scriptingValue.h>
+#include "value.h"
 
 #include <stack>
 #include <vector>
@@ -20,14 +20,14 @@ namespace interpreter
 
 	struct Interpreter
 	{
-		ValueWrapper m_initialScope;
-		ValueWrapper m_scope;
+		Value m_initialScope;
+		Value m_scope;
 
 		InterpreterState m_state = InterpreterState::Pending;
 		std::stack<Calculator*> m_programStack;
 
 
-		Interpreter(const ValueWrapper& scope);
+		Interpreter(const Value& scope);
 		~Interpreter();
 
 		void FreeUpResources();
@@ -45,12 +45,12 @@ namespace interpreter
 
 		void HandleContinueInstruction();
 		void HandleBreakInstruction();
-		void HandleReturnInstruction(const ValueWrapper& returnValue);
+		void HandleReturnInstruction(const Value& returnValue);
 
 	private:
 		bool m_breakInstruction = false;
 		bool m_continueInstruction = false;
 		bool m_returnInstruction = false;
-		ValueWrapper m_returnValue;
+		Value m_returnValue;
 	};
 }

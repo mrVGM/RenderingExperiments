@@ -16,7 +16,7 @@ struct PrintFunc : public interpreter::IFunc
 
 	interpreter::FuncResult Execute(interpreter::Scope& scope) override
 	{
-		interpreter::ValueWrapper val = scope.GetValue(m_paramNames[0]);
+		interpreter::Value val = scope.GetValue(m_paramNames[0]);
 		m_outputStream << val.ToString() << std::endl;
 		interpreter::FuncResult res;
 		res.m_state = interpreter::FuncResult::Finished;
@@ -34,15 +34,15 @@ struct RequireFunc : public interpreter::IFunc
 		m_paramNames.push_back("path");
 	}
 
-	interpreter::ValueWrapper GetScopeTemplate() override
+	interpreter::Value GetScopeTemplate() override
 	{
 		using namespace interpreter;
 		Scope* contextScope = new Scope();
-		ValueWrapper context(*contextScope);
+		Value context(*contextScope);
 
-		contextScope->BindValue("running", ValueWrapper());
+		contextScope->BindValue("running", Value());
 
-		interpreter::ValueWrapper argsScope = GetArgsTemplateScope();
+		interpreter::Value argsScope = GetArgsTemplateScope();
 
 		Scope* args = static_cast<Scope*>(argsScope.GetManagedValue());
 		args->SetParentScope(context);
@@ -54,9 +54,9 @@ struct RequireFunc : public interpreter::IFunc
 	{
 		using namespace interpreter;
 
-		ValueWrapper running = scope.GetProperty("running");
+		Value running = scope.GetProperty("running");
 		if (running.IsNone()) {
-			ValueWrapper path = scope.GetProperty("path");
+			Value path = scope.GetProperty("path");
 			if (path.GetType() != ScriptingValueType::String) {
 				FuncResult res;
 				res.m_state = FuncResult::Failed;
@@ -73,10 +73,10 @@ struct RequireFunc : public interpreter::IFunc
 			}
 
 			Scope* tmp = new Scope();
-			ValueWrapper runningScope(*tmp);
+			Value runningScope(*tmp);
 
 			ObjectValue* obj = new ObjectValue();
-			ValueWrapper objValue(*obj);
+			Value objValue(*obj);
 
 			tmp->BindValue("export", objValue);
 			tmp->SetParentScope(m_session.m_motherScope);
@@ -88,8 +88,8 @@ struct RequireFunc : public interpreter::IFunc
 			return FuncResult();
 		}
 
-		ValueWrapper runningScope = scope.GetProperty("running");
-		ValueWrapper exports = runningScope.GetProperty("export");
+		Value runningScope = scope.GetProperty("running");
+		Value exports = runningScope.GetProperty("export");
 
 		FuncResult res;
 		res.m_state = FuncResult::Finished;
@@ -128,7 +128,7 @@ void interpreter::Session::RunFile(std::string name)
 
 	if (parsed) {
 		Scope* tmp = new Scope();
-		ValueWrapper scope(*tmp);
+		Value scope(*tmp);
 		tmp->SetParentScope(m_motherScope);
 
 		m_intepreterStack.push(Interpreter(scope));
@@ -154,14 +154,14 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	m_outputStream(outputStream)
 {
 	Scope* sc = new Scope();
-	m_motherScope = ValueWrapper(*sc);
+	m_motherScope = Value(*sc);
 
 	PrintFunc* pf = new PrintFunc(m_outputStream);
-	ValueWrapper print(*pf);
+	Value print(*pf);
 	sc->BindValue("print", print);
 
 	RequireFunc* rf = new RequireFunc(*this);
-	ValueWrapper require(*rf);
+	Value require(*rf);
 	sc->BindValue("require", require);
 }
 

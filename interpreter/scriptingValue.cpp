@@ -1,25 +1,25 @@
-#include "scriptingValue.h"
+#include "value.h"
 #include "garbageCollector.h"
 
 #include <sstream>
 
-interpreter::ValueWrapper::ValueWrapper()
+interpreter::Value::Value()
 {
 }
 
-interpreter::ValueWrapper::ValueWrapper(double num)
+interpreter::Value::Value(double num)
 {
 	m_type = ScriptingValueType::Number;
 	m_number = num;
 }
 
-interpreter::ValueWrapper::ValueWrapper(std::string str)
+interpreter::Value::Value(std::string str)
 {
 	m_type = ScriptingValueType::String;
 	m_string = str;
 }
 
-void interpreter::ValueWrapper::Copy(const ValueWrapper& other)
+void interpreter::Value::Copy(const Value& other)
 {
 	m_type = other.m_type;
 
@@ -28,12 +28,12 @@ void interpreter::ValueWrapper::Copy(const ValueWrapper& other)
 	m_string = other.m_string;
 }
 
-interpreter::ValueWrapper::ValueWrapper(IManagedValue& value) :
-	ValueWrapper(value, ScriptingValueType::Object)
+interpreter::Value::Value(IManagedValue& value) :
+	Value(value, ScriptingValueType::Object)
 {
 }
 
-interpreter::ValueWrapper::ValueWrapper(IManagedValue& value, ScriptingValueType managedValueType)
+interpreter::Value::Value(IManagedValue& value, ScriptingValueType managedValueType)
 {
 	m_type = managedValueType;
 	m_value = &value;
@@ -41,7 +41,7 @@ interpreter::ValueWrapper::ValueWrapper(IManagedValue& value, ScriptingValueType
 	GarbageCollector::GetInstance().AddExplicitRef(&value);
 }
 
-interpreter::ValueWrapper::ValueWrapper(const ValueWrapper& other)
+interpreter::Value::Value(const Value& other)
 {
 	Copy(other);
 	if (IsManaged()) {
@@ -49,7 +49,7 @@ interpreter::ValueWrapper::ValueWrapper(const ValueWrapper& other)
 	}
 }
 
-interpreter::ValueWrapper& interpreter::ValueWrapper::operator=(const ValueWrapper& other)
+interpreter::Value& interpreter::Value::operator=(const Value& other)
 {
 	volatile GarbageCollector::GCInstructionsBatch batch;
 	if (IsManaged()) {
@@ -69,7 +69,7 @@ interpreter::ValueWrapper& interpreter::ValueWrapper::operator=(const ValueWrapp
 	return *this;
 }
 
-interpreter::ValueWrapper::~ValueWrapper()
+interpreter::Value::~Value()
 {
 	if (!IsManaged()) {
 		return;
@@ -84,7 +84,7 @@ interpreter::ValueWrapper::~ValueWrapper()
 	}
 }
 
-bool interpreter::ValueWrapper::Equals(const ValueWrapper& other) const
+bool interpreter::Value::Equals(const Value& other) const
 {
 	if (m_type != other.m_type) {
 		return false;
@@ -104,7 +104,7 @@ bool interpreter::ValueWrapper::Equals(const ValueWrapper& other) const
 	return false;
 }
 
-bool interpreter::ValueWrapper::IsTrue() const
+bool interpreter::Value::IsTrue() const
 {
 	if (GetType() == ScriptingValueType::Number) {
 		return GetNum();
@@ -112,53 +112,53 @@ bool interpreter::ValueWrapper::IsTrue() const
 	return false;
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Plus(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Plus(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() + v2.GetNum());
+		return Value(v1.GetNum() + v2.GetNum());
 	}
 
 	if (v1.GetType() == ScriptingValueType::String && v2.GetType() == ScriptingValueType::String) {
-		return ValueWrapper(v1.GetString() + v2.GetString());
+		return Value(v1.GetString() + v2.GetString());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Minus(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Minus(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() - v2.GetNum());
+		return Value(v1.GetNum() - v2.GetNum());
 	}
 
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Multiply(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Multiply(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() * v2.GetNum());
+		return Value(v1.GetNum() * v2.GetNum());
 	}
 
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Divide(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Divide(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
 		if (v2.GetNum() == 0.0) {
-			return ValueWrapper();
+			return Value();
 		}
-		return ValueWrapper(v1.GetNum() / v2.GetNum());
+		return Value(v1.GetNum() / v2.GetNum());
 	}
 
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Quotient(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Quotient(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
 		if (v2.GetNum() == 0.0) {
-			return ValueWrapper();
+			return Value();
 		}
 
 		double a = v1.GetNum();
@@ -172,89 +172,89 @@ interpreter::ValueWrapper interpreter::ValueWrapper::Quotient(const ValueWrapper
 			a += b;
 		}
 
-		return ValueWrapper(a - b);
+		return Value(a - b);
 	}
 
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Negate(const ValueWrapper& v1)
+interpreter::Value interpreter::Value::Negate(const Value& v1)
 {
 	if (v1.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(-v1.GetNum());
+		return Value(-v1.GetNum());
 	}
 
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Equal(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Equal(const Value& v1, const Value& v2)
 {
 	if (v1.Equals(v2)) {
-		return ValueWrapper(1);
+		return Value(1);
 	}
 	else {
-		return ValueWrapper(0);
+		return Value(0);
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Less(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Less(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() < v2.GetNum());
+		return Value(v1.GetNum() < v2.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::LessOrEqual(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::LessOrEqual(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() <= v2.GetNum());
+		return Value(v1.GetNum() <= v2.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Greater(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Greater(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() > v2.GetNum());
+		return Value(v1.GetNum() > v2.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::GreaterOrEqual(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::GreaterOrEqual(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() >= v2.GetNum());
+		return Value(v1.GetNum() >= v2.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::And(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::And(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() && v2.GetNum());
+		return Value(v1.GetNum() && v2.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Or(const ValueWrapper& v1, const ValueWrapper& v2)
+interpreter::Value interpreter::Value::Or(const Value& v1, const Value& v2)
 {
 	if (v1.GetType() == ScriptingValueType::Number && v2.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(v1.GetNum() || v2.GetNum());
+		return Value(v1.GetNum() || v2.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::Not(const ValueWrapper& v1)
+interpreter::Value interpreter::Value::Not(const Value& v1)
 {
 	if (v1.GetType() == ScriptingValueType::Number) {
-		return ValueWrapper(!v1.GetNum());
+		return Value(!v1.GetNum());
 	}
-	return ValueWrapper();
+	return Value();
 }
 
-std::string interpreter::ValueWrapper::ToString() const
+std::string interpreter::Value::ToString() const
 {
 	std::stringstream ss;
 
@@ -276,17 +276,17 @@ std::string interpreter::ValueWrapper::ToString() const
 	return ss.str();
 }
 
-bool interpreter::ValueWrapper::IsManaged() const
+bool interpreter::Value::IsManaged() const
 {
 	return GetType() == ScriptingValueType::Object;
 }
 
-bool interpreter::ValueWrapper::IsNone() const
+bool interpreter::Value::IsNone() const
 {
 	return GetType() == ScriptingValueType::None;
 }
 
-void interpreter::ValueWrapper::SetImplicitRef(IManagedValue* implicitRef)
+void interpreter::Value::SetImplicitRef(IManagedValue* implicitRef)
 {
 	if (!IsManaged()) {
 		return;
@@ -296,32 +296,32 @@ void interpreter::ValueWrapper::SetImplicitRef(IManagedValue* implicitRef)
 	GarbageCollector::GetInstance().RemoveExplicitRef(m_value);
 }
 
-double interpreter::ValueWrapper::GetNum() const
+double interpreter::Value::GetNum() const
 {
 	return m_number;
 }
 
-std::string interpreter::ValueWrapper::GetString() const
+std::string interpreter::Value::GetString() const
 {
 	return m_string;
 }
 
-interpreter::IManagedValue* interpreter::ValueWrapper::GetManagedValue() const
+interpreter::IManagedValue* interpreter::Value::GetManagedValue() const
 {
 	return m_value;
 }
 
-interpreter::ScriptingValueType interpreter::ValueWrapper::GetType() const
+interpreter::ScriptingValueType interpreter::Value::GetType() const
 {
 	return m_type;
 }
 
-void interpreter::ValueWrapper::SetProperty(std::string name, ValueWrapper value)
+void interpreter::Value::SetProperty(std::string name, Value value)
 {
 	m_value->SetProperty(name, value);
 }
 
-interpreter::ValueWrapper interpreter::ValueWrapper::GetProperty(std::string name)
+interpreter::Value interpreter::Value::GetProperty(std::string name)
 {
 	return m_value->GetProperty(name);
 }

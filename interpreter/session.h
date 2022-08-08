@@ -21,7 +21,7 @@ namespace interpreter
 		scripting::Parser& m_parser;
 		std::ostream& m_outputStream;
 
-		ValueWrapper m_motherScope;
+		Value m_motherScope;
 		std::stack<interpreter::Interpreter> m_intepreterStack;
 
 		std::map<std::string, scripting::CodeSource*> m_loadedCodeFiles;

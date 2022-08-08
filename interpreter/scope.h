@@ -3,24 +3,24 @@
 #include <string>
 #include <map>
 
-#include "scriptingValue.h"
+#include "value.h"
 
 namespace interpreter
 {
-	class ValueWrapper;
+	class Value;
 
 	struct Scope : public IManagedValue
 	{
-		ValueWrapper m_parent;
+		Value m_parent;
 
-		std::map<std::string, ValueWrapper> m_namedValues;
+		std::map<std::string, Value> m_namedValues;
 
-		void BindValue(std::string name, const ValueWrapper& value);
-		ValueWrapper GetValue(std::string name);
+		void BindValue(std::string name, const Value& value);
+		Value GetValue(std::string name);
 
-		void SetProperty(std::string name, ValueWrapper value) override;
-		ValueWrapper GetProperty(std::string name) const override;
+		void SetProperty(std::string name, Value value) override;
+		Value GetProperty(std::string name) const override;
 
-		void SetParentScope(ValueWrapper parentScope);
+		void SetParentScope(Value parentScope);
 	};
 }

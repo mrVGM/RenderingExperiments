@@ -4,11 +4,11 @@
 #include "calculator.h"
 #include "scope.h"
 #include "IFunc.h"
-#include "scriptingValue.h"
+#include "value.h"
 
 #include <iostream>
 
-interpreter::Interpreter::Interpreter(const ValueWrapper& scope) :
+interpreter::Interpreter::Interpreter(const Value& scope) :
 	m_initialScope(scope)
 {
 }
@@ -31,8 +31,8 @@ void interpreter::Interpreter::FreeUpResources()
 		delete top;
 	}
 
-	m_returnValue = ValueWrapper();
-	m_scope = ValueWrapper();
+	m_returnValue = Value();
+	m_scope = Value();
 }
 
 interpreter::Scope& interpreter::Interpreter::GetCurrentScope()
@@ -118,7 +118,7 @@ void interpreter::Interpreter::CalcutateStep()
 		if (funcCallCalc) {
 			funcCallCalc->m_returnInstruction = true;
 			top->m_calculation.m_value = m_returnValue;
-			m_returnValue = ValueWrapper();
+			m_returnValue = Value();
 			m_returnInstruction = false;
 			return;
 		}
@@ -163,7 +163,7 @@ void interpreter::Interpreter::HandleBreakInstruction()
 	m_breakInstruction = true;
 }
 
-void interpreter::Interpreter::HandleReturnInstruction(const ValueWrapper& returnValue)
+void interpreter::Interpreter::HandleReturnInstruction(const Value& returnValue)
 {
 	m_returnInstruction = true;
 	m_returnValue = returnValue;
@@ -172,7 +172,7 @@ void interpreter::Interpreter::HandleReturnInstruction(const ValueWrapper& retur
 void interpreter::Interpreter::PushScope()
 {
 	Scope* newScope = new Scope();
-	ValueWrapper newScopeWrapped(*newScope);
+	Value newScopeWrapped(*newScope);
 	newScope->SetParentScope(m_scope);
 
 	m_scope = newScopeWrapped;

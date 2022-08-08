@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scriptingValue.h"
+#include "value.h"
 
 #include <map>
 #include <string>
@@ -9,9 +9,9 @@ namespace interpreter
 {
 	struct ObjectValue : public IManagedValue
 	{
-		std::map <std::string, ValueWrapper> m_properties;
+		std::map <std::string, Value> m_properties;
 
-		void SetProperty(std::string name, ValueWrapper value) override;
-		ValueWrapper GetProperty(std::string name) const override;
+		void SetProperty(std::string name, Value value) override;
+		Value GetProperty(std::string name) const override;
 	};
 }
