@@ -5,10 +5,10 @@ cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
 add_library (Interpreter
-	"include/value.h"
-	"scriptingValue.cpp"
-	"garbageCollector.h"
-	"garbageCollector.cpp"
+	"../gc/include/value.h"
+	"../gc/value.cpp"
+	"../gc/garbageCollector.h"
+	"../gc/garbageCollector.cpp"
 	"scope.h"
 	"scope.cpp"
 	"calculator.h"
@@ -34,6 +34,7 @@ target_include_directories(Interpreter PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inclu
 target_include_directories(Interpreter PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(Interpreter PUBLIC Parser)
+target_link_libraries(Interpreter PUBLIC GC)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Interpreter PROPERTY CXX_STANDARD 20)
