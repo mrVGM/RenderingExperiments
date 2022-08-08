@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.8)
 project ("D3D12_Tests")
 
 # Include sub-projects.
-add_subdirectory ("scripting")
+add_subdirectory ("main")
 add_subdirectory ("dataLib")
 add_subdirectory ("parser")
 add_subdirectory ("interpreter")

@@ -7,6 +7,7 @@
 #include "window.h"
 
 #include <thread>
+#include <semaphore>
 
 void run()
 {
