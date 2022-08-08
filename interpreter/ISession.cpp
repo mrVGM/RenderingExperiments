@@ -6,6 +6,14 @@
 #include "grammar.h"
 
 #include <string>
+#include <thread>
+#include <mutex>
+
+
+struct ISessionImpl : public interpreter::ISession
+{
+	void RunFile(std::string name) override;
+};
 
 namespace _sessionData
 {
@@ -14,12 +22,37 @@ namespace _sessionData
 	scripting::ParserTable* m_parserTable = nullptr;
 	scripting::Parser* m_parser = nullptr;
 	interpreter::Session* m_session = nullptr;
+
+	bool m_running = false;
+	std::mutex m_mutex;
+	std::thread* m_thread = nullptr;
+
+	ISessionImpl m_impl;
+
+	void RunSessionThread()
+	{
+		m_running = true;
+		while (m_running) {
+			m_mutex.lock();
+			m_session->CalculationStep();
+			m_mutex.unlock();
+		}
+	}
+}
+
+void ISessionImpl::RunFile(std::string name)
+{
+	_sessionData::m_mutex.lock();
+
+	_sessionData::m_session->RunFile(name);
+
+	_sessionData::m_mutex.unlock();
 }
 
 interpreter::ISession& interpreter::GetSession(std::string scriptsDir, std::ostream& outputStream)
 {
 	if (_sessionData::m_session) {
-		return *_sessionData::m_session;
+		return _sessionData::m_impl;
 	}
 
 	_sessionData::m_scriptsDir = scriptsDir;
@@ -36,11 +69,21 @@ interpreter::ISession& interpreter::GetSession(std::string scriptsDir, std::ostr
 	_sessionData::m_parser = new scripting::Parser(*_sessionData::m_grammar, *_sessionData::m_parserTable);
 
 	_sessionData::m_session = new Session(_sessionData::m_scriptsDir, *_sessionData::m_parser, outputStream);
-	return *_sessionData::m_session;
+
+	_sessionData::m_thread = new std::thread(_sessionData::RunSessionThread);
+
+	return _sessionData::m_impl;
 }
 
 void interpreter::CloseSession()
 {
+	_sessionData::m_running = false;
+	if (_sessionData::m_thread) {
+		_sessionData::m_thread->join();
+		delete _sessionData::m_thread;
+	}
+	_sessionData::m_thread = nullptr;
+
 	if (_sessionData::m_grammar) {
 		delete _sessionData::m_grammar;
 	}

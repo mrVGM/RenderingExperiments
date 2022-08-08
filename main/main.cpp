@@ -29,7 +29,7 @@ void run()
 
 int main()
 {
-	std::thread t(run);
+	//std::thread t(run);
 
 	std::filesystem::path dataPath = std::filesystem::current_path().append("..\\..\\..\\..\\data\\");
 	data::Init(dataPath.string().c_str());
@@ -38,8 +38,9 @@ int main()
 
 	interpreter::ISession& session = interpreter::GetSession(scriptsDir.string(), std::cout);
 	session.RunFile("test_code.txt");
-	interpreter::CloseSession();
 
+	std::cin.get();
+	interpreter::CloseSession();
 	std::cin.get();
 
 	return 0;

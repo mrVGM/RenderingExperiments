@@ -134,17 +134,20 @@ void interpreter::Session::RunFile(std::string name)
 		m_intepreterStack.push(Interpreter(scope));
 		interpreter::Interpreter& interpreter = m_intepreterStack.top();
 		interpreter.PrepareCalculation(parsed);
+	}
+}
 
+void interpreter::Session::CalculationStep()
+{
+	if (m_intepreterStack.empty()) {
+		return;
+	}
 
+	interpreter::Interpreter& top = m_intepreterStack.top();
+	top.CalcutateStep();
 
-		while (!m_intepreterStack.empty()) {
-			interpreter::Interpreter& top = m_intepreterStack.top();
-			top.CalcutateStep();
-
-			if (top.m_state != InterpreterState::Pending) {
-				m_intepreterStack.pop();
-			}
-		}
+	if (top.m_state != InterpreterState::Pending) {
+		m_intepreterStack.pop();
 	}
 }
 

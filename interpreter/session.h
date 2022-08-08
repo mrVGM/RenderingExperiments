@@ -15,7 +15,7 @@
 
 namespace interpreter
 {
-	struct Session : public ISession
+	struct Session
 	{
 		std::string m_rootDir;
 		scripting::Parser& m_parser;
@@ -27,7 +27,8 @@ namespace interpreter
 		std::map<std::string, scripting::CodeSource*> m_loadedCodeFiles;
 		scripting::CodeSource& GetCode(std::string path);
 
-		void RunFile(std::string name) override;
+		void RunFile(std::string name);
+		void CalculationStep();
 
 		Session(std::string rootDir, scripting::Parser& parser, std::ostream& outputStream);
 		~Session();
