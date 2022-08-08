@@ -36,7 +36,7 @@ int main()
 
 	std::filesystem::path scriptsDir = dataPath.append("misc\\");
 
-	interpreter::ISession& session = interpreter::OpenSession(scriptsDir.string(), std::cout);
+	interpreter::ISession& session = interpreter::GetSession(scriptsDir.string(), std::cout);
 	session.RunFile("test_code.txt");
 	interpreter::CloseSession();
 

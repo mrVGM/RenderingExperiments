@@ -16,7 +16,7 @@ namespace _sessionData
 	interpreter::Session* m_session = nullptr;
 }
 
-interpreter::ISession& interpreter::OpenSession(std::string scriptsDir, std::ostream& outputStream)
+interpreter::ISession& interpreter::GetSession(std::string scriptsDir, std::ostream& outputStream)
 {
 	if (_sessionData::m_session) {
 		return *_sessionData::m_session;

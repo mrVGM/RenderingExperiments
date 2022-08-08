@@ -10,6 +10,6 @@ namespace interpreter
 		virtual void RunFile(std::string name) = 0;
 	};
 
-	ISession& OpenSession(std::string scriptsDir, std::ostream& outputStream);
+	ISession& GetSession(std::string scriptsDir, std::ostream& outputStream);
 	void CloseSession();
 }
