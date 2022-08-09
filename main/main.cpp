@@ -1,11 +1,13 @@
 ﻿#include "dataLib.h"
 #include "ISession.h"
 
+#include "window.h"
+#include "nativeFunc.h"
+
+#include "garbageCollector.h"
+
 #include <filesystem>
 #include <iostream>
-
-#include "window.h"
-
 #include <thread>
 #include <semaphore>
 
@@ -37,6 +39,13 @@ int main()
 	std::filesystem::path scriptsDir = dataPath.append("misc\\");
 
 	interpreter::ISession& session = interpreter::GetSession(scriptsDir.string(), std::cout);
+
+	session.AddGlobalValue("window", interpreter::CreateNativeFunc(0, [](interpreter::Value scope) {
+		volatile interpreter::GarbageCollector::GCInstructionsBatch batch;
+		rendering::Window* window = new rendering::Window();
+		return interpreter::Value(*window);
+	}));
+
 	session.RunFile("test_code.txt");
 
 	std::cin.get();

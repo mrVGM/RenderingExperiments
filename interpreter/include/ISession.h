@@ -10,9 +10,9 @@ namespace interpreter
 	struct ISession
 	{
 		virtual void RunFile(std::string name) = 0;
+		void AddGlobalValue(std::string name, const Value& value);
 	};
 
 	ISession& GetSession(std::string scriptsDir, std::ostream& outputStream);
-	void AddGlobalValue(std::string name, const Value& value);
 	void CloseSession();
 }

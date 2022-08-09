@@ -103,7 +103,7 @@ void interpreter::CloseSession()
 	_sessionData::m_session = nullptr;
 }
 
-void interpreter::AddGlobalValue(std::string name, const Value& value)
+void interpreter::ISession::AddGlobalValue(std::string name, const Value& value)
 {
 	_sessionData::m_mutex.lock();
 	

@@ -1,5 +1,7 @@
 #include "window.h"
 
+#include "nativeFunc.h"
+
 namespace _windowData
 {
 	static bool m_classRegistered = false;
@@ -79,7 +81,17 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 rendering::Window::Window()
 {
 	RegisterWindowClass();
-	Create();
+
+	RegisterProperty("create", &m_create);
+
+	interpreter::Value create = interpreter::CreateNativeMethod(*this, 0, [](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		Window* wnd = static_cast<Window*>(self.GetManagedValue());
+		wnd->Create();
+		return interpreter::Value();
+	});
+
+	SetProperty("create", create);
 }
 
 rendering::Window::~Window()

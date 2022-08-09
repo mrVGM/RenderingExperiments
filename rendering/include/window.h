@@ -1,8 +1,12 @@
+#include "renderObject.h"
+#include "value.h"
+
 #include <Windows.h>
+
 
 namespace rendering
 {
-	class Window
+	class Window : public RenderObject
 	{
 		void RegisterWindowClass();
 		void Create();
@@ -14,5 +18,7 @@ namespace rendering
 	public:
 		Window();
 		~Window();
+
+		interpreter::Value m_create;
 	};
 }

@@ -7,7 +7,7 @@ cmake_minimum_required (VERSION 3.8)
 add_library (GC
 	"include/value.h"
 	"value.cpp"
-	"garbageCollector.h"
+	"include/garbageCollector.h"
 	"garbageCollector.cpp"
 	"include/nativeFunc.h"
 	"nativeFunc.cpp"

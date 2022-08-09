@@ -7,11 +7,15 @@ cmake_minimum_required (VERSION 3.8)
 add_library (Rendering
 	"include/window.h"
 	"window.cpp"
+	"renderObject.h"
+	"renderObject.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+target_link_libraries(Rendering PUBLIC GC)
 
 add_definitions(-D_AFXDLL)
 set(CMAKE_MFC_FLAG 1)

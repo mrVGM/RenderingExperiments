@@ -8,6 +8,7 @@ add_executable (MainApp "main.cpp")
 
 target_link_libraries(MainApp PUBLIC Interpreter)
 target_link_libraries(MainApp PUBLIC Rendering)
+target_link_libraries(MainApp PUBLIC GC)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MainApp PROPERTY CXX_STANDARD 20)
