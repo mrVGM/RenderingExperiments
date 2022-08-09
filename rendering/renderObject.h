@@ -15,5 +15,6 @@ namespace rendering
 		void SetProperty(std::string name, interpreter::Value value) override;
 		interpreter::Value GetProperty(std::string name) const override;
 
+		virtual ~RenderObject();
 	};
 }

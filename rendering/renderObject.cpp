@@ -31,3 +31,7 @@ interpreter::Value rendering::RenderObject::GetProperty(std::string name) const
 	return *(it->second);
 }
 
+rendering::RenderObject::~RenderObject()
+{
+}
+

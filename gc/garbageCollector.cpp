@@ -146,3 +146,7 @@ interpreter::GarbageCollector::GCInstructionsBatch::~GCInstructionsBatch()
 	--GetInstance().m_instructionsBatches;
 	GetInstance().CollectGarbage();
 }
+
+interpreter::IManagedValue::~IManagedValue()
+{
+}
