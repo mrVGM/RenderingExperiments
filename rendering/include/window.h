@@ -9,7 +9,7 @@ namespace rendering
 	class Window : public RenderObject
 	{
 		void RegisterWindowClass();
-		void Create();
+		void Create(int width, int height);
 
 		HWND m_hwnd;
 

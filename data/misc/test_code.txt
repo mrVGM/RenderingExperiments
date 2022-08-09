@@ -2,4 +2,4 @@ let x = require("lib.txt");
 print(x);
 
 let wnd = window();
-wnd.create();
+wnd.create(600, 400);

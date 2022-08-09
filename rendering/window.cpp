@@ -84,10 +84,12 @@ rendering::Window::Window()
 
 	RegisterProperty("create", &m_create);
 
-	interpreter::Value create = interpreter::CreateNativeMethod(*this, 0, [](interpreter::Value scope) {
+	interpreter::Value create = interpreter::CreateNativeMethod(*this, 2, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
 		Window* wnd = static_cast<Window*>(self.GetManagedValue());
-		wnd->Create();
+		interpreter::Value width = scope.GetProperty("param0");
+		interpreter::Value height = scope.GetProperty("param1");
+		wnd->Create(width.GetNum(), height.GetNum());
 		return interpreter::Value();
 	});
 
@@ -102,7 +104,7 @@ rendering::Window::~Window()
 	}
 }
 
-void rendering::Window::Create()
+void rendering::Window::Create(int width, int height)
 {
 	DWORD dwStyle = WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
 	DWORD dxExStyle = 0;
@@ -110,8 +112,8 @@ void rendering::Window::Create()
 	RECT windowRect;
 	windowRect.left = 50;
 	windowRect.top = 50;
-	windowRect.right = windowRect.left + 1600;
-	windowRect.bottom = windowRect.top + 900;
+	windowRect.right = windowRect.left + width;
+	windowRect.bottom = windowRect.top + height;
 
 	AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
