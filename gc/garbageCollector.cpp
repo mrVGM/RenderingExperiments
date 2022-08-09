@@ -48,9 +48,15 @@ interpreter::GarbageCollector::ManagedValue& interpreter::GarbageCollector::Find
 
 void interpreter::GarbageCollector::CollectGarbage()
 {
+	if (m_collectingGarbage) {
+		return;
+	}
+
 	if (m_instructionsBatches > 0) {
 		return;
 	}
+
+	m_collectingGarbage = true;
 
 	std::queue<ManagedValue*> q;
 
@@ -80,16 +86,23 @@ void interpreter::GarbageCollector::CollectGarbage()
 	}
 
 	std::vector<ManagedValue*> alive;
+	std::vector<ManagedValue*> dead;
 	for (int i = 0; i < m_allValues.size(); ++i) {
 		if (m_allValues[i]->m_visited) {
 			alive.push_back(m_allValues[i]);
 		}
 		else {
-			delete m_allValues[i];
+			dead.push_back(m_allValues[i]);
 		}
 	}
 
 	m_allValues = alive;
+
+	for (int i = 0; i < dead.size(); ++i) {
+		delete dead[i];
+	}
+
+	m_collectingGarbage = false;
 }
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)

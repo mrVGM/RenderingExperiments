@@ -37,7 +37,6 @@ namespace interpreter
 		Value(std::string str);
 
 		Value(IManagedValue& value);
-		Value(IManagedValue& value, ScriptingValueType managedValueType);
 		Value(const Value& other);
 		Value& operator=(const Value& other);
 		~Value();

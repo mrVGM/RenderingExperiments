@@ -28,14 +28,9 @@ void interpreter::Value::Copy(const Value& other)
 	m_string = other.m_string;
 }
 
-interpreter::Value::Value(IManagedValue& value) :
-	Value(value, ScriptingValueType::Object)
+interpreter::Value::Value(IManagedValue& value)
 {
-}
-
-interpreter::Value::Value(IManagedValue& value, ScriptingValueType managedValueType)
-{
-	m_type = managedValueType;
+	m_type = ScriptingValueType::Object;
 	m_value = &value;
 
 	GarbageCollector::GetInstance().AddExplicitRef(&value);
@@ -54,11 +49,14 @@ interpreter::Value& interpreter::Value::operator=(const Value& other)
 	volatile GarbageCollector::GCInstructionsBatch batch;
 	if (IsManaged()) {
 		if (m_explicitRef) {
+			m_explicitRef = false;
 			GarbageCollector::GetInstance().RemoveExplicitRef(m_value);
 		}
 
 		if (m_implicitRef) {
-			GarbageCollector::GetInstance().RemoveImplicitRef(m_value, m_implicitRef);
+			IManagedValue* ref = m_implicitRef;
+			m_implicitRef = nullptr;
+			GarbageCollector::GetInstance().RemoveImplicitRef(m_value, ref);
 		}
 	}
 
@@ -76,11 +74,14 @@ interpreter::Value::~Value()
 	}
 
 	if (m_explicitRef) {
+		m_explicitRef = false;
 		GarbageCollector::GetInstance().RemoveExplicitRef(m_value);
 	}
-	
+
 	if (m_implicitRef) {
-		GarbageCollector::GetInstance().RemoveImplicitRef(m_value, m_implicitRef);
+		IManagedValue* ref = m_implicitRef;
+		m_implicitRef = nullptr;
+		GarbageCollector::GetInstance().RemoveImplicitRef(m_value, ref);
 	}
 }
 

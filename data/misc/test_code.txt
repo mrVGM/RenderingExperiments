@@ -3,3 +3,5 @@ print(x);
 
 let wnd = window();
 wnd.create(600, 400);
+
+wnd = none;

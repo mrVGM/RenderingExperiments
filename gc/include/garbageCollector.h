@@ -29,6 +29,8 @@ namespace interpreter
 		void CollectGarbage();
 
 		int m_instructionsBatches = 0;
+		bool m_collectingGarbage = false;
+
 	public:
 
 		struct GCInstructionsBatch
