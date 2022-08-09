@@ -102,3 +102,14 @@ void interpreter::CloseSession()
 	_sessionData::m_parser = nullptr;
 	_sessionData::m_session = nullptr;
 }
+
+void interpreter::AddGlobalValue(std::string name, const Value& value)
+{
+	_sessionData::m_mutex.lock();
+	
+	Value motherScope = _sessionData::m_session->m_motherScope;
+	Scope* scope = static_cast<Scope*>(motherScope.GetManagedValue());
+	scope->BindValue(name, value);
+
+	_sessionData::m_mutex.unlock();
+}
