@@ -20,7 +20,9 @@ namespace interpreter
 
 	class Value
 	{
+		IManagedValue* m_outerObject = nullptr;
 		IManagedValue* m_value = nullptr;
+
 		double m_number = 0.0;
 		std::string m_string;
 
@@ -30,7 +32,6 @@ namespace interpreter
 		void Copy(const Value& other);
 
 		bool m_explicitRef = true;
-		IManagedValue* m_implicitRef = nullptr;
 	public:
 		Value();
 		Value(double num);
@@ -46,7 +47,7 @@ namespace interpreter
 		bool IsManaged() const;
 		bool IsNone() const;
 
-		void SetImplicitRef(IManagedValue* implicitRef);
+		void SetImplicitRef(IManagedValue& outerObject);
 
 		double GetNum() const;
 		std::string GetString() const;

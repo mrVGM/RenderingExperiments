@@ -22,5 +22,7 @@ namespace interpreter
 		Value GetProperty(std::string name) const override;
 
 		void SetParentScope(Value parentScope);
+
+		Scope();
 	};
 }

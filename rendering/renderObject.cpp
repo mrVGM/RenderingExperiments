@@ -4,6 +4,7 @@
 void rendering::RenderObject::RegisterProperty(std::string name, interpreter::Value* value)
 {
 	m_props[name] = value;
+	value->SetImplicitRef(*this);
 }
 
 void rendering::RenderObject::SetProperty(std::string name, interpreter::Value value)
@@ -13,11 +14,8 @@ void rendering::RenderObject::SetProperty(std::string name, interpreter::Value v
 		return;
 	}
 
-	volatile interpreter::GarbageCollector::GCInstructionsBatch batch;
-
 	interpreter::Value& val = *(it->second);
 	val = value;
-	val.SetImplicitRef(this);
 }
 
 

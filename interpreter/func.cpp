@@ -9,13 +9,12 @@
 interpreter::Func::Func(const scripting::ISymbol& body) :
 	m_body(body)
 {
+	m_funcDefScope.SetImplicitRef(*this);
 }
 
 void interpreter::Func::InitFuncDefScope(const Value& funcDefScope)
 {
-	volatile GarbageCollector::GCInstructionsBatch batch;
 	m_funcDefScope = funcDefScope;
-	m_funcDefScope.SetImplicitRef(this);
 }
 
 interpreter::Value interpreter::Func::GetScopeTemplate()

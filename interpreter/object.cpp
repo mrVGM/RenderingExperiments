@@ -6,10 +6,15 @@ void interpreter::ObjectValue::SetProperty(std::string name, Value value)
 {
 	volatile GarbageCollector::GCInstructionsBatch batch;
 
-	m_properties[name] = value;
-	Value& tmp = m_properties[name];
+	std::map<std::string, interpreter::Value>::iterator it = m_properties.find(name);
+	if (it != m_properties.end()) {
+		m_properties[name] = value;
+		return;
+	}
 
-	tmp.SetImplicitRef(this);
+	m_properties[name] = Value();
+	m_properties[name].SetImplicitRef(*this);
+	m_properties[name] = value;
 }
 
 interpreter::Value interpreter::ObjectValue::GetProperty(std::string name) const

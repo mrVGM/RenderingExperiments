@@ -22,9 +22,8 @@ struct NativeFunc : public interpreter::IFunc
 			m_paramNames.push_back(ss.str());
 		}
 
-		volatile interpreter::GarbageCollector::GCInstructionsBatch batch;
+		m_obj.SetImplicitRef(*this);
 		m_obj = object;
-		m_obj.SetImplicitRef(this);
 	}
 
 	interpreter::Value GetScopeTemplate() override

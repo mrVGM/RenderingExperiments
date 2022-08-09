@@ -4,17 +4,11 @@
 
 void interpreter::ListValue::PushValue(Value value)
 {
-	if (!value.IsManaged()) {
-		m_list.push_back(value);
-		return;
-	}
+	m_list.push_back(Value());
+	Value& val = m_list.back();
 
-	volatile GarbageCollector::GCInstructionsBatch batch;
-
-	m_list.push_back(value);
-	Value& tmp = m_list.back();
-
-	tmp.SetImplicitRef(this);
+	val.SetImplicitRef(*this);
+	val = value;
 }
 
 interpreter::Value interpreter::ListValue::GetValueAt(int index) const
@@ -40,9 +34,7 @@ void interpreter::ListValue::SetValueAt(int index, Value valueWrapper)
 		return;
 	}
 
-	volatile GarbageCollector::GCInstructionsBatch batch;
 	m_list[index] = valueWrapper;
-	m_list[index].SetImplicitRef(this);
 }
 
 void interpreter::ListValue::SetProperty(std::string name, Value value)

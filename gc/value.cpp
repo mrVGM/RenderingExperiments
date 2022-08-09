@@ -21,9 +21,33 @@ interpreter::Value::Value(std::string str)
 
 void interpreter::Value::Copy(const Value& other)
 {
-	m_type = other.m_type;
+	volatile GarbageCollector::GCInstructionsBatch batch;
+	GarbageCollector& gc = GarbageCollector::GetInstance();
+	
+	if (m_type == ScriptingValueType::Object) {
+		if (other.m_type == ScriptingValueType::Object && m_value == other.m_value) {
+			return;
+		}
 
-	m_value = other.m_value;
+		if (m_explicitRef) {
+			gc.RemoveExplicitRef(m_value);
+		}
+		if (m_outerObject) {
+			gc.RemoveImplicitRef(m_value, m_outerObject);
+		}
+	}
+
+	if (other.m_type == ScriptingValueType::Object) {
+		m_value = other.m_value;
+		if (m_explicitRef) {
+			gc.AddExplicitRef(m_value);
+		}
+		if (m_outerObject) {
+			gc.AddImplicitRef(m_value, m_outerObject);
+		}
+	}
+
+	m_type = other.m_type;
 	m_number = other.m_number;
 	m_string = other.m_string;
 }
@@ -39,31 +63,11 @@ interpreter::Value::Value(IManagedValue& value)
 interpreter::Value::Value(const Value& other)
 {
 	Copy(other);
-	if (IsManaged()) {
-		GarbageCollector::GetInstance().AddExplicitRef(m_value);
-	}
 }
 
 interpreter::Value& interpreter::Value::operator=(const Value& other)
 {
-	volatile GarbageCollector::GCInstructionsBatch batch;
-	if (IsManaged()) {
-		if (m_explicitRef) {
-			m_explicitRef = false;
-			GarbageCollector::GetInstance().RemoveExplicitRef(m_value);
-		}
-
-		if (m_implicitRef) {
-			IManagedValue* ref = m_implicitRef;
-			m_implicitRef = nullptr;
-			GarbageCollector::GetInstance().RemoveImplicitRef(m_value, ref);
-		}
-	}
-
 	Copy(other);
-	if (IsManaged()) {
-		GarbageCollector::GetInstance().AddExplicitRef(m_value);
-	}
 	return *this;
 }
 
@@ -78,9 +82,9 @@ interpreter::Value::~Value()
 		GarbageCollector::GetInstance().RemoveExplicitRef(m_value);
 	}
 
-	if (m_implicitRef) {
-		IManagedValue* ref = m_implicitRef;
-		m_implicitRef = nullptr;
+	if (m_outerObject) {
+		IManagedValue* ref = m_outerObject;
+		m_outerObject = nullptr;
 		GarbageCollector::GetInstance().RemoveImplicitRef(m_value, ref);
 	}
 }
@@ -287,14 +291,14 @@ bool interpreter::Value::IsNone() const
 	return GetType() == ScriptingValueType::None;
 }
 
-void interpreter::Value::SetImplicitRef(IManagedValue* implicitRef)
+void interpreter::Value::SetImplicitRef(IManagedValue& outerObject)
 {
-	if (!IsManaged()) {
-		return;
+	if (m_value != nullptr) {
+		bool t = true;
 	}
 
-	GarbageCollector::GetInstance().AddImplicitRef(m_value, implicitRef);
-	GarbageCollector::GetInstance().RemoveExplicitRef(m_value);
+	m_explicitRef = false;
+	m_outerObject = &outerObject;
 }
 
 double interpreter::Value::GetNum() const
