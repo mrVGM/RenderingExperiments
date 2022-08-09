@@ -11,9 +11,9 @@
 struct NativeFunc : public interpreter::IFunc
 {
 	interpreter::Value m_obj;
-	std::function<interpreter::Value(std::vector<interpreter::Value>)> m_func;
+	std::function<interpreter::Value(interpreter::Value)> m_func;
 
-	NativeFunc(interpreter::Value object, int paramsCount, const std::function<interpreter::Value(std::vector<interpreter::Value>)>& func)
+	NativeFunc(interpreter::Value object, int paramsCount, const std::function<interpreter::Value(interpreter::Value)>& func)
 	{
 		m_func = func;
 		for (int i = 0; i < paramsCount; ++i) {
@@ -45,30 +45,22 @@ struct NativeFunc : public interpreter::IFunc
 	interpreter::FuncResult Execute(interpreter::Scope& scope) override
 	{
 		using namespace interpreter;
-		std::vector<Value> args;
-
-		for (int i = 0; i < m_paramNames.size(); ++i) {
-			Value tmp = scope.GetProperty(m_paramNames[i]);
-			args.push_back(tmp);
-		}
 
 		FuncResult res;
 		res.m_state = FuncResult::FuncExecutionState::Finished;
-		res.m_returnValue = m_func(args);
+		res.m_returnValue = m_func(Value(scope));
 		return res;
 	}
 };
 
-interpreter::Value interpreter::CreateNativeFunc(int paramsCount, std::function<Value(std::vector<Value>)> func)
+interpreter::Value interpreter::CreateNativeFunc(int paramsCount, std::function<Value(Value)> func)
 {
 	NativeFunc* nativeFunc = new NativeFunc(Value(), paramsCount, func);
-	return interpreter::Value(*nativeFunc);
+	return Value(*nativeFunc);
 }
 
-interpreter::Value CreateNativeMethod(interpreter::IManagedValue& object, int paramsCount, std::function<interpreter::Value(std::vector<interpreter::Value>)> func)
+interpreter::Value interpreter::CreateNativeMethod(IManagedValue& object, int paramsCount, std::function<Value(Value)> func)
 {
-	interpreter::Value obj(object);
-
-	NativeFunc* nativeFunc = new NativeFunc(obj, paramsCount, func);
-	return interpreter::Value(*nativeFunc);
+	NativeFunc* nativeFunc = new NativeFunc(Value(object), paramsCount, func);
+	return Value(*nativeFunc);
 }
