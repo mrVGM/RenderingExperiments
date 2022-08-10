@@ -8,8 +8,8 @@ interpreter::Value interpreter::IFunc::GetScopeTemplate()
 
 interpreter::Value interpreter::IFunc::GetArgsTemplateScope()
 {
-	Scope* scope = new Scope();
-	Value res(*scope);
+	Value res = Scope::Create();
+	Scope* scope = static_cast<Scope*>(res.GetManagedValue());
 	
 	for (int i = 0; i < m_paramNames.size(); ++i) {
 		scope->BindValue(m_paramNames[i], Value());
@@ -25,4 +25,8 @@ void interpreter::IFunc::SetProperty(std::string name, Value value)
 interpreter::Value interpreter::IFunc::GetProperty(std::string name) const
 {
 	return Value();
+}
+
+interpreter::IFunc::IFunc()
+{
 }

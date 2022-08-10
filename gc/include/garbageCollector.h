@@ -24,7 +24,8 @@ namespace interpreter
 
 		std::vector<ManagedValue*> m_allValues;
 
-		ManagedValue& FindValue(IManagedValue* value);
+		ManagedValue& FindOrCreateValue(IManagedValue* value);
+		ManagedValue* FindValue(IManagedValue* value);
 
 		void CollectGarbage();
 

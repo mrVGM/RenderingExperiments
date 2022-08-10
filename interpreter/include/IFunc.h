@@ -32,5 +32,8 @@ namespace interpreter
 
 		void SetProperty(std::string name, Value value) override;
 		Value GetProperty(std::string name) const override;
+
+	protected:
+		IFunc();
 	};
 }

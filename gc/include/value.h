@@ -81,5 +81,8 @@ namespace interpreter
 		virtual void SetProperty(std::string name, Value value) = 0;
 		virtual Value GetProperty(std::string name) const = 0;
 		virtual ~IManagedValue();
+
+	protected:
+		IManagedValue();
 	};
 }

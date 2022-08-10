@@ -37,6 +37,16 @@ void interpreter::ListValue::SetValueAt(int index, Value valueWrapper)
 	m_list[index] = valueWrapper;
 }
 
+interpreter::Value interpreter::ListValue::Create()
+{
+	ListValue* lv = new ListValue();
+	return Value(*lv);
+}
+
+interpreter::ListValue::ListValue()
+{
+}
+
 void interpreter::ListValue::SetProperty(std::string name, Value value)
 {
 }

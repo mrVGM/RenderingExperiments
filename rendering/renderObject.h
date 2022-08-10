@@ -16,5 +16,10 @@ namespace rendering
 		interpreter::Value GetProperty(std::string name) const override;
 
 		virtual ~RenderObject();
+
+		static interpreter::Value Create();
+
+	protected:
+		RenderObject();
 	};
 }

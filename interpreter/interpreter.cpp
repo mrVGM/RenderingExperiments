@@ -171,8 +171,9 @@ void interpreter::Interpreter::HandleReturnInstruction(const Value& returnValue)
 
 void interpreter::Interpreter::PushScope()
 {
-	Scope* newScope = new Scope();
-	Value newScopeWrapped(*newScope);
+	Value newScopeWrapped = Scope::Create();
+	Scope* newScope = static_cast<Scope*>(newScopeWrapped.GetManagedValue());
+
 	newScope->SetParentScope(m_scope);
 
 	m_scope = newScopeWrapped;

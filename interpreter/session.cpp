@@ -4,41 +4,17 @@
 #include "dataLib.h"
 #include "scope.h"
 #include "object.h"
-
-struct PrintFunc : public interpreter::IFunc
-{
-	std::ostream& m_outputStream;
-	PrintFunc(std::ostream& outputStream) :
-		m_outputStream(outputStream)
-	{
-		m_paramNames.push_back("str");
-	}
-
-	interpreter::FuncResult Execute(interpreter::Scope& scope) override
-	{
-		interpreter::Value val = scope.GetValue(m_paramNames[0]);
-		m_outputStream << val.ToString() << std::endl;
-		interpreter::FuncResult res;
-		res.m_state = interpreter::FuncResult::Finished;
-		return res;
-	}
-};
+#include "nativeFunc.h"
 
 struct RequireFunc : public interpreter::IFunc
 {
 	interpreter::Session& m_session;
 
-	RequireFunc(interpreter::Session& session) :
-		m_session(session)
-	{
-		m_paramNames.push_back("path");
-	}
-
 	interpreter::Value GetScopeTemplate() override
 	{
 		using namespace interpreter;
-		Scope* contextScope = new Scope();
-		Value context(*contextScope);
+		Value context = Scope::Create();
+		Scope* contextScope = static_cast<Scope*>(context.GetManagedValue());
 
 		contextScope->BindValue("running", Value());
 
@@ -72,11 +48,10 @@ struct RequireFunc : public interpreter::IFunc
 				return res;
 			}
 
-			Scope* tmp = new Scope();
-			Value runningScope(*tmp);
+			Value runningScope = Scope::Create();
+			Scope* tmp = static_cast<Scope*>(runningScope.GetManagedValue());
 
-			ObjectValue* obj = new ObjectValue();
-			Value objValue(*obj);
+			Value objValue = ObjectValue::Create();
 
 			tmp->BindValue("export", objValue);
 			tmp->SetParentScope(m_session.m_motherScope);
@@ -95,6 +70,19 @@ struct RequireFunc : public interpreter::IFunc
 		res.m_state = FuncResult::Finished;
 		res.m_returnValue = exports;
 		return res;
+	}
+
+	static interpreter::Value Create(interpreter::Session& session)
+	{
+		RequireFunc* req = new RequireFunc(session);
+		interpreter::Value res(*req);
+		return res;
+	}
+protected:
+	RequireFunc(interpreter::Session& session) :
+		m_session(session)
+	{
+		m_paramNames.push_back("path");
 	}
 };
 
@@ -127,8 +115,8 @@ void interpreter::Session::RunFile(std::string name)
 
 
 	if (parsed) {
-		Scope* tmp = new Scope();
-		Value scope(*tmp);
+		Value scope = Scope::Create();
+		Scope* tmp = static_cast<Scope*>(scope.GetManagedValue());
 		tmp->SetParentScope(m_motherScope);
 
 		m_intepreterStack.push(Interpreter(scope));
@@ -156,16 +144,19 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	m_parser(parser),
 	m_outputStream(outputStream)
 {
-	Scope* sc = new Scope();
-	m_motherScope = Value(*sc);
+	m_motherScope = Scope::Create();
+	Scope* scope = static_cast<Scope*>(m_motherScope.GetManagedValue());
 
-	PrintFunc* pf = new PrintFunc(m_outputStream);
-	Value print(*pf);
-	sc->BindValue("print", print);
+	Value print = CreateNativeFunc(1, [&](Value scope) {
+		Value str = scope.GetProperty("param0");
+		m_outputStream << str.ToString();
+		return Value();
+	});
 
-	RequireFunc* rf = new RequireFunc(*this);
-	Value require(*rf);
-	sc->BindValue("require", require);
+	scope->BindValue("print", print);
+
+	Value require = RequireFunc::Create(*this);
+	scope->BindValue("require", require);
 }
 
 interpreter::Session::~Session()

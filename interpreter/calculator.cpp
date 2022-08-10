@@ -733,16 +733,14 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, list, cs)) {
 		calculator.m_calculation.m_state = Calculation::Done;
 
-		ListValue* l = new ListValue();
-		calculator.m_calculation.m_value = Value(*l);
+		calculator.m_calculation.m_value = ListValue::Create();
 		return;
 	}
 
 	if (symbolUtils::MatchChildren(&calculator.m_symbol, object, cs)) {
 		calculator.m_calculation.m_state = Calculation::Done;
 
-		ObjectValue* obj = new ObjectValue();
-		calculator.m_calculation.m_value = Value(*obj);
+		calculator.m_calculation.m_value = ObjectValue::Create();
 		return;
 	}
 

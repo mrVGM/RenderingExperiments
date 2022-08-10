@@ -27,3 +27,13 @@ interpreter::Value interpreter::ObjectValue::GetProperty(std::string name) const
 
 	return it->second;
 }
+
+interpreter::Value interpreter::ObjectValue::Create()
+{
+	ObjectValue* objectValue = new ObjectValue();
+	return Value(*objectValue);
+}
+
+interpreter::ObjectValue::ObjectValue()
+{
+}

@@ -16,5 +16,10 @@ namespace interpreter
 		void PushValue(Value value);
 		Value GetValueAt(int index) const;
 		void SetValueAt(int index, Value valueWrapper);
+
+		static Value Create();
+
+	protected:
+		ListValue();
 	};
 }

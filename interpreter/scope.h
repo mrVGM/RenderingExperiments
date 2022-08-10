@@ -23,6 +23,9 @@ namespace interpreter
 
 		void SetParentScope(Value parentScope);
 
+		static Value Create();
+
+	protected:
 		Scope();
 	};
 }

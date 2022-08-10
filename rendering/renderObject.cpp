@@ -33,3 +33,15 @@ rendering::RenderObject::~RenderObject()
 {
 }
 
+interpreter::Value rendering::RenderObject::Create()
+{
+	RenderObject* ro = new RenderObject();
+	interpreter::Value res(*ro);
+
+	return res;
+}
+
+rendering::RenderObject::RenderObject()
+{
+}
+

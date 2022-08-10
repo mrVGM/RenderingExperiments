@@ -13,26 +13,14 @@ struct NativeFunc : public interpreter::IFunc
 	interpreter::Value m_obj;
 	std::function<interpreter::Value(interpreter::Value)> m_func;
 
-	NativeFunc(interpreter::Value object, int paramsCount, const std::function<interpreter::Value(interpreter::Value)>& func)
-	{
-		m_func = func;
-		for (int i = 0; i < paramsCount; ++i) {
-			std::stringstream ss;
-			ss << "param" << i;
-			m_paramNames.push_back(ss.str());
-		}
-
-		m_obj.SetImplicitRef(*this);
-		m_obj = object;
-	}
-
 	interpreter::Value GetScopeTemplate() override
 	{
 		using namespace interpreter;
 		Value argsScope = GetArgsTemplateScope();
 
-		Scope* tmp = new Scope();
-		Value objScope = Value(*tmp);
+		Value objScope = Scope::Create();
+		Scope* tmp = static_cast<Scope*>(objScope.GetManagedValue());
+
 		tmp->BindValue("self", m_obj);
 
 		tmp = static_cast<Scope*>(argsScope.GetManagedValue());
@@ -50,16 +38,38 @@ struct NativeFunc : public interpreter::IFunc
 		res.m_returnValue = m_func(Value(scope));
 		return res;
 	}
+
+	static interpreter::Value Create(interpreter::Value object, int paramsCount, const std::function<interpreter::Value(interpreter::Value)>& func)
+	{
+		NativeFunc* nativeFunc = new NativeFunc();
+		interpreter::Value res(*nativeFunc);
+
+		nativeFunc->m_func = func;
+
+		for (int i = 0; i < paramsCount; ++i) {
+			std::stringstream ss;
+			ss << "param" << i;
+			nativeFunc->m_paramNames.push_back(ss.str());
+		}
+
+		nativeFunc->m_obj.SetImplicitRef(*nativeFunc);
+		nativeFunc->m_obj = object;
+
+		return res;
+	}
+
+protected:
+	NativeFunc()
+	{
+	}
 };
 
 interpreter::Value interpreter::CreateNativeFunc(int paramsCount, std::function<Value(Value)> func)
 {
-	NativeFunc* nativeFunc = new NativeFunc(Value(), paramsCount, func);
-	return Value(*nativeFunc);
+	return NativeFunc::Create(Value(), paramsCount, func);
 }
 
 interpreter::Value interpreter::CreateNativeMethod(IManagedValue& object, int paramsCount, std::function<Value(Value)> func)
 {
-	NativeFunc* nativeFunc = new NativeFunc(Value(object), paramsCount, func);
-	return Value(*nativeFunc);
+	return NativeFunc::Create(Value(object), paramsCount, func);
 }

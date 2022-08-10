@@ -31,12 +31,11 @@ interpreter::GarbageCollector::ManagedValue::~ManagedValue()
 	delete m_managedValue;
 }
 
-interpreter::GarbageCollector::ManagedValue& interpreter::GarbageCollector::FindValue(IManagedValue* managedValue)
+interpreter::GarbageCollector::ManagedValue& interpreter::GarbageCollector::FindOrCreateValue(IManagedValue* managedValue)
 {
-	for (int i = 0; i < m_allValues.size(); ++i) {
-		if (m_allValues[i]->m_managedValue == managedValue) {
-			return *m_allValues[i];
-		}
+	GarbageCollector::ManagedValue* val = FindValue(managedValue);
+	if (val) {
+		return *val;
 	}
 
 	ManagedValue* res = new ManagedValue();
@@ -44,6 +43,17 @@ interpreter::GarbageCollector::ManagedValue& interpreter::GarbageCollector::Find
 	m_allValues.push_back(res);
 
 	return *res;
+}
+
+interpreter::GarbageCollector::ManagedValue* interpreter::GarbageCollector::FindValue(IManagedValue* managedValue)
+{
+	for (int i = 0; i < m_allValues.size(); ++i) {
+		if (m_allValues[i]->m_managedValue == managedValue) {
+			return m_allValues[i];
+		}
+	}
+
+	return nullptr;
 }
 
 void interpreter::GarbageCollector::CollectGarbage()
@@ -80,8 +90,8 @@ void interpreter::GarbageCollector::CollectGarbage()
 
 		cur->m_visited = true;
 		for (int i = 0; i < cur->m_implicitRefs.size(); ++i) {
-			ManagedValue& implicitRef = FindValue(cur->m_implicitRefs[i]);
-			q.push(&implicitRef);
+			ManagedValue* implicitRef = FindValue(cur->m_implicitRefs[i]);
+			q.push(implicitRef);
 		}
 	}
 
@@ -107,7 +117,7 @@ void interpreter::GarbageCollector::CollectGarbage()
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 {
-	ManagedValue& mv = FindValue(value);
+	ManagedValue& mv = FindOrCreateValue(value);
 	++mv.m_explicitRefs;
 
 	CollectGarbage();
@@ -115,8 +125,8 @@ void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 
 void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 {
-	ManagedValue& mv = FindValue(value);
-	--mv.m_explicitRefs;
+	ManagedValue* mv = FindValue(value);
+	--mv->m_explicitRefs;
 
 	CollectGarbage();
 }
@@ -130,18 +140,21 @@ interpreter::GarbageCollector::~GarbageCollector()
 
 void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	ManagedValue& refBy = FindValue(referencedBy);
-	refBy.m_implicitRefs.push_back(value);
+	ManagedValue* refBy = FindValue(referencedBy);
+	refBy->m_implicitRefs.push_back(value);
 	CollectGarbage();
 }
 
 void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	ManagedValue& refBy = FindValue(referencedBy);
+	ManagedValue* refBy = FindValue(referencedBy);
+	if (!refBy) {
+		return;
+	}
 
-	for (std::vector<IManagedValue*>::iterator it = refBy.m_implicitRefs.begin(); it != refBy.m_implicitRefs.end(); ++it) {
+	for (std::vector<IManagedValue*>::iterator it = refBy->m_implicitRefs.begin(); it != refBy->m_implicitRefs.end(); ++it) {
 		if ((*it) == value) {
-			refBy.m_implicitRefs.erase(it);
+			refBy->m_implicitRefs.erase(it);
 			break;
 		}
 	}
@@ -161,5 +174,9 @@ interpreter::GarbageCollector::GCInstructionsBatch::~GCInstructionsBatch()
 }
 
 interpreter::IManagedValue::~IManagedValue()
+{
+}
+
+interpreter::IManagedValue::IManagedValue()
 {
 }

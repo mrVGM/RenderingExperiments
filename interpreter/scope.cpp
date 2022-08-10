@@ -62,7 +62,15 @@ void interpreter::Scope::SetParentScope(interpreter::Value parentScope)
 	m_parent = parentScope;
 }
 
+interpreter::Value interpreter::Scope::Create()
+{
+	Scope* scope = new Scope();
+	Value res(*scope);
+
+	scope->m_parent.SetImplicitRef(*scope);
+	return res;
+}
+
 interpreter::Scope::Scope()
 {
-	m_parent.SetImplicitRef(*this);
 }

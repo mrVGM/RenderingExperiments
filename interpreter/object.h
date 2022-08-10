@@ -13,5 +13,9 @@ namespace interpreter
 
 		void SetProperty(std::string name, Value value) override;
 		Value GetProperty(std::string name) const override;
+
+		static Value Create();
+	protected:
+		ObjectValue();
 	};
 }
