@@ -10,6 +10,7 @@ namespace rendering
 	{
 		void RegisterWindowClass();
 		void Create(int width, int height);
+		void Destroy();
 
 		HWND m_hwnd;
 
@@ -20,5 +21,6 @@ namespace rendering
 		static interpreter::Value Create();
 		~Window();
 		interpreter::Value m_create;
+		interpreter::Value m_drag;
 	};
 }

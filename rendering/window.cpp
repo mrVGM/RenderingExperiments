@@ -6,6 +6,7 @@ namespace _windowData
 {
 	static bool m_classRegistered = false;
 	const wchar_t* m_className = L"MyWindow";
+	bool m_created = false;
 }
 
 void rendering::Window::RegisterWindowClass()
@@ -60,7 +61,7 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE:
 	{
 		PostQuitMessage(0);
-		m_hwnd = NULL;
+		Destroy();
 		break;
 	}
 
@@ -85,10 +86,7 @@ rendering::Window::Window()
 
 rendering::Window::~Window()
 {
-	if (m_hwnd != NULL) {
-		DestroyWindow(m_hwnd);
-		m_hwnd = nullptr;
-	}
+	Destroy();
 }
 
 interpreter::Value rendering::Window::Create()
@@ -97,6 +95,7 @@ interpreter::Value rendering::Window::Create()
 	interpreter::Value res(*wnd);
 
 	wnd->RegisterProperty("create", &wnd->m_create);
+	wnd->RegisterProperty("drag", &wnd->m_drag);
 
 	interpreter::Value create = interpreter::CreateNativeMethod(*wnd, 2, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
@@ -105,15 +104,34 @@ interpreter::Value rendering::Window::Create()
 		interpreter::Value height = scope.GetProperty("param1");
 		wnd->Create(width.GetNum(), height.GetNum());
 		return interpreter::Value();
-		});
+	});
+
+	interpreter::Value drag = interpreter::CreateNativeMethod(*wnd, 0, [](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+			if (!GetMessage(&msg, NULL, 0, 0)) {
+				break;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		return interpreter::Value();
+	});
 
 	wnd->SetProperty("create", create);
+	wnd->SetProperty("drag", drag);
 
 	return res;
 }
 
 void rendering::Window::Create(int width, int height)
 {
+	if (_windowData::m_created) {
+		return;
+	}
+	_windowData::m_created = true;
+
 	DWORD dwStyle = WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
 	DWORD dxExStyle = 0;
 
@@ -133,4 +151,12 @@ void rendering::Window::Create(int width, int height)
 		windowRect.right - windowRect.left,
 		windowRect.bottom - windowRect.top,
 		NULL, NULL, GetModuleHandle(NULL), this);
+}
+
+void rendering::Window::Destroy()
+{
+	if (m_hwnd != NULL) {
+		DestroyWindow(m_hwnd);
+		m_hwnd = nullptr;
+	}
 }
