@@ -4,6 +4,11 @@ print(x);
 let wnd = window();
 wnd.create(600, 400);
 
+let c = core();
+c.init(wnd);
+
 while (1) {
 	wnd.drag();
+	print(wnd.width);
+	print(wnd.height);
 }

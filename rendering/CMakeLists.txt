@@ -9,6 +9,9 @@ add_library (Rendering
 	"window.cpp"
 	"renderObject.h"
 	"renderObject.cpp"
+	"include/core.h"
+	"core.cpp"
+	"d3dx12.h"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

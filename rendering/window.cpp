@@ -96,12 +96,18 @@ interpreter::Value rendering::Window::Create()
 
 	wnd->RegisterProperty("create", &wnd->m_create);
 	wnd->RegisterProperty("drag", &wnd->m_drag);
+	wnd->RegisterProperty("width", &wnd->m_width);
+	wnd->RegisterProperty("height", &wnd->m_height);
 
 	interpreter::Value create = interpreter::CreateNativeMethod(*wnd, 2, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
 		Window* wnd = static_cast<Window*>(self.GetManagedValue());
 		interpreter::Value width = scope.GetProperty("param0");
 		interpreter::Value height = scope.GetProperty("param1");
+		
+		wnd->m_width = width;
+		wnd->m_height = height;
+		
 		wnd->Create(width.GetNum(), height.GetNum());
 		return interpreter::Value();
 	});

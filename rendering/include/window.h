@@ -12,15 +12,16 @@ namespace rendering
 		void Create(int width, int height);
 		void Destroy();
 
-		HWND m_hwnd;
-
 		static LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		LRESULT CALLBACK WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 		Window();
 	public:
+		HWND m_hwnd;
 		static interpreter::Value Create();
 		~Window();
 		interpreter::Value m_create;
 		interpreter::Value m_drag;
+		interpreter::Value m_width;
+		interpreter::Value m_height;
 	};
 }
