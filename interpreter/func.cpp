@@ -1,6 +1,5 @@
 #include "func.h"
 
-#include "garbageCollector.h"
 #include "scope.h"
 
 #include "interpreter.h"

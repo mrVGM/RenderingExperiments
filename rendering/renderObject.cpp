@@ -1,5 +1,4 @@
 #include "renderObject.h"
-#include "garbageCollector.h"
 
 void rendering::RenderObject::RegisterProperty(std::string name, interpreter::Value* value)
 {

@@ -7,7 +7,7 @@ cmake_minimum_required (VERSION 3.8)
 add_library (Interpreter
 	"../gc/include/value.h"
 	"../gc/value.cpp"
-	"../gc/include/garbageCollector.h"
+	"../gc/garbageCollector.h"
 	"../gc/garbageCollector.cpp"
 	"scope.h"
 	"scope.cpp"

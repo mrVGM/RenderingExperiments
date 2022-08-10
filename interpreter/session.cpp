@@ -149,7 +149,7 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 
 	Value print = CreateNativeFunc(1, [&](Value scope) {
 		Value str = scope.GetProperty("param0");
-		m_outputStream << str.ToString();
+		m_outputStream << str.ToString() << std::endl;
 		return Value();
 	});
 

@@ -1,7 +1,5 @@
 #include "list.h"
 
-#include "garbageCollector.h"
-
 void interpreter::ListValue::PushValue(Value value)
 {
 	m_list.push_back(Value());

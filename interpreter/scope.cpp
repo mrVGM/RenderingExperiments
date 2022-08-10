@@ -1,7 +1,6 @@
 #include "scope.h"
 
 #include "value.h"
-#include "garbageCollector.h"
 
 
 void interpreter::Scope::BindValue(std::string name, const Value& value)

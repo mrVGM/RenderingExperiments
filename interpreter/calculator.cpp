@@ -6,7 +6,6 @@
 #include "object.h"
 #include "list.h"
 #include "IFunc.h"
-#include "garbageCollector.h"
 #include "func.h"
 
 #include <cstring>
@@ -1712,12 +1711,10 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 	}
 
 	if (m_curInterpreterScope.GetType() == ScriptingValueType::None) {
-		volatile GarbageCollector::GCInstructionsBatch batch;
-
 		m_curInterpreterScope = calculator.m_interpreter.m_scope;
 		Value funcScope = func->GetScopeTemplate();
 
-		Scope* scope = dynamic_cast<Scope*>(funcScope.GetManagedValue());
+		Scope* scope = static_cast<Scope*>(funcScope.GetManagedValue());
 		for (int i = 0; i < argsList.m_args.size(); ++i) {
 			scope->BindValue(func->m_paramNames[i], argsList.m_args[i]);
 		}

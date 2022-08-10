@@ -15,10 +15,10 @@ namespace rendering
 
 		static LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		LRESULT CALLBACK WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	public:
 		Window();
+	public:
+		static interpreter::Value Create();
 		~Window();
-
 		interpreter::Value m_create;
 	};
 }

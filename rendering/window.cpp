@@ -81,19 +81,6 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 rendering::Window::Window()
 {
 	RegisterWindowClass();
-
-	RegisterProperty("create", &m_create);
-
-	interpreter::Value create = interpreter::CreateNativeMethod(*this, 2, [](interpreter::Value scope) {
-		interpreter::Value self = scope.GetProperty("self");
-		Window* wnd = static_cast<Window*>(self.GetManagedValue());
-		interpreter::Value width = scope.GetProperty("param0");
-		interpreter::Value height = scope.GetProperty("param1");
-		wnd->Create(width.GetNum(), height.GetNum());
-		return interpreter::Value();
-	});
-
-	SetProperty("create", create);
 }
 
 rendering::Window::~Window()
@@ -102,6 +89,27 @@ rendering::Window::~Window()
 		DestroyWindow(m_hwnd);
 		m_hwnd = nullptr;
 	}
+}
+
+interpreter::Value rendering::Window::Create()
+{
+	Window* wnd = new Window();
+	interpreter::Value res(*wnd);
+
+	wnd->RegisterProperty("create", &wnd->m_create);
+
+	interpreter::Value create = interpreter::CreateNativeMethod(*wnd, 2, [](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		Window* wnd = static_cast<Window*>(self.GetManagedValue());
+		interpreter::Value width = scope.GetProperty("param0");
+		interpreter::Value height = scope.GetProperty("param1");
+		wnd->Create(width.GetNum(), height.GetNum());
+		return interpreter::Value();
+		});
+
+	wnd->SetProperty("create", create);
+
+	return res;
 }
 
 void rendering::Window::Create(int width, int height)
