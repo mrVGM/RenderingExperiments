@@ -1,14 +1,16 @@
 let x = require("lib.txt");
 print(x);
 
+let shaderPath = "C:\\Users\\Vasil\\dev\\D3D12_Tests\\data\\misc\\shaders.hlsl";
+
 let wnd = window();
 wnd.create(600, 400);
 
 let c = core();
 c.init(wnd);
+c.loadAssets(shaderPath);
 
 while (1) {
 	wnd.drag();
-	print(wnd.width);
-	print(wnd.height);
+	c.renderFrame();
 }
