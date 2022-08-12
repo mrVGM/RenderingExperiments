@@ -128,6 +128,28 @@ void interpreter::Session::RunFile(std::string name)
 void interpreter::Session::CalculationStep()
 {
 	if (m_intepreterStack.empty()) {
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+
+		for (std::vector<DefferedCall>::const_iterator it = m_deferredCalls.begin(); it != m_deferredCalls.end(); ++it) {
+			const DefferedCall& dc = *it;
+			if (dc.m_scheduled < now) {
+				Value scope = Scope::Create();
+				Scope* tmp = static_cast<Scope*>(scope.GetManagedValue());
+				tmp->BindValue("func_name", dc.m_func);
+
+				Value intScope = Scope::Create();
+				tmp = static_cast<Scope*>(intScope.GetManagedValue());
+				tmp->SetParentScope(scope);
+
+				m_intepreterStack.push(Interpreter(intScope));
+				interpreter::Interpreter& interpreter = m_intepreterStack.top();
+				interpreter.PrepareCalculation(m_deferredCallCodeParsed);
+
+				m_deferredCalls.erase(it);
+				break;
+			}
+		}
+
 		return;
 	}
 
@@ -157,6 +179,45 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 
 	Value require = RequireFunc::Create(*this);
 	scope->BindValue("require", require);
+
+	Value timeout = CreateNativeFunc(2, [&](Value scope) {
+		Value func = scope.GetProperty("param0");
+		Value timeout = scope.GetProperty("param1");
+
+		if (func.GetType() != ScriptingValueType::Object) {
+			return Value();
+		}
+		IFunc* f = dynamic_cast<IFunc*>(func.GetManagedValue());
+		if (!f) {
+			return Value();
+		}
+
+		if (timeout.GetType() != ScriptingValueType::Number) {
+			timeout = Value(0);
+		}
+		
+		int milliseconds = (int)timeout.GetNum();
+		if (milliseconds < 0) {
+			milliseconds = 0;
+		}
+
+		DefferedCall dc;
+		dc.m_scheduled = std::chrono::system_clock::now() + std::chrono::milliseconds(milliseconds);
+		dc.m_func = func;
+
+		m_deferredCalls.push_back(dc);
+
+		return Value();
+	});
+	scope->BindValue("timeout", timeout);
+
+	m_deferredCallCode.m_code = "func_name();";
+	m_deferredCallCode.Tokenize();
+	m_deferredCallCode.TokenizeForParser();
+
+	m_deferredCallCodeParsed = m_parser.Parse(m_deferredCallCode);
+
+	m_beginning = std::chrono::system_clock::now();
 }
 
 interpreter::Session::~Session()
