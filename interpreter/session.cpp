@@ -39,9 +39,7 @@ struct RequireFunc : public interpreter::IFunc
 				return res;
 			}
 
-			scripting::CodeSource& cs = m_session.GetCode(path.GetString());
-
-			scripting::ISymbol* s = m_session.m_parser.Parse(cs);
+			scripting::ISymbol* s = m_session.GetCode(path.GetString());
 			if (!s) {
 				FuncResult res;
 				res.m_state = FuncResult::Failed;
@@ -86,11 +84,11 @@ protected:
 	}
 };
 
-scripting::CodeSource& interpreter::Session::GetCode(std::string path)
+scripting::ISymbol* interpreter::Session::GetCode(std::string path)
 {
-	std::map<std::string, scripting::CodeSource*>::iterator it = m_loadedCodeFiles.find(path);
+	std::map<std::string, ParsedFile>::iterator it = m_loadedCodeFiles.find(path);
 	if (it != m_loadedCodeFiles.end()) {
-		return *(it->second);
+		return it->second.m_parsed;
 	}
 
 	std::string fullPath = m_rootDir + path;
@@ -104,15 +102,20 @@ scripting::CodeSource& interpreter::Session::GetCode(std::string path)
 	cs->Tokenize();
 	cs->TokenizeForParser();
 
-	m_loadedCodeFiles[path] = cs;
-	return *cs;
+	scripting::ISymbol* parsed = m_parser.Parse(*cs);
+	if (!parsed) {
+		delete cs;
+		return nullptr;
+	}
+
+	ParsedFile pf{ cs, parsed };
+	m_loadedCodeFiles[path] = pf;
+	return parsed;
 }
 
 void interpreter::Session::RunFile(std::string name)
 {
-	scripting::CodeSource& cs = GetCode(name);
-	scripting::ISymbol* parsed = m_parser.Parse(cs);
-
+	scripting::ISymbol* parsed = GetCode(name);
 
 	if (parsed) {
 		Value scope = Scope::Create();
@@ -222,7 +225,7 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 
 interpreter::Session::~Session()
 {
-	for (std::map<std::string, scripting::CodeSource*>::iterator it = m_loadedCodeFiles.begin(); it != m_loadedCodeFiles.end(); ++it) {
-		delete it->second;
+	for (std::map<std::string, ParsedFile>::iterator it = m_loadedCodeFiles.begin(); it != m_loadedCodeFiles.end(); ++it) {
+		delete it->second.m_codeSource;
 	}
 }

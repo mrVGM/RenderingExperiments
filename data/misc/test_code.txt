@@ -1,7 +1,7 @@
 let x = require("lib.txt");
 let f = func() {
 	print(x);
+	timeout(f, 2000);
 };
 
 f();
-timeout(f, 5000);

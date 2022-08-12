@@ -19,6 +19,12 @@ namespace interpreter
 {
 	struct Session
 	{
+		struct ParsedFile
+		{
+			scripting::CodeSource* m_codeSource = nullptr;
+			scripting::ISymbol* m_parsed = nullptr;
+		};
+
 		struct DefferedCall
 		{
 			std::chrono::time_point<std::chrono::system_clock> m_scheduled;
@@ -35,11 +41,11 @@ namespace interpreter
 		std::stack<interpreter::Interpreter> m_intepreterStack;
 		std::vector<DefferedCall> m_deferredCalls;
 		
-		std::map<std::string, scripting::CodeSource*> m_loadedCodeFiles;
+		std::map<std::string, ParsedFile> m_loadedCodeFiles;
 		scripting::CodeSource m_deferredCallCode;
 		scripting::ISymbol* m_deferredCallCodeParsed = nullptr;
 
-		scripting::CodeSource& GetCode(std::string path);
+		scripting::ISymbol* GetCode(std::string path);
 
 		void RunFile(std::string name);
 		void CalculationStep();
