@@ -30,10 +30,8 @@ int main()
 		return rendering::Core::Create();
 	}));
 
-
-	//session.RunFile("test_code.txt");
-
 	while (true) {
+		std::cout << "> ";
 		std::string instruction;
 		std::getline(std::cin, instruction);
 
