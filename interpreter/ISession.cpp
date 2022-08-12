@@ -13,6 +13,7 @@
 struct ISessionImpl : public interpreter::ISession
 {
 	void RunFile(std::string name) override;
+	void RunInstruction(std::string instruction) override;
 };
 
 namespace _sessionData
@@ -45,6 +46,17 @@ void ISessionImpl::RunFile(std::string name)
 	_sessionData::m_mutex.lock();
 
 	_sessionData::m_session->RunFile(name);
+
+	_sessionData::m_mutex.unlock();
+}
+
+void ISessionImpl::RunInstruction(std::string instruction)
+{
+	_sessionData::m_mutex.lock();
+
+	if (!_sessionData::m_session->m_repl) {
+		_sessionData::m_session->RunInstruction(instruction);
+	}
 
 	_sessionData::m_mutex.unlock();
 }

@@ -10,6 +10,8 @@
 #include <thread>
 #include <semaphore>
 
+#include <cstring>
+
 int main()
 {
 	std::filesystem::path dataPath = std::filesystem::current_path().append("..\\..\\..\\..\\data\\");
@@ -29,11 +31,18 @@ int main()
 	}));
 
 
-	session.RunFile("test_code.txt");
+	//session.RunFile("test_code.txt");
 
-	std::cin.get();
+	while (true) {
+		std::string instruction;
+		std::getline(std::cin, instruction);
+
+		if (instruction == "exit") {
+			break;
+		}
+		session.RunInstruction(instruction);
+	}
+
 	interpreter::CloseSession();
-	std::cin.get();
-
 	return 0;
 }

@@ -86,7 +86,7 @@ protected:
 
 scripting::ISymbol* interpreter::Session::GetCode(std::string path)
 {
-	std::map<std::string, ParsedFile>::iterator it = m_loadedCodeFiles.find(path);
+	std::map<std::string, ParsedCode>::iterator it = m_loadedCodeFiles.find(path);
 	if (it != m_loadedCodeFiles.end()) {
 		return it->second.m_parsed;
 	}
@@ -108,8 +108,29 @@ scripting::ISymbol* interpreter::Session::GetCode(std::string path)
 		return nullptr;
 	}
 
-	ParsedFile pf{ cs, parsed };
+	ParsedCode pf{ cs, parsed };
 	m_loadedCodeFiles[path] = pf;
+	return parsed;
+}
+
+scripting::ISymbol* interpreter::Session::ParseInstruction(std::string instruction)
+{
+	std::stringstream ss;
+	ss << "timeout(func() {" << instruction << "}, -1);";
+
+	scripting::CodeSource* cs = new scripting::CodeSource();
+	cs->m_code = ss.str();
+	cs->Tokenize();
+	cs->TokenizeForParser();
+
+	scripting::ISymbol* parsed = m_parser.Parse(*cs);
+	if (!parsed) {
+		delete cs;
+		return nullptr;
+	}
+
+	ParsedCode pf{ cs, parsed };
+	m_loadedInstructions.push_back(pf);
 	return parsed;
 }
 
@@ -128,9 +149,27 @@ void interpreter::Session::RunFile(std::string name)
 	}
 }
 
+void interpreter::Session::RunInstruction(std::string instruction)
+{
+	scripting::ISymbol* parsed = ParseInstruction(instruction);
+	m_repl = parsed;
+}
+
 void interpreter::Session::CalculationStep()
 {
 	if (m_intepreterStack.empty()) {
+		if (m_repl) {
+			Value scope = Scope::Create();
+			Scope* tmp = static_cast<Scope*>(scope.GetManagedValue());
+			tmp->SetParentScope(m_motherScope);
+
+			m_intepreterStack.push(Interpreter(scope));
+			interpreter::Interpreter& interpreter = m_intepreterStack.top();
+			interpreter.PrepareCalculation(m_repl);
+			m_repl = nullptr;
+			return;
+		}
+
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
 		for (std::vector<DefferedCall>::const_iterator it = m_deferredCalls.begin(); it != m_deferredCalls.end(); ++it) {
@@ -200,7 +239,9 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 		}
 		
 		int milliseconds = (int)timeout.GetNum();
+		bool putInFront = false;
 		if (milliseconds < 0) {
+			putInFront = true;
 			milliseconds = 0;
 		}
 
@@ -208,8 +249,12 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 		dc.m_scheduled = std::chrono::system_clock::now() + std::chrono::milliseconds(milliseconds);
 		dc.m_func = func;
 
-		m_deferredCalls.push_back(dc);
-
+		if (putInFront) {
+			m_deferredCalls.insert(m_deferredCalls.begin(), dc);
+		}
+		else {
+			m_deferredCalls.push_back(dc);
+		}
 		return Value();
 	});
 	scope->BindValue("timeout", timeout);
@@ -225,7 +270,11 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 
 interpreter::Session::~Session()
 {
-	for (std::map<std::string, ParsedFile>::iterator it = m_loadedCodeFiles.begin(); it != m_loadedCodeFiles.end(); ++it) {
+	for (std::map<std::string, ParsedCode>::iterator it = m_loadedCodeFiles.begin(); it != m_loadedCodeFiles.end(); ++it) {
 		delete it->second.m_codeSource;
+	}
+
+	for (std::vector<ParsedCode>::iterator it = m_loadedInstructions.begin(); it != m_loadedInstructions.end(); ++it) {
+		delete it->m_codeSource;
 	}
 }

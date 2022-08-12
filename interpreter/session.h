@@ -19,7 +19,7 @@ namespace interpreter
 {
 	struct Session
 	{
-		struct ParsedFile
+		struct ParsedCode
 		{
 			scripting::CodeSource* m_codeSource = nullptr;
 			scripting::ISymbol* m_parsed = nullptr;
@@ -40,14 +40,18 @@ namespace interpreter
 		Value m_motherScope;
 		std::stack<interpreter::Interpreter> m_intepreterStack;
 		std::vector<DefferedCall> m_deferredCalls;
-		
-		std::map<std::string, ParsedFile> m_loadedCodeFiles;
+		scripting::ISymbol* m_repl = nullptr;
+
+		std::map<std::string, ParsedCode> m_loadedCodeFiles;
+		std::vector<ParsedCode> m_loadedInstructions;
 		scripting::CodeSource m_deferredCallCode;
 		scripting::ISymbol* m_deferredCallCodeParsed = nullptr;
 
 		scripting::ISymbol* GetCode(std::string path);
+		scripting::ISymbol* ParseInstruction(std::string instruction);
 
 		void RunFile(std::string name);
+		void RunInstruction(std::string runInstruction);
 		void CalculationStep();
 
 		Session(std::string rootDir, scripting::Parser& parser, std::ostream& outputStream);
