@@ -22,6 +22,7 @@ struct NativeFunc : public interpreter::IFunc
 		Scope* tmp = static_cast<Scope*>(objScope.GetManagedValue());
 
 		tmp->BindValue("self", m_obj);
+		tmp->BindValue("exception", Value());
 
 		tmp = static_cast<Scope*>(argsScope.GetManagedValue());
 		tmp->SetParentScope(objScope);
@@ -34,8 +35,17 @@ struct NativeFunc : public interpreter::IFunc
 		using namespace interpreter;
 
 		FuncResult res;
-		res.m_state = FuncResult::FuncExecutionState::Finished;
 		res.m_returnValue = m_func(Value(scope));
+
+		Value exception = scope.GetProperty("exception");
+		if (exception.IsNone()) {
+			res.m_state = FuncResult::FuncExecutionState::Finished;
+		}
+		else {
+			res.m_state = FuncResult::FuncExecutionState::Failed;
+			res.m_returnValue = exception;
+		}
+
 		return res;
 	}
 

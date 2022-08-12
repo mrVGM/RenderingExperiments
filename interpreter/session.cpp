@@ -198,8 +198,13 @@ void interpreter::Session::CalculationStep()
 	interpreter::Interpreter& top = m_intepreterStack.top();
 	top.CalcutateStep();
 
+	bool exception = top.m_state == InterpreterState::Failed;
 	if (top.m_state != InterpreterState::Pending) {
 		m_intepreterStack.pop();
+	}
+
+	if (exception) {
+		m_intepreterStack.top().HandleException();
 	}
 }
 
@@ -258,6 +263,13 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 		return Value();
 	});
 	scope->BindValue("timeout", timeout);
+
+	Value throwException = CreateNativeFunc(1, [](Value scope) {
+		Value arg = scope.GetProperty("param0");
+		scope.SetProperty("exception", arg);
+		return Value();
+	});
+	scope->BindValue("throw", throwException);
 
 	m_deferredCallCode.m_code = "func_name();";
 	m_deferredCallCode.Tokenize();

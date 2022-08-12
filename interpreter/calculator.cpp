@@ -148,6 +148,7 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 	const char* assignment[] = { "Assignment", 0 };
 	const char* ifStatement[] = { "IfStatement", 0 };
 	const char* whileStatement[] = { "WhileStatement", 0 };
+	const char* tryCatch[] = { "TryCatch", 0 };
 	const char* varDef[] = { "VarDef", 0 };
 	const char* funcCall[] = { "FuncCall", ";", 0 };
 	const char* breakStatement[] = { "break", ";", 0 };
@@ -180,6 +181,16 @@ void interpreter::SingleInstructionCalc::Calculate(Calculator& calculator)
 		if (!m_calc) {
 			WhileStatementCalc* whileStatementCalc = new WhileStatementCalc();
 			m_calc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[0], *whileStatementCalc);
+			calculator.m_interpreter.Push(m_calc);
+		}
+		calculator.m_calculation = m_calc->m_calculation;
+		return;
+	}
+
+	if (symbolUtils::MatchChildren(&calculator.m_symbol, tryCatch, cs)) {
+		if (!m_calc) {
+			TryCatchCalc* tryCatchCalc = new TryCatchCalc();
+			m_calc = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[0], *tryCatchCalc);
 			calculator.m_interpreter.Push(m_calc);
 		}
 		calculator.m_calculation = m_calc->m_calculation;
@@ -1917,5 +1928,68 @@ void interpreter::FuncDefCalc::FreeUpResouces()
 }
 
 interpreter::FuncDefCalc::~FuncDefCalc()
+{
+}
+
+void interpreter::TryCatchCalc::Calculate(Calculator& calculator)
+{
+	const scripting::CompositeSymbol* cs;
+	const char* tryCatch[] = { "try", "InstructionsBlock", "catch", "(", "Name", ")", "InstructionsBlock", 0 };
+
+	if (!symbolUtils::MatchChildren(&calculator.m_symbol, tryCatch, cs)) {
+		calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
+		return;
+	}
+
+	if (m_curInterpreterScope.IsNone()) {
+		m_curInterpreterScope = calculator.m_interpreter.m_scope;
+	}
+
+	if (!m_exception) {
+		if (!m_block) {
+			InstructionsBlockCalc* calc = new InstructionsBlockCalc();
+			m_block = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[1], *calc);
+			calculator.m_interpreter.Push(m_block);
+		}
+
+		calculator.m_calculation = m_block->m_calculation;
+		return;
+	}
+
+	if (m_exceptionScope.IsNone()) {
+		m_exceptionScope = Scope::Create();
+		Scope* scope = static_cast<Scope*>(m_exceptionScope.GetManagedValue());
+		scope->BindValue(cs->m_childSymbols[4]->m_symbolData.m_string, m_exceptionValue);
+		scope->SetParentScope(m_curInterpreterScope);
+
+		calculator.m_interpreter.m_scope = m_exceptionScope;
+	}
+
+	if (!m_catchBlock) {
+		InstructionsBlockCalc* calc = new InstructionsBlockCalc();
+		m_catchBlock = new Calculator(calculator.m_interpreter, *cs->m_childSymbols[6], *calc);
+		calculator.m_interpreter.Push(m_catchBlock);
+	}
+
+	calculator.m_calculation = m_catchBlock->m_calculation;
+	if (calculator.m_calculation.m_state != Calculation::CalculationState::Pending) {
+		calculator.m_interpreter.m_scope = m_curInterpreterScope;
+	}
+}
+
+void interpreter::TryCatchCalc::FreeUpResouces()
+{
+	if (m_block) {
+		delete m_block;
+	}
+	if (m_catchBlock) {
+		delete m_catchBlock;
+	}
+
+	m_block = nullptr;
+	m_catchBlock = nullptr;
+}
+
+interpreter::TryCatchCalc::~TryCatchCalc()
 {
 }

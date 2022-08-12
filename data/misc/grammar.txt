@@ -41,6 +41,7 @@
 "Instruction" "VarDef"
 "Instruction" "IfStatement"
 "Instruction" "WhileStatement"
+"Instruction" "TryCatch"
 "Instruction" "return" ";"
 "Instruction" "return" "Expression" ";"
 "Instruction" "break" ";"
@@ -50,6 +51,7 @@
 "Assignment" "RawValue" "=" "Expression" ";"
 "IfStatement" "if" "(" "Expression" ")" "InstructionsBlock"
 "WhileStatement" "while" "(" "Expression" ")" "InstructionsBlock"
+"TryCatch" "try" "InstructionsBlock" "catch" "(" "Name" ")" "InstructionsBlock"
 
 "Sum" "Sum" "+" "Product"
 "Sum" "Sum" "-" "Product"

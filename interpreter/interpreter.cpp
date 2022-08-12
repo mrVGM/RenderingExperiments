@@ -68,14 +68,35 @@ void interpreter::Interpreter::PrepareCalculation(scripting::ISymbol* symbol)
 void interpreter::Interpreter::CalcutateStep()
 {
 	if (m_programStack.empty()) {
-		if (m_breakInstruction || m_continueInstruction || m_returnInstruction) {
+		if (m_breakInstruction || m_continueInstruction || m_returnInstruction || m_exception) {
 			m_state = InterpreterState::Failed;
 		}
-		m_state = InterpreterState::Done;
+		else {
+			m_state = InterpreterState::Done;
+		}
 		return;
 	}
 
 	Calculator* top = m_programStack.top();
+
+	if (m_exception) {
+		TryCatchCalc* tryCatchCalc = dynamic_cast<TryCatchCalc*>(&top->m_calculator);
+		if (tryCatchCalc) {
+			tryCatchCalc->m_exception = true;
+			m_state = InterpreterState::Pending;
+			m_exception = false;
+			return;
+		}
+
+		m_programStack.pop();
+		top->FreeUpResources();
+
+		if (m_programStack.empty()) {
+			delete top;
+		}
+
+		return;
+	}
 
 	if (m_breakInstruction) {
 		WhileStatementCalc* whileCalc = dynamic_cast<WhileStatementCalc*>(&top->m_calculator);
@@ -140,7 +161,7 @@ void interpreter::Interpreter::CalcutateStep()
 	}
 
 	if (top->m_calculation.m_state == Calculation::Failed) {
-		m_state = InterpreterState::Failed;
+		HandleException();
 		return;
 	}
 
@@ -161,6 +182,11 @@ void interpreter::Interpreter::HandleContinueInstruction()
 void interpreter::Interpreter::HandleBreakInstruction()
 {
 	m_breakInstruction = true;
+}
+
+void interpreter::Interpreter::HandleException()
+{
+	m_exception = true;
 }
 
 void interpreter::Interpreter::HandleReturnInstruction(const Value& returnValue)

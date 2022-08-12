@@ -318,4 +318,20 @@ namespace interpreter
 		void FreeUpResouces() override;
 		~ParameterListCalc() override;
 	};
+
+	struct TryCatchCalc : public ICalculator
+	{
+		Calculator* m_block = nullptr;
+		Calculator* m_catchBlock = nullptr;
+
+		Value m_curInterpreterScope;
+		Value m_exceptionScope;
+
+		bool m_exception = false;
+		Value m_exceptionValue;
+
+		void Calculate(Calculator& calculator) override;
+		void FreeUpResouces() override;
+		~TryCatchCalc() override;
+	};
 }

@@ -1,7 +1,8 @@
-let x = require("lib.txt");
-let f = func() {
-	print(x);
-	timeout(f, 2000);
-};
+try {
+	let s = 3;
+	throw("exception");
+} catch (e) {
+	print("Hello");
+}
 
-f();
+print("Done");
