@@ -83,8 +83,9 @@ void interpreter::Interpreter::CalcutateStep()
 		TryCatchCalc* tryCatchCalc = dynamic_cast<TryCatchCalc*>(&top->m_calculator);
 		if (tryCatchCalc) {
 			tryCatchCalc->m_exception = true;
-			m_state = InterpreterState::Pending;
+			tryCatchCalc->m_exceptionValue = m_exceptionValue;
 			m_exception = false;
+			m_exceptionValue = Value();
 			return;
 		}
 
@@ -161,7 +162,7 @@ void interpreter::Interpreter::CalcutateStep()
 	}
 
 	if (top->m_calculation.m_state == Calculation::Failed) {
-		HandleException();
+		HandleException(top->m_calculation.m_value);
 		return;
 	}
 
@@ -184,15 +185,21 @@ void interpreter::Interpreter::HandleBreakInstruction()
 	m_breakInstruction = true;
 }
 
-void interpreter::Interpreter::HandleException()
+void interpreter::Interpreter::HandleException(const Value& exception)
 {
 	m_exception = true;
+	m_exceptionValue = exception;
 }
 
 void interpreter::Interpreter::HandleReturnInstruction(const Value& returnValue)
 {
 	m_returnInstruction = true;
 	m_returnValue = returnValue;
+}
+
+const interpreter::Value& interpreter::Interpreter::GetException() const
+{
+	return m_exceptionValue;
 }
 
 void interpreter::Interpreter::PushScope()

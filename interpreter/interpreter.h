@@ -45,14 +45,17 @@ namespace interpreter
 
 		void HandleContinueInstruction();
 		void HandleBreakInstruction();
-		void HandleException();
+		void HandleException(const Value& exception);
 		void HandleReturnInstruction(const Value& returnValue);
+
+		const Value& GetException() const;
 
 	private:
 		bool m_breakInstruction = false;
 		bool m_continueInstruction = false;
 		bool m_returnInstruction = false;
 		bool m_exception = false;
+		Value m_exceptionValue;
 		Value m_returnValue;
 	};
 }

@@ -1,8 +1,5 @@
 try {
-	let s = 3;
-	throw("exception");
+	require("inc.txt");
 } catch (e) {
-	print("Hello");
+	print(e);
 }
-
-print("Done");

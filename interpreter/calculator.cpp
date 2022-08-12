@@ -1744,6 +1744,7 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 
 		if (res.m_state == FuncResult::FuncExecutionState::Failed) {
 			calculator.m_calculation.m_state = Calculation::CalculationState::Failed;
+			calculator.m_calculation.m_value = res.m_returnValue;
 			return;
 		}
 

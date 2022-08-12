@@ -199,12 +199,13 @@ void interpreter::Session::CalculationStep()
 	top.CalcutateStep();
 
 	bool exception = top.m_state == InterpreterState::Failed;
+	Value exceptionValue = top.GetException();
 	if (top.m_state != InterpreterState::Pending) {
 		m_intepreterStack.pop();
 	}
 
-	if (exception) {
-		m_intepreterStack.top().HandleException();
+	if (exception && !m_intepreterStack.empty()) {
+		m_intepreterStack.top().HandleException(exceptionValue);
 	}
 }
 
