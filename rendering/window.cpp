@@ -122,7 +122,6 @@ void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 	});
 
 	interpreter::Value drag = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
-		interpreter::Value self = scope.GetProperty("self");
 		MSG msg;
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 			if (!GetMessage(&msg, NULL, 0, 0)) {
@@ -134,11 +133,22 @@ void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 		return interpreter::Value();
 	});
 
+	interpreter::Value alive = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		interpreter::NativeObject* obj = static_cast<interpreter::NativeObject*>(self.GetManagedValue());
+
+		Window& wnd = static_cast<Window&>(obj->GetNativeObject());
+
+		return interpreter::Value((bool)wnd.m_hwnd);
+	});
+	
 	interpreter::Value& createProp = GetOrCreateProperty(nativeObject, "create");
 	interpreter::Value& dragProp = GetOrCreateProperty(nativeObject, "drag");
+	interpreter::Value& aliveProp = GetOrCreateProperty(nativeObject, "isAlive");
 
 	createProp = create;
 	dragProp = drag;
+	aliveProp = alive;
 }
 
 
