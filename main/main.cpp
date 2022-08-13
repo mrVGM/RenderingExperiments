@@ -1,16 +1,10 @@
 ﻿#include "dataLib.h"
 #include "ISession.h"
 
-#include "window.h"
-#include "core.h"
-#include "nativeFunc.h"
+#include "api.h"
 
 #include <filesystem>
 #include <iostream>
-#include <thread>
-#include <semaphore>
-
-#include <cstring>
 
 int main()
 {
@@ -20,17 +14,9 @@ int main()
 	std::filesystem::path scriptsDir = dataPath.append("misc\\");
 
 	interpreter::ISession& session = interpreter::GetSession(scriptsDir.string(), std::cout);
+	session.AddGlobalValue("api", rendering::GetAPI());
 
-
-	session.AddGlobalValue("window", interpreter::CreateNativeFunc(0, [](interpreter::Value scope) {
-		return rendering::Window::Create();
-	}));
-
-	session.AddGlobalValue("core", interpreter::CreateNativeFunc(0, [](interpreter::Value scope) {
-		return rendering::Core::Create();
-	}));
-
-	session.RunFile("test_code.txt");
+	session.RunFile("main.txt");
 
 	while (true) {
 		std::cout << "> ";

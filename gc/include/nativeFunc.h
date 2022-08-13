@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 
+#include <string>
+
 namespace interpreter
 {
 	Value CreateNativeFunc(int paramsCount, std::function<Value(Value)> func);

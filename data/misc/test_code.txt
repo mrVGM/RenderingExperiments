@@ -1,5 +1,0 @@
-try {
-	require("inc.txt");
-} catch (e) {
-	print(e);
-}

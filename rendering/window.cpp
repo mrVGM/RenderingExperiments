@@ -2,7 +2,7 @@
 
 #include "nativeFunc.h"
 
-namespace _windowData
+namespace
 {
 	static bool m_classRegistered = false;
 	const wchar_t* m_className = L"MyWindow";
@@ -11,7 +11,7 @@ namespace _windowData
 
 void rendering::Window::RegisterWindowClass()
 {
-	if (!_windowData::m_classRegistered)
+	if (!m_classRegistered)
 	{
 		WNDCLASSEXW wcex;
 
@@ -25,11 +25,11 @@ void rendering::Window::RegisterWindowClass()
 		wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground = CreateSolidBrush(RGB(0, 0, 0));
 		wcex.lpszMenuName = NULL;
-		wcex.lpszClassName = _windowData::m_className;
+		wcex.lpszClassName = m_className;
 
 		RegisterClassExW(&wcex);
 
-		_windowData::m_classRegistered = true;
+		m_classRegistered = true;
 	}
 }
 
@@ -89,30 +89,39 @@ rendering::Window::~Window()
 	Destroy();
 }
 
-interpreter::Value rendering::Window::Create()
+void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 {
-	Window* wnd = new Window();
-	interpreter::Value res(*wnd);
-
-	wnd->RegisterProperty("create", &wnd->m_create);
-	wnd->RegisterProperty("drag", &wnd->m_drag);
-	wnd->RegisterProperty("width", &wnd->m_width);
-	wnd->RegisterProperty("height", &wnd->m_height);
-
-	interpreter::Value create = interpreter::CreateNativeMethod(*wnd, 2, [](interpreter::Value scope) {
+	interpreter::Value create = interpreter::CreateNativeMethod(nativeObject, 2, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
-		Window* wnd = static_cast<Window*>(self.GetManagedValue());
+		interpreter::NativeObject* obj = static_cast<interpreter::NativeObject*>(self.GetManagedValue());
+
+		Window& wnd = static_cast<Window&>(obj->GetNativeObject());
+
 		interpreter::Value width = scope.GetProperty("param0");
 		interpreter::Value height = scope.GetProperty("param1");
-		
-		wnd->m_width = width;
-		wnd->m_height = height;
-		
-		wnd->Create(width.GetNum(), height.GetNum());
+
+
+		if (width.GetType() != interpreter::ScriptingValueType::Number || width.GetNum() < 0) {
+			scope.SetProperty("exception", interpreter::Value("Bad width value!"));
+			return interpreter::Value();
+		}
+
+		if (height.GetType() != interpreter::ScriptingValueType::Number || height.GetNum() < 0) {
+			scope.SetProperty("exception", interpreter::Value("Bad height value!"));
+			return interpreter::Value();
+		}
+
+		interpreter::Value& widthVal = wnd.GetOrCreateProperty(*obj, "width");
+		interpreter::Value& heightVal = wnd.GetOrCreateProperty(*obj, "height");
+
+		widthVal = width;
+		heightVal = height;
+
+		wnd.Create(width.GetNum(), height.GetNum());
 		return interpreter::Value();
 	});
 
-	interpreter::Value drag = interpreter::CreateNativeMethod(*wnd, 0, [](interpreter::Value scope) {
+	interpreter::Value drag = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
 		MSG msg;
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
@@ -125,18 +134,20 @@ interpreter::Value rendering::Window::Create()
 		return interpreter::Value();
 	});
 
-	wnd->SetProperty("create", create);
-	wnd->SetProperty("drag", drag);
+	interpreter::Value& createProp = GetOrCreateProperty(nativeObject, "create");
+	interpreter::Value& dragProp = GetOrCreateProperty(nativeObject, "drag");
 
-	return res;
+	createProp = create;
+	dragProp = drag;
 }
+
 
 void rendering::Window::Create(int width, int height)
 {
-	if (_windowData::m_created) {
+	if (m_created) {
 		return;
 	}
-	_windowData::m_created = true;
+	m_created = true;
 
 	DWORD dwStyle = WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
 	DWORD dxExStyle = 0;
@@ -150,7 +161,7 @@ void rendering::Window::Create(int width, int height)
 	AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
 	CreateWindowW(
-		_windowData::m_className,
+		m_className,
 		L"Render Window",
 		dwStyle,
 		windowRect.left, windowRect.top,

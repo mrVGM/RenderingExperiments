@@ -11,6 +11,10 @@ add_library (GC
 	"garbageCollector.cpp"
 	"include/nativeFunc.h"
 	"nativeFunc.cpp"
+	"include/nativeObject.h"
+	"nativeObject.cpp"
+	"include/utils.h"
+	"utils.cpp"
 )
 
 target_include_directories(GC INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

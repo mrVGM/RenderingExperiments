@@ -1,12 +1,11 @@
-#include "renderObject.h"
-#include "value.h"
+#include "nativeObject.h"
 
 #include <Windows.h>
 
 
 namespace rendering
 {
-	class Window : public RenderObject
+	class Window : public interpreter::INativeObject
 	{
 		void RegisterWindowClass();
 		void Create(int width, int height);
@@ -14,14 +13,11 @@ namespace rendering
 
 		static LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		LRESULT CALLBACK WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-		Window();
+
+		void InitProperties(interpreter::NativeObject& nativeObject) override;
 	public:
 		HWND m_hwnd;
-		static interpreter::Value Create();
+		Window();
 		~Window();
-		interpreter::Value m_create;
-		interpreter::Value m_drag;
-		interpreter::Value m_width;
-		interpreter::Value m_height;
 	};
 }

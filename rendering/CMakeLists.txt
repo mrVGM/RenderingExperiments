@@ -7,12 +7,7 @@ cmake_minimum_required (VERSION 3.8)
 add_library (Rendering
 	"include/window.h"
 	"window.cpp"
-	"renderObject.h"
-	"renderObject.cpp"
-	"include/core.h"
-	"core.cpp"
-	"d3dx12.h"
-)
+ "include/api.h" "api.cpp")
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

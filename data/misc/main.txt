@@ -1,0 +1,7 @@
+let wnd = api.window();
+
+wnd.create(600, 400);
+
+while (1) {
+	wnd.drag();
+}
