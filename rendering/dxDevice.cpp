@@ -261,18 +261,93 @@ bool rendering::DXDevice::LoadAssets(std::string shaderPath, std::string& errorM
         // Wait for the command list to execute; we are reusing the same command 
         // list in our main loop but for now, we just want to wait for setup to 
         // complete before continuing.
-        WaitForPreviousFrame();
+        bool res = WaitForPreviousFrame(errorMessage);
+        if (!res) {
+            return false;
+        }
     }
 
     return true;
 }
 
-void rendering::DXDevice::PopulateCommandList()
+bool rendering::DXDevice::PopulateCommandList(std::string& errorMessage)
 {
+    // Command list allocators can only be reset when the associated 
+    // command lists have finished execution on the GPU; apps should use 
+    // fences to determine GPU execution progress.
+    THROW_ERROR(
+        m_commandAllocator->Reset(),
+        "Can't reset Command Allocator!")
+
+    // However, when ExecuteCommandList() is called on a particular command 
+    // list, that command list can then be reset at any time and must be before 
+    // re-recording.
+    THROW_ERROR(
+        m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()),
+        "can't reset Command List!")
+
+    // Set necessary state.
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+
+    // Indicate that the back buffer will be used as a render target.
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+    // Record commands.
+    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->DrawInstanced(3, 1, 0, 0);
+
+    // Indicate that the back buffer will now be used to present.
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+
+    THROW_ERROR(
+        m_commandList->Close(),
+        "Can't close Command List!")
+
+    return true;
 }
 
-void rendering::DXDevice::WaitForPreviousFrame()
+bool rendering::DXDevice::WaitForPreviousFrame(std::string& errorMessage)
 {
+    // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
+    // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
+    // sample illustrates how to use fences for efficient resource usage and to
+    // maximize GPU utilization.
+
+    // Signal and increment the fence value.
+    const UINT64 fence = m_fenceValue;
+    THROW_ERROR(
+        m_commandQueue->Signal(m_fence.Get(), fence),
+        "Can't signal the Fence!"
+        )
+    m_fenceValue++;
+
+    // Wait until the previous frame is finished.
+    if (m_fence->GetCompletedValue() < fence)
+    {
+        THROW_ERROR(
+            m_fence->SetEventOnCompletion(fence, m_fenceEvent),
+            "Can't set Fence Event!"
+        )
+        WaitForSingleObject(m_fenceEvent, INFINITE);
+    }
+
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+    return true;
 }
 
 #undef THROW_ERROR

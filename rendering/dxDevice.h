@@ -49,8 +49,8 @@ namespace rendering
 
         bool LoadPipeline(HWND hWnd, std::string& errorMessage);
         bool LoadAssets(std::string shaderPath, std::string& errorMessage);
-        void PopulateCommandList();
-        void WaitForPreviousFrame();
+        bool PopulateCommandList(std::string& errorMessage);
+        bool WaitForPreviousFrame(std::string& errorMessage);
 
     public:
         virtual void InitProperties(interpreter::NativeObject& nativeObject);
