@@ -12,4 +12,13 @@ let dragCrt = func() {
 	timeout(dragCrt, 0);
 };
 
+let device = api.device();
+try {
+	device.init(wnd);
+	print("Init Complete!");
+} catch(e) {
+	print(e);
+}
+
+
 dragCrt();

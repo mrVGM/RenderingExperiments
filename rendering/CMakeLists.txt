@@ -7,7 +7,12 @@ cmake_minimum_required (VERSION 3.8)
 add_library (Rendering
 	"include/window.h"
 	"window.cpp"
- "include/api.h" "api.cpp")
+	"include/api.h"
+	"api.cpp"
+	"d3dx12.h"
+	"dxDevice.h"
+	"dxDevice.cpp"
+)
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -16,6 +21,7 @@ target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(Rendering PUBLIC GC)
 target_link_libraries(Rendering PRIVATE "d3d12.lib" "dxgi.lib" "d3dcompiler.lib")
 
+add_definitions(-DDEBUG=1)
 add_definitions(-D_AFXDLL)
 set(CMAKE_MFC_FLAG 1)
 
