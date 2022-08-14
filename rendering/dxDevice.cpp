@@ -121,6 +121,7 @@ bool rendering::DXDevice::LoadAssets(std::string shaderPath, std::string& errorM
 {
     using Microsoft::WRL::ComPtr;
 
+    // TODO: proper conversion to wstring
     std::wstring shaderPathW(shaderPath.begin(), shaderPath.end());
 
     // Create an empty root signature.
