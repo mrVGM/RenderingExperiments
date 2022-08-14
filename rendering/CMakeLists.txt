@@ -21,7 +21,6 @@ target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(Rendering PUBLIC GC)
 target_link_libraries(Rendering PRIVATE "d3d12.lib" "dxgi.lib" "d3dcompiler.lib")
 
-add_definitions(-DDEBUG=1)
 add_definitions(-D_AFXDLL)
 set(CMAKE_MFC_FLAG 1)
 

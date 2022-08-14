@@ -5,6 +5,9 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("D3D12_Tests")
 
+add_definitions(-DDEBUG=1)
+add_definitions(-DUNICODE)
+
 # Include sub-projects.
 add_subdirectory ("main")
 add_subdirectory ("dataLib")

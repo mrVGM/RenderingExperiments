@@ -170,7 +170,7 @@ void rendering::Window::Create(int width, int height)
 
 	AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
-	CreateWindowW(
+	CreateWindow(
 		m_className,
 		L"Render Window",
 		dwStyle,
