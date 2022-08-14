@@ -350,6 +350,31 @@ bool rendering::DXDevice::WaitForPreviousFrame(std::string& errorMessage)
     return true;
 }
 
+bool rendering::DXDevice::Render(std::string& errorMessage)
+{
+    bool res;
+    // Record all the commands we need to render the scene into the command list.
+    res = PopulateCommandList(errorMessage);
+    if (!res) {
+        return false;
+    }
+
+    // Execute the command list.
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+    // Present the frame.
+    THROW_ERROR(m_swapChain->Present(1, 0),
+        "Can't present Swap Chain!")
+
+    res = WaitForPreviousFrame(errorMessage);
+    if (!res) {
+        return false;
+    }
+
+    return true;
+}
+
 #undef THROW_ERROR
 
 void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject)
@@ -407,4 +432,22 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
         }
 		return Value();
 	});
+
+    Value& render = GetOrCreateProperty(nativeObject, "render");
+
+    render = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+        Value self = scope.GetProperty("self");
+        NativeObject* selfContainer = static_cast<NativeObject*>(self.GetManagedValue());
+        DXDevice& device = static_cast<DXDevice&>(selfContainer->GetNativeObject());
+
+        std::string errorMessage;
+        bool res = device.Render(errorMessage);
+
+        if (!res) {
+            scope.SetProperty("exception", Value(errorMessage));
+            return Value();
+        }
+
+        return Value();
+    });
 }

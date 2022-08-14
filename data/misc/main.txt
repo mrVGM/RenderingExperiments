@@ -13,12 +13,29 @@ let dragCrt = func() {
 };
 
 let device = api.device();
+
+let renderCrt = func() {
+	if (wnd.isAlive() == 0) {
+		return;
+	}
+
+	try {
+		device.render();
+	} catch(e) {
+		print(e);
+		return;
+	}
+
+	timeout(renderCrt);
+};
+
 try {
 	device.init(wnd, "C:\\Users\\Vasil\\dev\\D3D12_Tests\\data\\misc\\shaders.hlsl");
 	print("Init Complete!");
+
 } catch(e) {
 	print(e);
 }
 
-
+renderCrt();
 dragCrt();

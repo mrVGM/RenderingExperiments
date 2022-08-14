@@ -52,6 +52,8 @@ namespace rendering
         bool PopulateCommandList(std::string& errorMessage);
         bool WaitForPreviousFrame(std::string& errorMessage);
 
+        bool Render(std::string& errorMessage);
+
     public:
         virtual void InitProperties(interpreter::NativeObject& nativeObject);
 	};
