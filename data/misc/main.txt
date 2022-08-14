@@ -14,7 +14,7 @@ let dragCrt = func() {
 
 let device = api.device();
 try {
-	device.init(wnd);
+	device.init(wnd, "C:\\Users\\Vasil\\dev\\D3D12_Tests\\data\\misc\\shaders.hlsl");
 	print("Init Complete!");
 } catch(e) {
 	print(e);

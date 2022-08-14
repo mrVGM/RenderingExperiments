@@ -2,6 +2,8 @@
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
 #include <wrl.h>
 #include <string>
 
@@ -10,6 +12,12 @@
 
 namespace rendering
 {
+    struct Vertex
+    {
+        DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT4 color;
+    };
+
 	class DXDevice : public interpreter::INativeObject
 	{
         static const UINT FrameCount = 2;
@@ -40,7 +48,7 @@ namespace rendering
         UINT64 m_fenceValue;
 
         bool LoadPipeline(HWND hWnd, std::string& errorMessage);
-        void LoadAssets();
+        bool LoadAssets(std::string shaderPath, std::string& errorMessage);
         void PopulateCommandList();
         void WaitForPreviousFrame();
 
