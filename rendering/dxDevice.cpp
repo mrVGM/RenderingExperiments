@@ -284,7 +284,7 @@ bool rendering::DXDevice::PopulateCommandList(std::string& errorMessage)
     // re-recording.
     THROW_ERROR(
         m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()),
-        "can't reset Command List!")
+        "Can't reset Command List!")
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
@@ -377,6 +377,7 @@ bool rendering::DXDevice::Render(std::string& errorMessage)
 
 #undef THROW_ERROR
 
+
 void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject)
 {
 	using namespace interpreter;
@@ -408,6 +409,11 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
 
 		device.m_width = (UINT)windowContainer->GetProperty("width").GetNum();
 		device.m_height = (UINT)windowContainer->GetProperty("height").GetNum();
+
+        device.m_frameIndex = 0;
+        device.m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(device.m_width), static_cast<float>(device.m_height));
+        device.m_scissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(device.m_width), static_cast<LONG>(device.m_height));
+        device.m_rtvDescriptorSize = 0;
 
         std::string errorMessage;
         {
