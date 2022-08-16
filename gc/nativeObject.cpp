@@ -37,6 +37,16 @@ interpreter::Value interpreter::NativeObject::Create(INativeObject* nativeObject
 	return res;
 }
 
+interpreter::INativeObject* interpreter::NativeObject::ExtractNativeObject(const interpreter::Value& value)
+{
+	NativeObject* nativeObject = dynamic_cast<NativeObject*>(value.GetManagedValue());
+	if (!nativeObject) {
+		return nullptr;
+	}
+
+	return &nativeObject->GetNativeObject();
+}
+
 void interpreter::INativeObject::InitProperties(NativeObject& nativeObject)
 {
 }

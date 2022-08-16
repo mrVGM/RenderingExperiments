@@ -25,6 +25,7 @@ namespace interpreter
 
 	public:
 		static Value Create(INativeObject* nativeObject);
+		static INativeObject* ExtractNativeObject(const Value& value);
 
 		void SetProperty(std::string name, Value value) override;
 		Value GetProperty(std::string name) const override;

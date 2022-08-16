@@ -11,9 +11,10 @@ let dragCrt = func() {
 	wnd.drag();
 	timeout(dragCrt, 0);
 };
+dragCrt();
+
 
 let device = api.device();
-
 let renderCrt = func() {
 	if (wnd.isAlive() == 0) {
 		return;
@@ -29,27 +30,23 @@ let renderCrt = func() {
 	timeout(renderCrt);
 };
 
-try {
-	device.init(wnd, "C:\\Users\\Vasil\\dev\\D3D12_Tests\\data\\misc\\shaders.hlsl");
-	print("Init Complete!");
-
-} catch(e) {
-	print(e);
-}
-
-renderCrt();
-dragCrt();
-
 let shaderCode = readFile("shaders.hlsl");
 
 let vertexShader = api.vertexShader();
 let pixelShader = api.pixelShader();
 
+
 try {
 	vertexShader.compile(shaderCode);
 	pixelShader.compile(shaderCode);
 	print("Shaders compiled!");
+
+	device.init(wnd, vertexShader, pixelShader);
+	print("Device Init Completed!");
+
+	renderCrt();
 } catch (e) {
 	print(e);
 }
+
 

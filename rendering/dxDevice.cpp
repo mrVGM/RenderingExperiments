@@ -2,6 +2,8 @@
 
 #include "nativeFunc.h"
 #include "window.h"
+#include "dxVertexShader.h"
+#include "dxPixelShader.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -117,12 +119,9 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
 }
 
 
-bool rendering::DXDevice::LoadAssets(std::string shaderPath, std::string& errorMessage)
+bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
-
-    // TODO: proper conversion to wstring
-    std::wstring shaderPathW(shaderPath.begin(), shaderPath.end());
 
     // Create an empty root signature.
     {
@@ -142,24 +141,6 @@ bool rendering::DXDevice::LoadAssets(std::string shaderPath, std::string& errorM
 
     // Create the pipeline state, which includes compiling and loading shaders.
     {
-        ComPtr<ID3DBlob> vertexShader;
-        ComPtr<ID3DBlob> pixelShader;
-
-#if defined(_DEBUG)
-        // Enable better shader debugging with the graphics debugging tools.
-        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-        UINT compileFlags = 0;
-#endif
-
-        THROW_ERROR(
-            D3DCompileFromFile(shaderPathW.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr),
-            "Can't compile Vertex Shader!")
-
-        THROW_ERROR(
-            D3DCompileFromFile(shaderPathW.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr),
-            "Can't compile Pixel Shader!")
-
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
@@ -385,7 +366,7 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
 
 	Value& initProp = GetOrCreateProperty(nativeObject, "init");
 
-	initProp = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+	initProp = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value self = scope.GetProperty("self");
 		NativeObject* selfContainer = static_cast<NativeObject*>(self.GetManagedValue());
 		DXDevice& device = static_cast<DXDevice&>(selfContainer->GetNativeObject());
@@ -425,13 +406,23 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
             }
         }
 
-        Value shaderPath = scope.GetProperty("param1");
-        if (shaderPath.GetType() != ScriptingValueType::String) {
-            scope.SetProperty("exception", Value("Please supply a Shader path!"));
+        Value vertexShaderValue = scope.GetProperty("param1");
+        Value pixelShaderValue = scope.GetProperty("param2");
+
+        DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
+        if (!vertexShader) {
+            scope.SetProperty("exception", Value("PLease supply a Vertex Shader!"));
             return Value();
         }
+
+        DXPixelShader* pixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(pixelShaderValue));
+        if (!pixelShader) {
+            scope.SetProperty("exception", Value("PLease supply a Pixel Shader!"));
+            return Value();
+        }
+
         {
-            bool res = device.LoadAssets(shaderPath.GetString(), errorMessage);
+            bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), errorMessage);
             if (!res) {
                 self.SetProperty("exception", Value(errorMessage));
                 return Value();
