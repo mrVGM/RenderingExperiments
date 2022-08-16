@@ -6,6 +6,8 @@
 
 #include "window.h"
 #include "dxDevice.h"
+#include "dxVertexShader.h"
+#include "dxPixelShader.h"
 
 namespace rendering
 {
@@ -13,16 +15,28 @@ namespace rendering
 
 	void Create()
 	{
+		using namespace interpreter;
+
 		m_api = interpreter::utils::GetEmptyObject();
 
-		m_api.SetProperty("window", interpreter::CreateNativeFunc(0, [](interpreter::Value scope) {
+		m_api.SetProperty("window", interpreter::CreateNativeFunc(0, [](Value scope) {
 			Window* wnd = new Window();
-			return interpreter::NativeObject::Create(wnd);
+			return NativeObject::Create(wnd);
 		}));
 
-		m_api.SetProperty("device", interpreter::CreateNativeFunc(0, [](interpreter::Value scope) {
+		m_api.SetProperty("device", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXDevice* device = new DXDevice();
-			return interpreter::NativeObject::Create(device);
+			return NativeObject::Create(device);
+		}));
+
+		m_api.SetProperty("vertexShader", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXVertexShader* vertexShader = new DXVertexShader();
+			return NativeObject::Create(vertexShader);
+		}));
+
+		m_api.SetProperty("pixelShader", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXPixelShader* pixelShader = new DXPixelShader();
+			return NativeObject::Create(pixelShader);
 		}));
 	}
 }

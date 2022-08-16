@@ -39,3 +39,17 @@ try {
 
 renderCrt();
 dragCrt();
+
+let shaderCode = readFile("shaders.hlsl");
+
+let vertexShader = api.vertexShader();
+let pixelShader = api.pixelShader();
+
+try {
+	vertexShader.compile(shaderCode);
+	pixelShader.compile(shaderCode);
+	print("Shaders compiled!");
+} catch (e) {
+	print(e);
+}
+

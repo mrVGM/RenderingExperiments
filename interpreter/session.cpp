@@ -272,6 +272,20 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	});
 	scope->BindValue("throw", throwException);
 
+	Value readFile = CreateNativeFunc(1, [&](Value scope) {
+		Value filePathValue = scope.GetProperty("param0");
+		if (filePathValue.GetType() != ScriptingValueType::String) {
+			scope.SetProperty("exception", Value("Please supply a file path!"));
+			return Value();
+		}
+
+		std::string fullPath = m_rootDir + filePathValue.GetString();
+		std::string contents = data::GetLibrary().ReadFileByPath(fullPath);
+
+		return Value(contents);
+	});
+	scope->BindValue("readFile", readFile);
+
 	m_deferredCallCode.m_code = "func_name();";
 	m_deferredCallCode.Tokenize();
 	m_deferredCallCode.TokenizeForParser();

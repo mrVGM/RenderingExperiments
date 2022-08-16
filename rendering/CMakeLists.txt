@@ -12,6 +12,10 @@ add_library (Rendering
 	"d3dx12.h"
 	"dxDevice.h"
 	"dxDevice.cpp"
+	"dxVertexShader.h"
+	"dxVertexShader.cpp"
+	"dxPixelShader.h"
+	"dxPixelShader.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
