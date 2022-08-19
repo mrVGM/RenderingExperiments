@@ -44,11 +44,11 @@ namespace rendering
         // Synchronization objects.
         UINT m_frameIndex;
         HANDLE m_fenceEvent;
-        Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
+        ID3D12Fence* m_fence = nullptr;
         UINT64 m_fenceValue;
 
         bool LoadPipeline(HWND hWnd, std::string& errorMessage);
-        bool LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, std::string& errorMessage);
+        bool LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, std::string& errorMessage);
         bool PopulateCommandList(std::string& errorMessage);
         bool WaitForPreviousFrame(std::string& errorMessage);
 

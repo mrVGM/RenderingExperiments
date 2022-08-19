@@ -35,6 +35,7 @@ let shaderCode = readFile("shaders.hlsl");
 let vertexShader = api.vertexShader();
 let pixelShader = api.pixelShader();
 
+let fence = api.fence();
 
 try {
 	vertexShader.compile(shaderCode);
@@ -42,7 +43,11 @@ try {
 	print("Shaders compiled!");
 
 	device.init(wnd);
-	device.load(vertexShader, pixelShader);
+
+	fence.create(device);
+	print("Fence created!");
+
+	device.load(vertexShader, pixelShader, fence);
 	print("Device Init Completed!");
 
 	renderCrt();

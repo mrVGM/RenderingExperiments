@@ -18,6 +18,8 @@ add_library (Rendering
 	"dxPixelShader.cpp"
 	"dxHeap.h"
 	"dxHeap.cpp"
+	"dxFence.h"
+	"dxFence.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

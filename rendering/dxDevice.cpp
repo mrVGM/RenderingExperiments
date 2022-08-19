@@ -4,6 +4,7 @@
 #include "window.h"
 #include "dxVertexShader.h"
 #include "dxPixelShader.h"
+#include "dxFence.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -119,7 +120,7 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
 }
 
 
-bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, std::string& errorMessage)
+bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
@@ -224,10 +225,7 @@ bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& ver
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
-        THROW_ERROR(
-            m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)),
-            "Can't Create Fence!"
-        );
+        m_fence = fence;
         m_fenceValue = 1;
 
         // Create an event handle to use for frame synchronization.
@@ -312,7 +310,7 @@ bool rendering::DXDevice::WaitForPreviousFrame(std::string& errorMessage)
     // Signal and increment the fence value.
     const UINT64 fence = m_fenceValue;
     THROW_ERROR(
-        m_commandQueue->Signal(m_fence.Get(), fence),
+        m_commandQueue->Signal(m_fence, fence),
         "Can't signal the Fence!"
         )
     m_fenceValue++;
@@ -397,12 +395,14 @@ return Value();
 	});
 
     Value& load = GetOrCreateProperty(nativeObject, "load");
-    load = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    load = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value self = scope.GetProperty("self");
         DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
 
         Value vertexShaderValue = scope.GetProperty("param0");
         Value pixelShaderValue = scope.GetProperty("param1");
+
+        Value fenceValue = scope.GetProperty("param2");
 
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
         if (!vertexShader) {
@@ -414,9 +414,14 @@ return Value();
             THROW_EXCEPTION("Please supply a Pixel Shader!")
         }
 
+        DXFence* fence = dynamic_cast<DXFence*>(NativeObject::ExtractNativeObject(fenceValue));
+        if (!fence) {
+            THROW_EXCEPTION("Please supply a Fence!")
+        }
+
         std::string errorMessage;
         {
-            bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), errorMessage);
+            bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), fence->GetFence(), errorMessage);
             if (!res) {
                 THROW_EXCEPTION(errorMessage)
             }

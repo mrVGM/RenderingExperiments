@@ -9,6 +9,7 @@
 #include "dxVertexShader.h"
 #include "dxPixelShader.h"
 #include "dxHeap.h"
+#include "dxFence.h"
 
 namespace rendering
 {
@@ -43,6 +44,11 @@ namespace rendering
 		m_api.SetProperty("heap", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXHeap* heap = new DXHeap();
 			return NativeObject::Create(heap);
+		}));
+
+		m_api.SetProperty("fence", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXFence* fence = new DXFence();
+			return NativeObject::Create(fence);
 		}));
 	}
 }
