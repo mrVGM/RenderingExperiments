@@ -13,11 +13,19 @@ return Value();\
 
 
 	create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
+
 		Value deviceValue = scope.GetProperty("param0");
 		DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
 
 		if (!device) {
 			THROW_EXCEPTION("Please supply a Device!")
+		}
+
+		HRESULT hr = device->GetDevice().QueryInterface(IID_PPV_ARGS(&heap->m_device3));
+		if (FAILED(hr)) {
+			THROW_EXCEPTION("Can't Query ID3D12Device3!")
 		}
 
 		Value heapSizeValue = scope.GetProperty("param1");
@@ -44,9 +52,7 @@ return Value();\
 			D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_CREATE_NOT_RESIDENT |
 			D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
 
-		Value selfValue = scope.GetProperty("self");
-		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
-
+		
 		std::string error;
 		bool res = heap->Init(*device, desc, error);
 		if (!res) {
@@ -74,5 +80,10 @@ if (FAILED(hr)) {\
 
 #undef THROW_ERROR
 
+	return true;
+}
+
+bool rendering::DXHeap::MakeResident(DXDevice& device)
+{
 	return true;
 }
