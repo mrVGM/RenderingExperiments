@@ -49,4 +49,12 @@ try {
 	print(e);
 }
 
+let heap = api.heap();
+
+try {
+	heap.create(device, 12);
+	print("Heap Created!");
+} catch(e) {
+	print(e);
+}
 

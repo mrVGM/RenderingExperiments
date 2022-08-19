@@ -449,3 +449,8 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
         return Value();
     });
 }
+
+ID3D12Device& rendering::DXDevice::GetDevice()
+{
+    return *m_device.Get();
+}

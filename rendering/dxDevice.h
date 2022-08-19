@@ -54,8 +54,10 @@ namespace rendering
 
         bool Render(std::string& errorMessage);
 
-    public:
         virtual void InitProperties(interpreter::NativeObject& nativeObject);
+    public:
+
+        ID3D12Device& GetDevice();
 	};
 
 }

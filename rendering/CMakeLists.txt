@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
 add_library (Rendering
-	"include/window.h"
+	"window.h"
 	"window.cpp"
 	"include/api.h"
 	"api.cpp"
@@ -16,6 +16,8 @@ add_library (Rendering
 	"dxVertexShader.cpp"
 	"dxPixelShader.h"
 	"dxPixelShader.cpp"
+	"dxHeap.h"
+	"dxHeap.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

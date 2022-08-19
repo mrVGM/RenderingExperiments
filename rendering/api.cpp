@@ -8,6 +8,7 @@
 #include "dxDevice.h"
 #include "dxVertexShader.h"
 #include "dxPixelShader.h"
+#include "dxHeap.h"
 
 namespace rendering
 {
@@ -37,6 +38,11 @@ namespace rendering
 		m_api.SetProperty("pixelShader", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXPixelShader* pixelShader = new DXPixelShader();
 			return NativeObject::Create(pixelShader);
+		}));
+
+		m_api.SetProperty("heap", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXHeap* heap = new DXHeap();
+			return NativeObject::Create(heap);
 		}));
 	}
 }
