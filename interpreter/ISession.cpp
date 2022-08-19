@@ -61,7 +61,7 @@ void ISessionImpl::RunInstruction(std::string instruction)
 	_sessionData::m_mutex.unlock();
 }
 
-interpreter::ISession& interpreter::GetSession(std::string scriptsDir, std::ostream& outputStream)
+interpreter::ISession& interpreter::OpenSession(std::string scriptsDir, std::ostream& outputStream)
 {
 	if (_sessionData::m_session) {
 		return _sessionData::m_impl;

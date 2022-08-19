@@ -14,6 +14,6 @@ namespace interpreter
 		void AddGlobalValue(std::string name, const Value& value);
 	};
 
-	ISession& GetSession(std::string scriptsDir, std::ostream& outputStream);
+	ISession& OpenSession(std::string scriptsDir, std::ostream& outputStream);
 	void CloseSession();
 }

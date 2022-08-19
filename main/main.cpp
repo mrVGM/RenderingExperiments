@@ -13,7 +13,7 @@ int main()
 
 	std::filesystem::path scriptsDir = dataPath.append("misc\\");
 
-	interpreter::ISession& session = interpreter::GetSession(scriptsDir.string(), std::cout);
+	interpreter::ISession& session = interpreter::OpenSession(scriptsDir.string(), std::cout);
 	session.AddGlobalValue("api", rendering::GetAPI());
 
 	session.RunFile("main.txt");
