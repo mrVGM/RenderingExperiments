@@ -14,6 +14,7 @@ struct ISessionImpl : public interpreter::ISession
 {
 	void RunFile(std::string name) override;
 	void RunInstruction(std::string instruction) override;
+	void RunFunc(const interpreter::Value& func) override;
 };
 
 namespace _sessionData
@@ -61,6 +62,15 @@ void ISessionImpl::RunInstruction(std::string instruction)
 	_sessionData::m_mutex.unlock();
 }
 
+void ISessionImpl::RunFunc(const interpreter::Value& func)
+{
+	_sessionData::m_mutex.lock();
+
+	_sessionData::m_session->RunFunc(func);
+
+	_sessionData::m_mutex.unlock();
+}
+
 interpreter::ISession& interpreter::OpenSession(std::string scriptsDir, std::ostream& outputStream)
 {
 	if (_sessionData::m_session) {
@@ -85,6 +95,15 @@ interpreter::ISession& interpreter::OpenSession(std::string scriptsDir, std::ost
 	_sessionData::m_thread = new std::thread(_sessionData::RunSessionThread);
 
 	return _sessionData::m_impl;
+}
+
+interpreter::ISession* interpreter::GetSession()
+{
+	if (!_sessionData::m_session) {
+		return nullptr;
+	}
+
+	return &_sessionData::m_impl;
 }
 
 void interpreter::CloseSession()

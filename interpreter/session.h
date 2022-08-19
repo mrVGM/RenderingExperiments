@@ -52,6 +52,8 @@ namespace interpreter
 
 		void RunFile(std::string name);
 		void RunInstruction(std::string runInstruction);
+		void RunFunc(const Value& func);
+		
 		void CalculationStep();
 
 		Session(std::string rootDir, scripting::Parser& parser, std::ostream& outputStream);

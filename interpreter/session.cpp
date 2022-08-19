@@ -155,6 +155,24 @@ void interpreter::Session::RunInstruction(std::string instruction)
 	m_repl = parsed;
 }
 
+void interpreter::Session::RunFunc(const Value& func)
+{
+	if (func.GetType() != ScriptingValueType::Object) {
+		return;
+	}
+
+	IFunc* tmp =  dynamic_cast<IFunc*>(func.GetManagedValue());
+	if (!tmp) {
+		return;
+	}
+
+	DefferedCall dc;
+	dc.m_func = func;
+	dc.m_scheduled = std::chrono::system_clock::now();
+
+	m_deferredCalls.insert(m_deferredCalls.begin(), dc);
+}
+
 void interpreter::Session::CalculationStep()
 {
 	if (m_intepreterStack.empty()) {
