@@ -370,7 +370,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
 	Value& initProp = GetOrCreateProperty(nativeObject, "init");
-	initProp = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+	initProp = CreateNativeMethod(nativeObject, 1, [](Value scope) {
 		Value self = scope.GetProperty("self");
 		DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
 
@@ -393,8 +393,16 @@ return Value();
             }
         }
 
-        Value vertexShaderValue = scope.GetProperty("param1");
-        Value pixelShaderValue = scope.GetProperty("param2");
+		return Value();
+	});
+
+    Value& load = GetOrCreateProperty(nativeObject, "load");
+    load = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+        Value self = scope.GetProperty("self");
+        DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
+
+        Value vertexShaderValue = scope.GetProperty("param0");
+        Value pixelShaderValue = scope.GetProperty("param1");
 
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
         if (!vertexShader) {
@@ -406,14 +414,16 @@ return Value();
             THROW_EXCEPTION("Please supply a Pixel Shader!")
         }
 
+        std::string errorMessage;
         {
             bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), errorMessage);
             if (!res) {
                 THROW_EXCEPTION(errorMessage)
             }
         }
-		return Value();
-	});
+
+        return Value();
+    });
 
     Value& render = GetOrCreateProperty(nativeObject, "render");
     render = CreateNativeMethod(nativeObject, 0, [](Value scope) {

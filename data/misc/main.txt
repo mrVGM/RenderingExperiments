@@ -41,7 +41,8 @@ try {
 	pixelShader.compile(shaderCode);
 	print("Shaders compiled!");
 
-	device.init(wnd, vertexShader, pixelShader);
+	device.init(wnd);
+	device.load(vertexShader, pixelShader);
 	print("Device Init Completed!");
 
 	renderCrt();
