@@ -364,33 +364,21 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
 {
 	using namespace interpreter;
 
-	Value& initProp = GetOrCreateProperty(nativeObject, "init");
 
+#define THROW_EXCEPTION(error)\
+scope.SetProperty("exception", Value(error));\
+return Value();
+
+	Value& initProp = GetOrCreateProperty(nativeObject, "init");
 	initProp = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value self = scope.GetProperty("self");
-		NativeObject* selfContainer = static_cast<NativeObject*>(self.GetManagedValue());
-		DXDevice& device = static_cast<DXDevice&>(selfContainer->GetNativeObject());
+		DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
 
 		Value windowValue = scope.GetProperty("param0");
-#define NO_WINDOW scope.SetProperty("exception", Value("Please supply a Window object!")); return Value();
+        Window* window = dynamic_cast<Window*>(NativeObject::ExtractNativeObject(windowValue));
 
-		if (windowValue.IsNone()) {
-			NO_WINDOW
-		}
-
-		NativeObject* windowContainer = dynamic_cast<NativeObject*>(windowValue.GetManagedValue());
-		if (!windowContainer) {
-			NO_WINDOW
-		}
-
-		Window* window = dynamic_cast<Window*>(&windowContainer->GetNativeObject());
-		if (!window) {
-			NO_WINDOW
-		}
-#undef NO_WINDOW
-
-		device.m_width = (UINT)windowContainer->GetProperty("width").GetNum();
-		device.m_height = (UINT)windowContainer->GetProperty("height").GetNum();
+		device.m_width = (UINT)windowValue.GetProperty("width").GetNum();
+		device.m_height = (UINT)windowValue.GetProperty("height").GetNum();
 
         device.m_frameIndex = 0;
         device.m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(device.m_width), static_cast<float>(device.m_height));
@@ -401,8 +389,7 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
         {
             bool res = device.LoadPipeline(window->m_hwnd, errorMessage);
             if (!res) {
-                self.SetProperty("exception", Value(errorMessage));
-                return Value();
+                THROW_EXCEPTION(errorMessage)
             }
         }
 
@@ -411,28 +398,24 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
 
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
         if (!vertexShader) {
-            scope.SetProperty("exception", Value("PLease supply a Vertex Shader!"));
-            return Value();
+            THROW_EXCEPTION("Please supply a Vertex Shader!")
         }
 
         DXPixelShader* pixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(pixelShaderValue));
         if (!pixelShader) {
-            scope.SetProperty("exception", Value("PLease supply a Pixel Shader!"));
-            return Value();
+            THROW_EXCEPTION("Please supply a Pixel Shader!")
         }
 
         {
             bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), errorMessage);
             if (!res) {
-                self.SetProperty("exception", Value(errorMessage));
-                return Value();
+                THROW_EXCEPTION(errorMessage)
             }
         }
 		return Value();
 	});
 
     Value& render = GetOrCreateProperty(nativeObject, "render");
-
     render = CreateNativeMethod(nativeObject, 0, [](Value scope) {
         Value self = scope.GetProperty("self");
         NativeObject* selfContainer = static_cast<NativeObject*>(self.GetManagedValue());
@@ -442,12 +425,13 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
         bool res = device.Render(errorMessage);
 
         if (!res) {
-            scope.SetProperty("exception", Value(errorMessage));
-            return Value();
+            THROW_EXCEPTION(errorMessage)
         }
 
         return Value();
     });
+
+#undef THROW_EXCEPTION
 }
 
 ID3D12Device& rendering::DXDevice::GetDevice()
