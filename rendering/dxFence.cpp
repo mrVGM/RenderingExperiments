@@ -29,10 +29,27 @@ return Value();
 		return Value();
 	});
 
+	Value& getEventID = GetOrCreateProperty(nativeObject, "getEventID");
+	getEventID = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value self = scope.GetProperty("self");
+		DXFence* fence = static_cast<DXFence*>(NativeObject::ExtractNativeObject(self));
+
+		return Value(fence->GetEventID());
+	});
+
 #undef THROW_EXCEPTION
 }
 
 ID3D12Fence* rendering::DXFence::GetFence() const
 {
 	return m_fence.Get();
+}
+
+int rendering::DXFence::GetEventID()
+{
+	m_eventCounterMutex.lock();
+	int res = m_eventCounter++;
+	m_eventCounterMutex.unlock();
+
+	return res;
 }
