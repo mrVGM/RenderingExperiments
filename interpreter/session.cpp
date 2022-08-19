@@ -155,22 +155,28 @@ void interpreter::Session::RunInstruction(std::string instruction)
 	m_repl = parsed;
 }
 
-void interpreter::Session::RunFunc(const Value& func)
+void interpreter::Session::RunCallback(const Value& func, const Value& args)
 {
-	if (func.GetType() != ScriptingValueType::Object) {
+	if (args.GetType() != ScriptingValueType::None && args.GetType() != ScriptingValueType::Object) {
 		return;
 	}
 
+	if (func.GetType() != ScriptingValueType::Object) {
+		return;
+	}
+	
 	IFunc* tmp =  dynamic_cast<IFunc*>(func.GetManagedValue());
 	if (!tmp) {
 		return;
 	}
 
-	DefferedCall dc;
-	dc.m_func = func;
-	dc.m_scheduled = std::chrono::system_clock::now();
+	Callback cb;
+	cb.m_func = func;
+	cb.m_args = args;
 
-	m_deferredCalls.insert(m_deferredCalls.begin(), dc);
+	m_callbackMutex.lock();
+	m_callbacks.push(cb);
+	m_callbackMutex.unlock();
 }
 
 void interpreter::Session::CalculationStep()
@@ -187,6 +193,29 @@ void interpreter::Session::CalculationStep()
 			m_repl = nullptr;
 			return;
 		}
+
+		m_callbackMutex.lock();
+		if (!m_callbacks.empty()) {
+			Callback cb = m_callbacks.front();
+			m_callbacks.pop();
+
+			Value scope = Scope::Create();
+			Scope* tmp = static_cast<Scope*>(scope.GetManagedValue());
+			tmp->BindValue("callback_func_name", cb.m_func);
+			tmp->BindValue("callback_args", cb.m_args);
+
+			Value intScope = Scope::Create();
+			tmp = static_cast<Scope*>(intScope.GetManagedValue());
+			tmp->SetParentScope(scope);
+
+			m_intepreterStack.push(Interpreter(intScope));
+			interpreter::Interpreter& interpreter = m_intepreterStack.top();
+			interpreter.PrepareCalculation(m_callbackCallCodeParsed);
+
+			m_callbackMutex.unlock();
+			return;
+		}
+		m_callbackMutex.unlock();
 
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
@@ -307,8 +336,12 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	m_deferredCallCode.m_code = "func_name();";
 	m_deferredCallCode.Tokenize();
 	m_deferredCallCode.TokenizeForParser();
-
 	m_deferredCallCodeParsed = m_parser.Parse(m_deferredCallCode);
+
+	m_callbackCallCode.m_code = "callback_func_name(callback_args);";
+	m_callbackCallCode.Tokenize();
+	m_callbackCallCode.TokenizeForParser();
+	m_callbackCallCodeParsed = m_parser.Parse(m_callbackCallCode);
 
 	m_beginning = std::chrono::system_clock::now();
 }

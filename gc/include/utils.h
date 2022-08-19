@@ -5,5 +5,5 @@
 namespace interpreter::utils
 {
 	interpreter::Value GetEmptyObject();
-	void RunFunc(const Value& func);
+	void RunCallback(const Value& func, const Value& args);
 }

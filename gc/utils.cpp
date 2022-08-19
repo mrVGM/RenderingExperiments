@@ -7,7 +7,7 @@ interpreter::Value interpreter::utils::GetEmptyObject()
 	return interpreter::ObjectValue::Create();
 }
 
-void interpreter::utils::RunFunc(const interpreter::Value& func)
+void interpreter::utils::RunCallback(const Value& func, const Value& args)
 {
 	ISession* session = GetSession();
 
@@ -15,5 +15,5 @@ void interpreter::utils::RunFunc(const interpreter::Value& func)
 		return;
 	}
 
-	session->RunFunc(func);
+	session->RunCallback(func, args);
 }

@@ -14,6 +14,8 @@
 #include <stack>
 #include <chrono>
 #include <vector>
+#include <mutex>
+#include <queue>
 
 namespace interpreter
 {
@@ -31,6 +33,12 @@ namespace interpreter
 			interpreter::Value m_func;
 		};
 
+		struct Callback
+		{
+			Value m_func;
+			Value m_args;
+		};
+
 		std::chrono::time_point<std::chrono::system_clock> m_beginning;
 
 		std::string m_rootDir;
@@ -39,6 +47,9 @@ namespace interpreter
 
 		Value m_motherScope;
 		std::stack<interpreter::Interpreter> m_intepreterStack;
+
+		std::mutex m_callbackMutex;
+		std::queue<Callback> m_callbacks;
 		std::vector<DefferedCall> m_deferredCalls;
 		scripting::ISymbol* m_repl = nullptr;
 
@@ -46,13 +57,15 @@ namespace interpreter
 		std::vector<ParsedCode> m_loadedInstructions;
 		scripting::CodeSource m_deferredCallCode;
 		scripting::ISymbol* m_deferredCallCodeParsed = nullptr;
+		scripting::CodeSource m_callbackCallCode;
+		scripting::ISymbol* m_callbackCallCodeParsed = nullptr;
 
 		scripting::ISymbol* GetCode(std::string path);
 		scripting::ISymbol* ParseInstruction(std::string instruction);
 
 		void RunFile(std::string name);
 		void RunInstruction(std::string runInstruction);
-		void RunFunc(const Value& func);
+		void RunCallback(const Value& func, const Value& args);
 		
 		void CalculationStep();
 

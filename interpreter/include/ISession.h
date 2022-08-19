@@ -11,7 +11,7 @@ namespace interpreter
 	{
 		virtual void RunFile(std::string name) = 0;
 		virtual void RunInstruction(std::string instruction) = 0;
-		virtual void RunFunc(const interpreter::Value& func) = 0;
+		virtual void RunCallback(const interpreter::Value& func, const interpreter::Value& args) = 0;
 		void AddGlobalValue(std::string name, const Value& value);
 	};
 
