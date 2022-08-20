@@ -43,6 +43,7 @@ namespace interpreter
 		~Value();
 
 		std::string ToString() const;
+		void ToList(std::vector<Value>& list) const;
 
 		bool IsManaged() const;
 		bool IsNone() const;

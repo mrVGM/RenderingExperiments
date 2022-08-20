@@ -5,19 +5,15 @@ cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
 add_library (Interpreter
-	"../gc/include/value.h"
-	"../gc/value.cpp"
-	"../gc/garbageCollector.h"
-	"../gc/garbageCollector.cpp"
 	"scope.h"
 	"scope.cpp"
 	"calculator.h"
 	"calculator.cpp"
 	"interpreter.h"
 	"interpreter.cpp"
-	"list.h" 
+	"include/list.h" 
 	"list.cpp"
-	"object.h"
+	"include/object.h"
 	"object.cpp"
 	"include/IFunc.h"
 	"IFunc.cpp"

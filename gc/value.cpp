@@ -1,5 +1,7 @@
 #include "value.h"
+
 #include "garbageCollector.h"
+#include "list.h"
 
 #include <sstream>
 
@@ -279,6 +281,21 @@ std::string interpreter::Value::ToString() const
 	}
 
 	return ss.str();
+}
+
+void interpreter::Value::ToList(std::vector<Value>& list) const
+{
+	if (GetType() != ScriptingValueType::Object) {
+		list.clear();
+		return;
+	}
+	ListValue* lv = dynamic_cast<ListValue*>(GetManagedValue());
+	if (!lv) {
+		list.clear();
+		return;
+	}
+
+	list = lv->m_list;
 }
 
 bool interpreter::Value::IsManaged() const
