@@ -73,6 +73,42 @@ return Value();
 		return Value();
 	});
 
+	Value& copyData = GetOrCreateProperty(nativeObject, "copyData");
+	copyData = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXBuffer* buffer = static_cast<DXBuffer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value data = scope.GetProperty("param0");
+		std::vector<Value> list;
+		data.ToList(list);
+		if (list.size() == 0) {
+			THROW_EXCEPTION("Please supply buffer data!")
+		}
+
+		for (int i = 0; i < list.size(); ++i) {
+			const Value& cur = list[i];
+			if (cur.GetType() != ScriptingValueType::Number) {
+				THROW_EXCEPTION("Please supply list of numbers!")
+			}
+		}
+
+		float* numbers = new float[list.size()];
+		for (int i = 0; i < list.size(); ++i) {
+			const Value& cur = list[i];
+			numbers[i] = static_cast<float>(cur.GetNum());
+		}
+
+		std::string error;
+		bool res = buffer->CopyData(numbers, list.size() * sizeof(float), error);
+		delete[] numbers;
+
+		if (!res) {
+			THROW_EXCEPTION(error);
+		}
+
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -83,6 +119,23 @@ bool rendering::DXBuffer::Place(ID3D12Device* device, ID3D12Heap* heap, UINT64 h
 	THROW_ERROR(
 		device->CreatePlacedResource(heap, heapOffset, &bufferDescription, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_buffer)),
 		"Can't place buffer in the heap!")
+
+	return true;
+}
+
+bool rendering::DXBuffer::CopyData(void* data, int dataSize, std::string& errorMessage)
+{
+	UINT8* pVertexDataBegin;
+	CD3DX12_RANGE readRange(0, 0);
+
+	void* dst = nullptr;
+
+	THROW_ERROR(
+		m_buffer->Map(0, &readRange, &dst),
+		"Can't map Vertex Buffer!")
+
+	memcpy(dst, data, dataSize);
+	m_buffer->Unmap(0, nullptr);
 
 	return true;
 }

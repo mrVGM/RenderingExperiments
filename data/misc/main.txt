@@ -1,6 +1,34 @@
 let wnd = api.window();
-
 wnd.create(600, 400);
+
+let aspect = wnd.width / wnd.height;
+print(aspect);
+
+let vertexData = [];
+vertexData.push(0);
+vertexData.push(0.25 * aspect);
+vertexData.push(0);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(0.25);
+vertexData.push(-0.25 * aspect);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(-0.25);
+vertexData.push(-0.25 * aspect);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(1);
+vertexData.push(1);
+
 
 let dragCrt = func() {
 	if (wnd.isAlive() == 0) {
@@ -60,8 +88,9 @@ let heap = api.heap();
 let loadBuffer = func() {
 	try {
 		let buf = api.buffer();
-		buf.init(8);
+		buf.init(84);
 		buf.place(device, heap, 0);
+		buf.copyData(vertexData);
 
 		print("Buffer Placed!");
 	} catch (e) {
@@ -80,7 +109,7 @@ try {
 
 	let signal = fenceEvent.getID();
 
-	heap.create(device, 12, "DEFAULT");
+	heap.create(device, 100, "UPLOAD");
 
 	heap.makeResident(fence, signal);
 
