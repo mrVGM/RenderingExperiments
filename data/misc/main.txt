@@ -65,7 +65,7 @@ try {
 
 	let signal = fenceEvent.getID();
 
-	heap.create(device, 12);
+	heap.create(device, 12, "DEFAULT");
 
 	heap.makeResident(fence, signal);
 

@@ -11,7 +11,7 @@ scope.SetProperty("exception", Value(message));\
 return Value();\
 
 	Value& create = GetOrCreateProperty(nativeObject, "create");
-	create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+	create = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -37,9 +37,28 @@ return Value();\
 			THROW_EXCEPTION("Please supply a valid heap size!")
 		}
 
+		Value heapTypeValue = scope.GetProperty("param2");
+		if (heapTypeValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply heap type!")
+		}
+
+		std::string heapType = heapTypeValue.GetString();
+		if (heapType != "DEFAULT" && heapType != "UPLOAD" && heapType != "READBACK") {
+			THROW_EXCEPTION("Please supply a valid heap type!")
+		}
+
+		D3D12_HEAP_TYPE type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT;
+		if (heapType == "UPLOAD") {
+			type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
+		}
+		if (heapType == "READBACK") {
+			type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_READBACK;
+		}
+
+
 		D3D12_HEAP_DESC desc = {};
 		desc.SizeInBytes = size;
-		desc.Properties.Type = D3D12_HEAP_TYPE_UPLOAD;
+		desc.Properties.Type = type;
 		desc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 		desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		desc.Properties.CreationNodeMask = 0;
