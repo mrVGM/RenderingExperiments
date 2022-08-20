@@ -332,6 +332,7 @@ void interpreter::AssignmentCalc::Calculate(Calculator& calculator)
 			}
 
 			list->SetValueAt(lValueCalc.m_prop.GetNum(), m_expressionCalc->m_calculation.m_value);
+			calculator.m_calculation.m_state = Calculation::CalculationState::Done;
 			return;
 		}
 	}
@@ -794,6 +795,8 @@ void interpreter::RawValueCalc::Calculate(Calculator& calculator)
 		}
 
 		std::string propName = cs->m_childSymbols[2]->m_symbolData.m_string;
+
+		IManagedValue* managedValue = m_calc->m_calculation.m_value.GetManagedValue();
 
 		calculator.m_calculation.m_value = m_calc->m_calculation.m_value.GetManagedValue()->GetProperty(propName);
 		calculator.m_calculation.m_state = Calculation::CalculationState::Done;

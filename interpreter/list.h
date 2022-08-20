@@ -19,6 +19,8 @@ namespace interpreter
 
 		static Value Create();
 
+		Value m_pushMethod;
+
 	protected:
 		ListValue();
 	};
