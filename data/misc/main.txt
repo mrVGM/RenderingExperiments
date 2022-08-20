@@ -57,11 +57,26 @@ try {
 
 let heap = api.heap();
 
+let loadBuffer = func() {
+	try {
+		let buf = api.buffer();
+		buf.init(8);
+		buf.place(device, heap, 0);
+
+		print("Buffer Placed!");
+	} catch (e) {
+		print(e);
+	}
+};
+
 try {
 	let fenceEvent = api.fenceEvent();
 
 	fenceEvent.create();
-	fenceEvent.wait(fence, func(arg) { print("Heap is now resident!"); heap.evict(); });
+	fenceEvent.wait(fence, func(arg) { 
+		print("Heap is now resident!");
+		loadBuffer();
+	});
 
 	let signal = fenceEvent.getID();
 

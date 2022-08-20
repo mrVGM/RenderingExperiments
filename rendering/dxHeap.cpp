@@ -179,6 +179,11 @@ bool rendering::DXHeap::Evict(std::string& errorMessage)
 	return true;
 }
 
+ID3D12Heap* rendering::DXHeap::GetHeap() const
+{
+	return m_heap.Get();
+}
+
 rendering::DXHeap::~DXHeap()
 {
 	if (m_resident) {

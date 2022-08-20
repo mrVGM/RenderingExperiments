@@ -23,6 +23,7 @@ namespace rendering
 		bool MakeResident(DXFence* fence, int signalValue, std::string& errorMessage);
 		bool Evict(std::string& errorMessage);
 	public:
+		ID3D12Heap* GetHeap() const;
 		~DXHeap();
 	};
 }

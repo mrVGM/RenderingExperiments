@@ -11,6 +11,7 @@
 #include "dxHeap.h"
 #include "dxFence.h"
 #include "dxFenceEvent.h"
+#include "dxBuffer.h"
 
 namespace rendering
 {
@@ -55,6 +56,11 @@ namespace rendering
 		m_api.SetProperty("fenceEvent", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXFenceEvent* fenceEvent = new DXFenceEvent();
 			return NativeObject::Create(fenceEvent);
+		}));
+
+		m_api.SetProperty("buffer", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXBuffer* buffer = new DXBuffer();
+			return NativeObject::Create(buffer);
 		}));
 	}
 }
