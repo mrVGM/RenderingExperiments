@@ -91,6 +91,19 @@ return Value();\
 		return Value();
 	});
 
+	Value& evict = GetOrCreateProperty(nativeObject, "evict");
+	evict = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
+
+		std::string error;
+		bool res = heap->Evict(error);
+		if (!res) {
+			THROW_EXCEPTION(error);
+		}
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 
 }
@@ -108,19 +121,51 @@ bool rendering::DXHeap::Init(DXDevice& device, const D3D12_HEAP_DESC& desc, std:
 		device.GetDevice().CreateHeap(&desc, IID_PPV_ARGS(&m_heap)),
 		"Can't create Heap!")
 
-
 	return true;
 }
 
 bool rendering::DXHeap::MakeResident(DXFence* fence, int signalValue, std::string& errorMessage)
 {
+	if (m_resident) {
+		errorMessage = "The heap is already Resident!";
+		return false;
+	}
+
 	ID3D12Pageable* const tmp = m_heap.Get();
 
 	THROW_ERROR(
 		m_device3->EnqueueMakeResident(D3D12_RESIDENCY_FLAGS::D3D12_RESIDENCY_FLAG_DENY_OVERBUDGET, 1, &tmp, fence->GetFence(), signalValue),
 		"Can't make the heap resident!")
 
+	m_resident = true;
+
 	return true;
+}
+
+bool rendering::DXHeap::Evict(std::string& errorMessage)
+{
+	if (!m_resident) {
+		errorMessage = "The heap is not Resident yet!";
+		return false;
+	}
+
+	ID3D12Pageable* const tmp = m_heap.Get();
+
+	THROW_ERROR(
+		m_device3->Evict(1, &tmp),
+		"Can't Evict the Heap!")
+
+	m_resident = false;
+
+	return true;
+}
+
+rendering::DXHeap::~DXHeap()
+{
+	if (m_resident) {
+		std::string error;
+		Evict(error);
+	}
 }
 
 #undef THROW_ERROR

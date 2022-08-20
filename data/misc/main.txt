@@ -61,7 +61,7 @@ try {
 	let fenceEvent = api.fenceEvent();
 
 	fenceEvent.create();
-	fenceEvent.wait(fence, func(arg) { print("Heap is now resident!"); });
+	fenceEvent.wait(fence, func(arg) { print("Heap is now resident!"); heap.evict(); });
 
 	let signal = fenceEvent.getID();
 
