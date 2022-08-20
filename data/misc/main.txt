@@ -58,7 +58,17 @@ try {
 let heap = api.heap();
 
 try {
+	let fenceEvent = api.fenceEvent();
+
+	fenceEvent.create();
+	fenceEvent.wait(fence, func(arg) { print("Heap is now resident!"); });
+
+	let signal = fenceEvent.getID();
+
 	heap.create(device, 12);
+
+	heap.makeResident(fence, signal);
+
 	print("Heap Created!");
 } catch(e) {
 	print(e);

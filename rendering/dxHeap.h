@@ -1,7 +1,9 @@
 #pragma once
 
 #include "nativeObject.h"
+
 #include "dxDevice.h"
+#include "dxFence.h"
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -17,7 +19,7 @@ namespace rendering
 
 		Microsoft::WRL::ComPtr<ID3D12Heap> m_heap;
 		bool Init(DXDevice& device, const D3D12_HEAP_DESC& desc, std::string errorMessage);
-		bool MakeResident(DXDevice& device);
+		bool MakeResident(DXFence* fence, int signalValue, std::string& errorMessage);
 	public:
 	};
 }

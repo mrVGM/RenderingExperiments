@@ -5,13 +5,12 @@
 void rendering::DXHeap::InitProperties(interpreter::NativeObject& nativeObject)
 {
 	using namespace interpreter;
-	Value& create = GetOrCreateProperty(nativeObject, "create");
 
 #define THROW_EXCEPTION(message)\
 scope.SetProperty("exception", Value(message));\
 return Value();\
 
-
+	Value& create = GetOrCreateProperty(nativeObject, "create");
 	create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
@@ -62,28 +61,66 @@ return Value();\
 		return Value();
 	});
 
+	Value& makeResident = GetOrCreateProperty(nativeObject, "makeResident");
+	makeResident = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value fenceValue = scope.GetProperty("param0");
+		DXFence* fence = dynamic_cast<DXFence*>(NativeObject::ExtractNativeObject(fenceValue));
+
+		if (!fence) {
+			THROW_EXCEPTION("Please supply a Fence!");
+		}
+
+		Value signalValue = scope.GetProperty("param1");
+		if (signalValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply a Singnal Value!");
+		}
+
+		int signal = signalValue.GetNum();
+		if (signal < 0) {
+			THROW_EXCEPTION("Please supply a valid Singnal Value!");
+		}
+
+		std::string error;
+		bool res = heap->MakeResident(fence, signal, error);
+		if (!res) {
+			THROW_EXCEPTION(error);
+		}
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 
 }
 
-bool rendering::DXHeap::Init(DXDevice& device, const D3D12_HEAP_DESC& desc, std::string errorMessage)
-{
 #define THROW_ERROR(hr, error)\
 if (FAILED(hr)) {\
 	errorMessage = error;\
 	return false;\
-}\
+}
+
+bool rendering::DXHeap::Init(DXDevice& device, const D3D12_HEAP_DESC& desc, std::string errorMessage)
+{
 
 	THROW_ERROR(
 		device.GetDevice().CreateHeap(&desc, IID_PPV_ARGS(&m_heap)),
 		"Can't create Heap!")
 
-#undef THROW_ERROR
 
 	return true;
 }
 
-bool rendering::DXHeap::MakeResident(DXDevice& device)
+bool rendering::DXHeap::MakeResident(DXFence* fence, int signalValue, std::string& errorMessage)
 {
+	ID3D12Pageable* const tmp = m_heap.Get();
+
+	THROW_ERROR(
+		m_device3->EnqueueMakeResident(D3D12_RESIDENCY_FLAGS::D3D12_RESIDENCY_FLAG_DENY_OVERBUDGET, 1, &tmp, fence->GetFence(), signalValue),
+		"Can't make the heap resident!")
+
 	return true;
 }
+
+#undef THROW_ERROR

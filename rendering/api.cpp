@@ -10,6 +10,7 @@
 #include "dxPixelShader.h"
 #include "dxHeap.h"
 #include "dxFence.h"
+#include "dxFenceEvent.h"
 
 namespace rendering
 {
@@ -49,6 +50,11 @@ namespace rendering
 		m_api.SetProperty("fence", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXFence* fence = new DXFence();
 			return NativeObject::Create(fence);
+		}));
+
+		m_api.SetProperty("fenceEvent", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXFenceEvent* fenceEvent = new DXFenceEvent();
+			return NativeObject::Create(fenceEvent);
 		}));
 	}
 }
