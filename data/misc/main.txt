@@ -5,7 +5,7 @@ let aspect = wnd.width / wnd.height;
 print(aspect);
 
 let vertexData = [];
-vertexData.push(0);
+vertexData.push(0.0);
 vertexData.push(0.25 * aspect);
 vertexData.push(0);
 vertexData.push(1);
@@ -43,6 +43,15 @@ dragCrt();
 
 
 let device = api.device();
+
+let shaderCode = readFile("shaders.hlsl");
+
+let vertexShader = api.vertexShader();
+let pixelShader = api.pixelShader();
+
+let fence = api.fence();
+let vertexBuff = api.buffer();
+
 let renderCrt = func() {
 	if (wnd.isAlive() == 0) {
 		return;
@@ -58,12 +67,6 @@ let renderCrt = func() {
 	timeout(renderCrt);
 };
 
-let shaderCode = readFile("shaders.hlsl");
-
-let vertexShader = api.vertexShader();
-let pixelShader = api.pixelShader();
-
-let fence = api.fence();
 
 try {
 	vertexShader.compile(shaderCode);
@@ -75,47 +78,30 @@ try {
 	fence.create(device);
 	print("Fence created!");
 
-	device.load(vertexShader, pixelShader, fence);
-	print("Device Init Completed!");
-
-	renderCrt();
-} catch (e) {
-	print(e);
-}
-
-let heap = api.heap();
-
-let loadBuffer = func() {
-	try {
-		let buf = api.buffer();
-		buf.init(84);
-		buf.place(device, heap, 0);
-		buf.copyData(vertexData);
-
-		print("Buffer Placed!");
-	} catch (e) {
-		print(e);
-	}
-};
-
-try {
 	let fenceEvent = api.fenceEvent();
-
 	fenceEvent.create();
 	fenceEvent.wait(fence, func(arg) { 
 		print("Heap is now resident!");
-		loadBuffer();
+		try {
+			vertexBuff.init(84);
+			vertexBuff.place(device, heap, 0);
+			vertexBuff.copyData(vertexData);
+			print("Buffer Placed!");
+
+			device.load(vertexShader, pixelShader, fence, vertexBuff);
+			renderCrt();
+		} catch(exception) {
+			print(exception);
+		}
 	});
 
+
 	let signal = fenceEvent.getID();
+	let heap = api.heap();
 
 	heap.create(device, 100, "UPLOAD");
-
-	heap.makeResident(fence, signal);
-
 	print("Heap Created!");
-} catch(e) {
+	heap.makeResident(fence, signal);
+} catch (e) {
 	print(e);
 }
-
-

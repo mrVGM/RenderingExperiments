@@ -2,6 +2,7 @@
 #include "ISession.h"
 
 #include "api.h"
+#include "utils.h"
 
 #include <filesystem>
 #include <iostream>

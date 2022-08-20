@@ -17,5 +17,8 @@ namespace rendering
 
 		bool Place(ID3D12Device* device, ID3D12Heap* heap, UINT64 heapOffset, UINT64 width, std::string& errorMessage);
 		bool CopyData(void* data, int dataSize, std::string& error);
+	public:
+		ID3D12Resource* GetBuffer() const;
+		UINT GetBufferWidth() const;
 	};
 }

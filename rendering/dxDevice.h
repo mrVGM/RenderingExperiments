@@ -9,6 +9,7 @@
 
 #include "d3dx12.h"
 #include "nativeObject.h"
+#include "dxBuffer.h"
 
 namespace rendering
 {
@@ -38,7 +39,7 @@ namespace rendering
         UINT m_rtvDescriptorSize;
 
         // App resources.
-        Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
+        ID3D12Resource* m_vertexBuffer = nullptr;
         D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
         // Synchronization objects.
@@ -48,7 +49,7 @@ namespace rendering
         UINT64 m_fenceValue;
 
         bool LoadPipeline(HWND hWnd, std::string& errorMessage);
-        bool LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, std::string& errorMessage);
+        bool LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage);
         bool PopulateCommandList(std::string& errorMessage);
         bool WaitForPreviousFrame(std::string& errorMessage);
 

@@ -140,4 +140,14 @@ bool rendering::DXBuffer::CopyData(void* data, int dataSize, std::string& errorM
 	return true;
 }
 
+ID3D12Resource* rendering::DXBuffer::GetBuffer() const
+{
+	return m_buffer.Get();
+}
+
+UINT rendering::DXBuffer::GetBufferWidth() const
+{
+	return m_width;
+}
+
 #undef THROW_ERROR

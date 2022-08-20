@@ -119,8 +119,7 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
     return true;
 }
 
-
-bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, std::string& errorMessage)
+bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
@@ -182,45 +181,12 @@ bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& ver
 
     // Create the vertex buffer.
     {
-        float aspectRatio = (float)m_width / m_height;
-        // Define the geometry for a triangle.
-        Vertex triangleVertices[] =
-        {
-            { { 0.0f, 0.25f * aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-        };
-
-        const UINT vertexBufferSize = sizeof(triangleVertices);
-
-        // Note: using upload heaps to transfer static data like vert buffers is not 
-        // recommended. Every time the GPU needs it, the upload heap will be marshalled 
-        // over. Please read up on Default Heap usage. An upload heap is used here for 
-        // code simplicity and because there are very few verts to actually transfer.
-        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
-        CD3DX12_RESOURCE_DESC bufferDescription = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
-        THROW_ERROR(m_device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferDescription,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_vertexBuffer)),
-            "Can't commit Vertex Buffer!")
-
-        // Copy the triangle data to the vertex buffer.
-        UINT8* pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        THROW_ERROR(
-            m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)),
-            "Can't map Vertex Buffer!")
-        memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-        m_vertexBuffer->Unmap(0, nullptr);
+        m_vertexBuffer = vertexBuffer->GetBuffer();
 
         // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+        m_vertexBufferView.SizeInBytes = vertexBuffer->GetBufferWidth();
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -395,7 +361,7 @@ return Value();
 	});
 
     Value& load = GetOrCreateProperty(nativeObject, "load");
-    load = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+    load = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value self = scope.GetProperty("self");
         DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
 
@@ -403,6 +369,7 @@ return Value();
         Value pixelShaderValue = scope.GetProperty("param1");
 
         Value fenceValue = scope.GetProperty("param2");
+        Value vertexBufferValue = scope.GetProperty("param3");
 
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
         if (!vertexShader) {
@@ -419,9 +386,14 @@ return Value();
             THROW_EXCEPTION("Please supply a Fence!")
         }
 
+        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
+        if (!vertexBuffer) {
+            THROW_EXCEPTION("Please supply a Vertex Buffer!")
+        }
+
         std::string errorMessage;
         {
-            bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), fence->GetFence(), errorMessage);
+            bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), fence->GetFence(), vertexBuffer, errorMessage);
             if (!res) {
                 THROW_EXCEPTION(errorMessage)
             }
