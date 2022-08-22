@@ -69,7 +69,7 @@ bool rendering::DXPixelShader::Init(const std::string& shaderCode, std::string& 
     return true;
 }
 
-Microsoft::WRL::ComPtr<ID3DBlob>& rendering::DXPixelShader::GetCompiledShader()
+ID3DBlob* rendering::DXPixelShader::GetCompiledShader() const
 {
-    return m_pixelShader;
+    return m_pixelShader.Get();
 }

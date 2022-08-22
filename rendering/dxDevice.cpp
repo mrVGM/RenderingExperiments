@@ -119,7 +119,7 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
     return true;
 }
 
-bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage)
+bool rendering::DXDevice::LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
@@ -152,8 +152,8 @@ bool rendering::DXDevice::LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& ver
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader);
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader);
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState.DepthEnable = FALSE;

@@ -68,7 +68,7 @@ bool rendering::DXVertexShader::Init(const std::string& shaderCode, std::string&
 	return true;
 }
 
-Microsoft::WRL::ComPtr<ID3DBlob>& rendering::DXVertexShader::GetCompiledShader()
+ID3DBlob* rendering::DXVertexShader::GetCompiledShader() const
 {
-	return m_vertexShader;
+	return m_vertexShader.Get();
 }

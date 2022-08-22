@@ -49,7 +49,7 @@ namespace rendering
         UINT64 m_fenceValue;
 
         bool LoadPipeline(HWND hWnd, std::string& errorMessage);
-        bool LoadAssets(const Microsoft::WRL::ComPtr<ID3DBlob>& vertexShader, const Microsoft::WRL::ComPtr<ID3DBlob>& pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage);
+        bool LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage);
         bool PopulateCommandList(std::string& errorMessage);
         bool WaitForPreviousFrame(std::string& errorMessage);
 

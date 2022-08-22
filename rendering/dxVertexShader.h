@@ -14,6 +14,6 @@ namespace rendering
 
 		Microsoft::WRL::ComPtr<ID3DBlob> m_vertexShader;
 	public:
-		Microsoft::WRL::ComPtr<ID3DBlob>& GetCompiledShader();
+		ID3DBlob* GetCompiledShader() const;
 	};
 }

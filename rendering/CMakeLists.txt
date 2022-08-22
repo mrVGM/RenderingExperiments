@@ -24,6 +24,8 @@ add_library (Rendering
 	"dxFenceEvent.cpp"
 	"dxBuffer.h"
 	"dxBuffer.cpp"
+	"dxCommandList.h"
+	"dxCommandList.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
