@@ -425,3 +425,19 @@ ID3D12Device& rendering::DXDevice::GetDevice()
 {
     return *m_device.Get();
 }
+
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE rendering::DXDevice::GetCurrentRTVDescriptor() const
+{
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+}
+
+const D3D12_VERTEX_BUFFER_VIEW* rendering::DXDevice::GetVertexBufferView() const
+{
+    return &m_vertexBufferView;
+}
+
+ID3D12Resource* rendering::DXDevice::GetCurrentRenderTarget() const
+{
+    return m_renderTargets[m_frameIndex].Get();
+}

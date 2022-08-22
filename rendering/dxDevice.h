@@ -25,8 +25,6 @@ namespace rendering
         UINT m_width;
         UINT m_height;
 
-        CD3DX12_VIEWPORT m_viewport;
-        CD3DX12_RECT m_scissorRect;
         Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12Device> m_device;
         Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
@@ -59,6 +57,11 @@ namespace rendering
     public:
 
         ID3D12Device& GetDevice();
+        CD3DX12_VIEWPORT m_viewport;
+        CD3DX12_RECT m_scissorRect;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const;
+        const D3D12_VERTEX_BUFFER_VIEW* GetVertexBufferView() const;
+        ID3D12Resource* GetCurrentRenderTarget() const;
 	};
 
 }

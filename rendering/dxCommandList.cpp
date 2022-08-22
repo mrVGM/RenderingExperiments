@@ -1,6 +1,5 @@
 #include "dxCommandList.h"
 
-#include "d3dx12.h"
 #include "nativeFunc.h"
 #include "dxDevice.h"
 #include "dxVertexShader.h"
@@ -49,6 +48,33 @@ return Value();
         return Value();
     });
 
+    Value& populate = GetOrCreateProperty(nativeObject, "populate");
+    populate = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value deviceValue = scope.GetProperty("param0");
+        DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
+
+        if (!device) {
+            THROW_EXCEPTION("Please supply a device!")
+        }
+
+        std::string error;
+        bool res = commandList->Populate(
+            &device->m_viewport,
+            &device->m_scissorRect,
+            device->GetCurrentRTVDescriptor(),
+            device->GetCurrentRenderTarget(),
+            device->GetVertexBufferView(),
+            error);
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
 
 #undef THROW_EXCEPTION
 }
@@ -74,9 +100,9 @@ bool rendering::DXCommandList::Create(ID3D12Device* device, ID3DBlob* vertexShad
             D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
             "Can't serialize Root Signature!")
 
-            THROW_ERROR(
-                device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)),
-                "Can't Create Root Signature!")
+        THROW_ERROR(
+            device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)),
+            "Can't Create Root Signature!")
     }
 
 
@@ -111,12 +137,66 @@ bool rendering::DXCommandList::Create(ID3D12Device* device, ID3DBlob* vertexShad
 
     THROW_ERROR(
         device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)),
-        "Can't create Command Allocator!"
-    )
+        "Can't create Command Allocator!")
 
     THROW_ERROR(
         device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)),
         "Can't create Command List!")
+
+    return true;
+}
+
+bool rendering::DXCommandList::Populate(
+    const CD3DX12_VIEWPORT* viewport,
+    CD3DX12_RECT* scissorRect,
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+    ID3D12Resource* renderTarget,
+    const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+    std::string& errorMessage)
+{
+    // Command list allocators can only be reset when the associated 
+    // command lists have finished execution on the GPU; apps should use 
+    // fences to determine GPU execution progress.
+    THROW_ERROR(
+        m_commandAllocator->Reset(),
+        "Can't reset Command Allocator!")
+
+    // However, when ExecuteCommandList() is called on a particular command 
+    // list, that command list can then be reset at any time and must be before 
+    // re-recording.
+    THROW_ERROR(
+        m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()),
+        "Can't reset Command List!")
+
+    // Set necessary state.
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->RSSetViewports(1, viewport);
+    m_commandList->RSSetScissorRects(1, scissorRect);
+
+    // Indicate that the back buffer will be used as a render target.
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+    // Record commands.
+    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
+    m_commandList->DrawInstanced(3, 1, 0, 0);
+
+    // Indicate that the back buffer will now be used to present.
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+
+    THROW_ERROR(
+        m_commandList->Close(),
+        "Can't close Command List!")
 
     return true;
 }

@@ -2,6 +2,8 @@
 
 #include "nativeObject.h"
 
+#include "d3dx12.h"
+
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
@@ -18,6 +20,14 @@ namespace rendering
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		bool Create(ID3D12Device* device, ID3DBlob* vertexShader, ID3DBlob* pixelShader, std::string& errorMessage);
+		bool Populate(
+			const CD3DX12_VIEWPORT* viewport,
+			CD3DX12_RECT* scissorRect,
+			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+			ID3D12Resource* renderTarget,
+			const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+			std::string& errorMessage);
+
 	public:
 	};
 }
