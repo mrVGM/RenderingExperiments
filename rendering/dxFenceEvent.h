@@ -14,6 +14,8 @@ namespace rendering
 	{
 		int m_id = -1;
 		std::thread* m_waitThread = nullptr;
+
+		// TODO: REMOVE this value
 		interpreter::Value m_callback;
 
 		HANDLE m_fenceEvent = nullptr;
