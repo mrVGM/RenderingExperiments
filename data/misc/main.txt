@@ -52,6 +52,9 @@ let pixelShader = api.pixelShader();
 let fence = api.fence();
 let vertexBuff = api.buffer();
 
+let commandList = api.commandList();
+let commandQueue = api.commandQueue();
+
 let renderCrt = func() {
 	if (wnd.isAlive() == 0) {
 		return;
@@ -67,14 +70,43 @@ let renderCrt = func() {
 	timeout(renderCrt);
 };
 
+let renderCrt2 = func() {
+	if (wnd.isAlive() == 0) {
+		return;
+	}
+
+	try {
+		let frameDone = api.fenceEvent();
+		frameDone.create();
+
+		frameDone.wait(fence, func(arg) {
+			device.present();
+			renderCrt2();
+		});
+
+		device.updateCurrentFrameIndex();
+		commandList.populate(device);
+		commandList.execute(commandQueue, fence, frameDone.getID());
+	} catch(e) {
+		print(e);
+		return;
+	}
+};
+
+
 
 try {
 	vertexShader.compile(shaderCode);
 	pixelShader.compile(shaderCode);
 	print("Shaders compiled!");
 
-	device.init(wnd);
+	device.create();
+	commandQueue.create(device);
 
+	device.init(wnd, commandQueue);
+
+	commandList.create(device, vertexShader, pixelShader);
+	
 	fence.create(device);
 	print("Fence created!");
 
@@ -84,12 +116,13 @@ try {
 		print("Heap is now resident!");
 		try {
 			vertexBuff.init(84);
-			vertexBuff.place(device, heap, 0);
+			vertexBuff.place(device, heap, fenceEvent.getID());
 			vertexBuff.copyData(vertexData);
 			print("Buffer Placed!");
 
 			device.load(vertexShader, pixelShader, fence, vertexBuff);
-			renderCrt();
+			renderCrt2();
+			#renderCrt();
 		} catch(exception) {
 			print(exception);
 		}

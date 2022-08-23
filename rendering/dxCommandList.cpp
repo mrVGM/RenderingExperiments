@@ -175,6 +175,10 @@ bool rendering::DXCommandList::Create(ID3D12Device* device, ID3DBlob* vertexShad
         device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)),
         "Can't create Command List!")
 
+    THROW_ERROR(
+        m_commandList->Close(),
+        "Can't close command List!")
+
     return true;
 }
 

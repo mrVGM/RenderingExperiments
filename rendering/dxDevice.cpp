@@ -5,6 +5,7 @@
 #include "dxVertexShader.h"
 #include "dxPixelShader.h"
 #include "dxFence.h"
+#include "dxCommandQueue.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -12,7 +13,8 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
+
+bool rendering::DXDevice::Create(std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
@@ -33,8 +35,7 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
     }
 #endif
 
-    ComPtr<IDXGIFactory4> factory;
-    THROW_ERROR(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)), "Can't create DXGIFactoty!")
+    THROW_ERROR(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&m_factory)), "Can't create DXGIFactoty!")
 
     {
         THROW_ERROR(D3D12CreateDevice(
@@ -44,14 +45,17 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
         ), "Can't Create device");
     }
 
-    // Describe and create the command queue.
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    return true;
+}
 
-    THROW_ERROR(
-        m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)),
-        "Can't create Command QUEUE!")
+void rendering::DXDevice::UpdateCurrentFrameIndex()
+{
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+}
+
+bool rendering::DXDevice::LoadPipeline(HWND hWnd, ID3D12CommandQueue* commandQueue, std::string & errorMessage)
+{
+    using Microsoft::WRL::ComPtr;
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -64,8 +68,8 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
     swapChainDesc.SampleDesc.Count = 1;
 
     ComPtr<IDXGISwapChain1> swapChain;
-    THROW_ERROR(factory->CreateSwapChainForHwnd(
-        m_commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+    THROW_ERROR(m_factory->CreateSwapChainForHwnd(
+        commandQueue,        // Swap chain needs the queue so that it can force a flush on it.
         hWnd,
         &swapChainDesc,
         nullptr,
@@ -75,7 +79,7 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, std::string& errorMessage)
 
     // This sample does not support fullscreen transitions.
     THROW_ERROR(
-        factory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER),
+        m_factory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER),
         "Can't Associate to Window!")
 
     THROW_ERROR(swapChain.As(&m_swapChain), "Can't cast to swap chain!")
@@ -123,6 +127,17 @@ bool rendering::DXDevice::LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShad
 {
     using Microsoft::WRL::ComPtr;
 
+    // Create the vertex buffer.
+    {
+        m_vertexBuffer = vertexBuffer->GetBuffer();
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.SizeInBytes = vertexBuffer->GetBufferWidth();
+    }
+
+#if false
     // Create an empty root signature.
     {
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
@@ -179,15 +194,7 @@ bool rendering::DXDevice::LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShad
         m_commandList->Close(),
         "Can't close command List!")
 
-    // Create the vertex buffer.
-    {
-        m_vertexBuffer = vertexBuffer->GetBuffer();
-
-        // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-        m_vertexBufferView.SizeInBytes = vertexBuffer->GetBufferWidth();
-    }
+    
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
@@ -212,7 +219,7 @@ bool rendering::DXDevice::LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShad
             return false;
         }
     }
-
+#endif
     return true;
 }
 
@@ -268,6 +275,7 @@ bool rendering::DXDevice::PopulateCommandList(std::string& errorMessage)
 
 bool rendering::DXDevice::WaitForPreviousFrame(std::string& errorMessage)
 {
+#if false
     // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
     // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
     // sample illustrates how to use fences for efficient resource usage and to
@@ -292,12 +300,13 @@ bool rendering::DXDevice::WaitForPreviousFrame(std::string& errorMessage)
     }
 
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
+#endif
     return true;
 }
 
 bool rendering::DXDevice::Render(std::string& errorMessage)
 {
+#if false
     bool res;
     // Record all the commands we need to render the scene into the command list.
     res = PopulateCommandList(errorMessage);
@@ -317,7 +326,7 @@ bool rendering::DXDevice::Render(std::string& errorMessage)
     if (!res) {
         return false;
     }
-
+#endif
     return true;
 }
 
@@ -341,8 +350,32 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
 scope.SetProperty("exception", Value(error));\
 return Value();
 
+    Value& updateCurrentFrameIndex = GetOrCreateProperty(nativeObject, "updateCurrentFrameIndex");
+    updateCurrentFrameIndex = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+        Value self = scope.GetProperty("self");
+        DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
+
+        device.UpdateCurrentFrameIndex();
+        return Value();
+    });
+
+    Value& create = GetOrCreateProperty(nativeObject, "create");
+    create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+        Value self = scope.GetProperty("self");
+        DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
+
+        std::string error;
+        bool res = device.Create(error);
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
+
 	Value& initProp = GetOrCreateProperty(nativeObject, "init");
-	initProp = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+	initProp = CreateNativeMethod(nativeObject, 2, [](Value scope) {
 		Value self = scope.GetProperty("self");
 		DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
 
@@ -357,9 +390,16 @@ return Value();
         device.m_scissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(device.m_width), static_cast<LONG>(device.m_height));
         device.m_rtvDescriptorSize = 0;
 
+        Value commandQueueValue = scope.GetProperty("param1");
+        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+
+        if (!commandQueue) {
+            THROW_EXCEPTION("Please supply a Command Queue!");
+        }
+
         std::string errorMessage;
         {
-            bool res = device.LoadPipeline(window->m_hwnd, errorMessage);
+            bool res = device.LoadPipeline(window->m_hwnd, commandQueue->GetCommandQueue(), errorMessage);
             if (!res) {
                 THROW_EXCEPTION(errorMessage)
             }

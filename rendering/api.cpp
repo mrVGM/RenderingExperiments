@@ -12,6 +12,8 @@
 #include "dxFence.h"
 #include "dxFenceEvent.h"
 #include "dxBuffer.h"
+#include "dxCommandList.h"
+#include "dxCommandQueue.h"
 
 namespace rendering
 {
@@ -61,6 +63,16 @@ namespace rendering
 		m_api.SetProperty("buffer", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXBuffer* buffer = new DXBuffer();
 			return NativeObject::Create(buffer);
+		}));
+
+		m_api.SetProperty("commandList", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXCommandList* commandList = new DXCommandList();
+			return NativeObject::Create(commandList);
+		}));
+
+		m_api.SetProperty("commandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXCommandQueue* commandQuue = new DXCommandQueue();
+			return NativeObject::Create(commandQuue);
 		}));
 	}
 }
