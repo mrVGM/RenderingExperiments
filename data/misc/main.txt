@@ -93,6 +93,7 @@ try {
 		} catch(exception) {
 			print(exception);
 		}
+		print("finished");
 	});
 
 

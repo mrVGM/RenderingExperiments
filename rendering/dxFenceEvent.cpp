@@ -11,14 +11,19 @@ namespace
 {
     std::binary_semaphore m_semaphore{1};
     rendering::DXFenceEvent* m_fenceEventCache = nullptr;
+    interpreter::Value m_cb;
 
     void waitThread()
     {
         rendering::DXFenceEvent* fenceEvent = m_fenceEventCache;
         m_fenceEventCache = nullptr;
+        interpreter::Value callback = m_cb;
+        m_cb = interpreter::Value();
+
         m_semaphore.release();
 
-        fenceEvent->WaitBlocking();
+        fenceEvent->WaitBlocking(callback);
+        m_cb = interpreter::Value();
     }
 }
 
@@ -62,7 +67,6 @@ return Value();
         }
 
         fenceEvent->m_id = fence->GetEventID();
-        fenceEvent->m_callback = func;
 
         std::string error;
         bool res = fenceEvent->AttachToFence(*fence, error);
@@ -73,6 +77,7 @@ return Value();
 
         m_semaphore.acquire();
         m_fenceEventCache = fenceEvent;
+        m_cb = func;
 
         fenceEvent->m_waitThread = new std::thread(waitThread);
 
@@ -111,15 +116,16 @@ bool rendering::DXFenceEvent::AttachToFence(DXFence& fence, std::string errorMes
     return true;
 }
 
-void rendering::DXFenceEvent::WaitBlocking()
+void rendering::DXFenceEvent::WaitBlocking(const interpreter::Value& callback)
 {
     WaitForSingleObject(m_fenceEvent, INFINITE);
-    interpreter::utils::RunCallback(m_callback, interpreter::Value());
+    interpreter::utils::RunCallback(callback, interpreter::Value());
 }
 
 rendering::DXFenceEvent::~DXFenceEvent()
 {
     if (m_waitThread) {
+        m_waitThread->join();
         delete m_waitThread;
     }
     m_waitThread = nullptr;

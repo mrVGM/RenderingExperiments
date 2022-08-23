@@ -15,9 +15,6 @@ namespace rendering
 		int m_id = -1;
 		std::thread* m_waitThread = nullptr;
 
-		// TODO: REMOVE this value
-		interpreter::Value m_callback;
-
 		HANDLE m_fenceEvent = nullptr;
 
 		void InitProperties(interpreter::NativeObject& nativeObject);
@@ -25,7 +22,7 @@ namespace rendering
 
 		bool AttachToFence(DXFence& fence, std::string errorMessage);
 	public:
-		void WaitBlocking();
+		void WaitBlocking(const interpreter::Value& callback);
 		~DXFenceEvent();
 	};
 }
