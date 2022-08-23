@@ -15,5 +15,7 @@ namespace rendering
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 		bool Create(ID3D12Device* device, std::string& errorMessage);
 	public:
+
+		ID3D12CommandQueue* GetCommandQueue();
 	};
 }

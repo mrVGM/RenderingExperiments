@@ -54,4 +54,9 @@ bool rendering::DXCommandQueue::Create(ID3D12Device* device, std::string& errorM
     return true;
 }
 
+ID3D12CommandQueue* rendering::DXCommandQueue::GetCommandQueue()
+{
+    return m_commandQueue.Get();
+}
+
 #undef THROW_ERROR

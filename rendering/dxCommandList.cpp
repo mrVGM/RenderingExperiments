@@ -76,6 +76,38 @@ return Value();
         return Value();
     });
 
+    Value& execute = GetOrCreateProperty(nativeObject, "execute");
+    execute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value commandQueueValue = scope.GetProperty("param0");
+        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+        if (!commandQueue) {
+            THROW_EXCEPTION("Please supply a Command Queue!")
+        }
+        
+        Value fenceValue = scope.GetProperty("param1");
+        DXFence* fence = dynamic_cast<DXFence*>(NativeObject::ExtractNativeObject(fenceValue));
+        if (!fence) {
+            THROW_EXCEPTION("Please supply a Fence!")
+        }
+
+        Value signalValue = scope.GetProperty("param2");
+        if (signalValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a Signal Value!")
+        }
+        int signal = static_cast<int>(signalValue.GetNum());
+
+        std::string error;
+        bool res = commandList->Execute(commandQueue->GetCommandQueue(), fence->GetFence(), signal, error);
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
+
 #undef THROW_EXCEPTION
 }
 
@@ -200,5 +232,15 @@ bool rendering::DXCommandList::Populate(
 
     return true;
 }
+
+bool rendering::DXCommandList::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+{
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    commandQueue->Signal(fence, signal);
+
+    return true;
+}
+
 
 #undef THROW_ERROR

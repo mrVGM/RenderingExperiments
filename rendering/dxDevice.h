@@ -52,6 +52,7 @@ namespace rendering
         bool WaitForPreviousFrame(std::string& errorMessage);
 
         bool Render(std::string& errorMessage);
+        bool Present(std::string& errorMessage);
 
         virtual void InitProperties(interpreter::NativeObject& nativeObject);
     public:
