@@ -1,0 +1,141 @@
+let wnd = api.window();
+wnd.create(600, 400);
+
+let aspect = wnd.width / wnd.height;
+print(aspect);
+
+let vertexData = [];
+vertexData.push(0.0);
+vertexData.push(0.25 * aspect);
+vertexData.push(0);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(0.25);
+vertexData.push(-0.25 * aspect);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(-0.25);
+vertexData.push(-0.25 * aspect);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(0);
+vertexData.push(1);
+vertexData.push(1);
+
+
+let dragCrt = func() {
+	if (wnd.isAlive() == 0) {
+		print("Window closed!");
+		wnd = none;
+		return;
+	}
+	wnd.drag();
+	timeout(dragCrt, 0);
+};
+dragCrt();
+
+
+let device = api.device();
+
+let shaderCode = readFile("shaders.hlsl");
+
+let vertexShader = api.vertexShader();
+let pixelShader = api.pixelShader();
+
+let fence = api.fence();
+let vertexBuff = api.buffer();
+
+let commandList = api.commandList();
+let commandQueue = api.commandQueue();
+
+let renderCrt = func() {
+	if (wnd.isAlive() == 0) {
+		return;
+	}
+
+	try {
+		device.render();
+	} catch(e) {
+		print(e);
+		return;
+	}
+
+	timeout(renderCrt);
+};
+
+let renderCrt2 = func() {
+	if (wnd.isAlive() == 0) {
+		return;
+	}
+
+	try {
+		let frameDone = api.fenceEvent();
+		frameDone.create();
+
+		frameDone.wait(fence, func(arg) {
+			device.present();
+			renderCrt2();
+		});
+
+		device.updateCurrentFrameIndex();
+		commandList.populate(device);
+		commandList.execute(commandQueue, fence, frameDone.getID());
+	} catch(e) {
+		print(e);
+		return;
+	}
+};
+
+
+
+try {
+	vertexShader.compile(shaderCode);
+	pixelShader.compile(shaderCode);
+	print("Shaders compiled!");
+
+	device.create();
+	commandQueue.create(device);
+
+	device.init(wnd, commandQueue);
+
+	commandList.create(device, vertexShader, pixelShader);
+	
+	fence.create(device);
+	print("Fence created!");
+
+	let fenceEvent = api.fenceEvent();
+	fenceEvent.create();
+	fenceEvent.wait(fence, func(arg) { 
+		print("Heap is now resident!");
+		try {
+			vertexBuff.init(84);
+			vertexBuff.place(device, heap, fenceEvent.getID());
+			vertexBuff.copyData(vertexData);
+			print("Buffer Placed!");
+
+			device.load(vertexShader, pixelShader, fence, vertexBuff);
+			renderCrt2();
+			#renderCrt();
+		} catch(exception) {
+			print(exception);
+		}
+		print("finished");
+	});
+
+
+	let signal = fenceEvent.getID();
+	let heap = api.heap();
+
+	heap.create(device, 100, "UPLOAD");
+	print("Heap Created!");
+	heap.makeResident(fence, signal);
+} catch (e) {
+	print(e);
+}

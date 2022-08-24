@@ -3,6 +3,7 @@
 #include "value.h"
 
 #include <vector>
+#include <mutex>
 
 namespace interpreter
 {
@@ -31,6 +32,8 @@ namespace interpreter
 
 		int m_instructionsBatches = 0;
 		bool m_collectingGarbage = false;
+
+		std::mutex m_mutex;
 
 	public:
 

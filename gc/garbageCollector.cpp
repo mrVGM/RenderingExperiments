@@ -117,18 +117,26 @@ void interpreter::GarbageCollector::CollectGarbage()
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 {
+	//m_mutex.lock();
+
 	ManagedValue& mv = FindOrCreateValue(value);
 	++mv.m_explicitRefs;
 
 	CollectGarbage();
+
+	//m_mutex.unlock();
 }
 
 void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 {
+	//m_mutex.lock();
+
 	ManagedValue* mv = FindValue(value);
 	--mv->m_explicitRefs;
 
 	CollectGarbage();
+
+	//m_mutex.unlock();
 }
 
 interpreter::GarbageCollector::~GarbageCollector()
@@ -140,13 +148,19 @@ interpreter::GarbageCollector::~GarbageCollector()
 
 void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
+	//m_mutex.lock();
+	
 	ManagedValue* refBy = FindValue(referencedBy);
 	refBy->m_implicitRefs.push_back(value);
 	CollectGarbage();
+
+	//m_mutex.unlock();
 }
 
 void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
+	//m_mutex.lock();
+
 	ManagedValue* refBy = FindValue(referencedBy);
 	if (!refBy) {
 		return;
@@ -160,6 +174,8 @@ void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IMan
 	}
 
 	CollectGarbage();
+
+	//m_mutex.unlock();
 }
 
 interpreter::GarbageCollector::GCInstructionsBatch::GCInstructionsBatch()
