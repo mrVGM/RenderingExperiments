@@ -33,15 +33,8 @@ namespace rendering
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
         UINT m_rtvDescriptorSize;
 
-        // App resources.
-        ID3D12Resource* m_vertexBuffer = nullptr;
-        D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-
         // Synchronization objects.
         UINT m_frameIndex;
-
-        bool LoadPipeline(HWND hWnd, ID3D12CommandQueue* commandQueue, std::string& errorMessage);
-        bool LoadAssets(DXBuffer* svertexBuffer, std::string& errorMessage);
 
         bool Present(std::string& errorMessage);
         bool Create(std::string& errorMessage);
@@ -51,11 +44,6 @@ namespace rendering
     public:
 
         ID3D12Device& GetDevice();
-        CD3DX12_VIEWPORT m_viewport;
-        CD3DX12_RECT m_scissorRect;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const;
-        const D3D12_VERTEX_BUFFER_VIEW* GetVertexBufferView() const;
-        ID3D12Resource* GetCurrentRenderTarget() const;
         IDXGIFactory4* GetFactory() const;
 	};
 
