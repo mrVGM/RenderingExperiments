@@ -83,6 +83,10 @@ let loadHeap = func(onLoaded) {
 };
 
 let render = func() {
+	if (wnd.isAlive() == 0) {
+		return;
+	}
+
 	try {
 		let frameDone = api.fenceEvent();
 		frameDone.create();
