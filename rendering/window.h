@@ -1,3 +1,5 @@
+#pragma once
+
 #include "nativeObject.h"
 
 #include <Windows.h>
@@ -17,6 +19,8 @@ namespace rendering
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 	public:
 		HWND m_hwnd;
+		UINT m_width;
+		UINT m_height;
 		Window();
 		~Window();
 	};

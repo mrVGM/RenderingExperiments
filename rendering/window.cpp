@@ -111,14 +111,28 @@ void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 			return interpreter::Value();
 		}
 
-		interpreter::Value& widthVal = wnd.GetOrCreateProperty(*obj, "width");
-		interpreter::Value& heightVal = wnd.GetOrCreateProperty(*obj, "height");
-
-		widthVal = width;
-		heightVal = height;
+		wnd.m_width = static_cast<UINT>(width.GetNum());
+		wnd.m_height = static_cast<UINT>(height.GetNum());
 
 		wnd.Create(width.GetNum(), height.GetNum());
 		return interpreter::Value();
+	});
+
+	interpreter::Value& widthVal = GetOrCreateProperty(nativeObject, "width");
+	interpreter::Value& heightVal = GetOrCreateProperty(nativeObject, "height");
+
+	widthVal = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		Window* wnd = static_cast<Window*>(interpreter::NativeObject::ExtractNativeObject(self));
+
+		return interpreter::Value(wnd->m_width);
+	});
+
+	heightVal = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		Window* wnd = static_cast<Window*>(interpreter::NativeObject::ExtractNativeObject(self));
+
+		return interpreter::Value(wnd->m_height);
 	});
 
 	interpreter::Value drag = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {

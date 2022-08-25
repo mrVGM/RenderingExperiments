@@ -187,8 +187,8 @@ return Value();
 		Value windowValue = scope.GetProperty("param0");
         Window* window = dynamic_cast<Window*>(NativeObject::ExtractNativeObject(windowValue));
 
-		device.m_width = (UINT)windowValue.GetProperty("width").GetNum();
-		device.m_height = (UINT)windowValue.GetProperty("height").GetNum();
+        device.m_width = window->m_width;
+		device.m_height = window->m_height;
 
         device.m_frameIndex = 0;
         device.m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(device.m_width), static_cast<float>(device.m_height));

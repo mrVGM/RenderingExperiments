@@ -1,7 +1,11 @@
 let wnd = api.window();
 wnd.create(600, 400);
 
-let aspect = wnd.width / wnd.height;
+let w = wnd.width();
+let h = wnd.height();
+
+let aspect = w / h;
+print(aspect);
 
 let vertexData = [];
 vertexData.push(0.0);
