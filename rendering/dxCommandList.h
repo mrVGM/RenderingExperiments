@@ -29,6 +29,7 @@ namespace rendering
 			ID3DBlob* pixelShader,
 			ID3D12Resource* vertexBuffer,
 			int vertexBufferWidth,
+			int vertexBufferStride,
 			std::string& errorMessage);
 		bool Populate(
 			const CD3DX12_VIEWPORT* viewport,

@@ -13,12 +13,6 @@
 
 namespace rendering
 {
-    struct Vertex
-    {
-        DirectX::XMFLOAT3 position;
-        DirectX::XMFLOAT4 color;
-    };
-
 	class DXDevice : public interpreter::INativeObject
 	{
         Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;

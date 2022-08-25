@@ -16,7 +16,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 5, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -48,6 +48,15 @@ return Value();
             THROW_EXCEPTION("Please supply a Vertex Buffer!")
         }
 
+        Value vertexBufferStrideValue = scope.GetProperty("param4");
+        if (vertexBufferStrideValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a Stride!")
+        }
+        int stride = vertexBufferStrideValue.GetNum();
+        if (stride <= 0) {
+            THROW_EXCEPTION("Please supply a valid Stride!")
+        }
+
         std::string error;
         bool res = commandList->Create(
             &device->GetDevice(),
@@ -55,6 +64,7 @@ return Value();
             pixelShader->GetCompiledShader(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
+            stride,
             error);
 
         if (!res) {
@@ -139,6 +149,7 @@ bool rendering::DXCommandList::Create(
     ID3DBlob* pixelShader,
     ID3D12Resource* vertexBuffer,
     int vertexBufferWidth,
+    int vertexBufferStride,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
@@ -147,7 +158,7 @@ bool rendering::DXCommandList::Create(
     {
         // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.StrideInBytes = vertexBufferStride;
         m_vertexBufferView.SizeInBytes = vertexBufferWidth;
     }
 
