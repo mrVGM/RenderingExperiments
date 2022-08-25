@@ -48,19 +48,6 @@ bool rendering::DXDevice::Create(std::string& errorMessage)
     return true;
 }
 
-void rendering::DXDevice::UpdateCurrentFrameIndex()
-{
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-}
-
-bool rendering::DXDevice::Present(std::string& errorMessage)
-{    
-    THROW_ERROR(m_swapChain->Present(1, 0),
-        "Can't present Swap Chain!")
-
-    return true;
-}
-
 #undef THROW_ERROR
 
 
@@ -73,15 +60,6 @@ void rendering::DXDevice::InitProperties(interpreter::NativeObject& nativeObject
 scope.SetProperty("exception", Value(error));\
 return Value();
 
-    Value& updateCurrentFrameIndex = GetOrCreateProperty(nativeObject, "updateCurrentFrameIndex");
-    updateCurrentFrameIndex = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-        Value self = scope.GetProperty("self");
-        DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
-
-        device.UpdateCurrentFrameIndex();
-        return Value();
-    });
-
     Value& create = GetOrCreateProperty(nativeObject, "create");
     create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value self = scope.GetProperty("self");
@@ -92,22 +70,6 @@ return Value();
 
         if (!res) {
             THROW_EXCEPTION(error)
-        }
-
-        return Value();
-    });
-
-    Value& present = GetOrCreateProperty(nativeObject, "present");
-    present = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-        Value self = scope.GetProperty("self");
-        NativeObject* selfContainer = static_cast<NativeObject*>(self.GetManagedValue());
-        DXDevice& device = static_cast<DXDevice&>(selfContainer->GetNativeObject());
-
-        std::string errorMessage;
-        bool res = device.Present(errorMessage);
-
-        if (!res) {
-            THROW_EXCEPTION(errorMessage)
         }
 
         return Value();

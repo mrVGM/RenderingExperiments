@@ -21,24 +21,11 @@ namespace rendering
 
 	class DXDevice : public interpreter::INativeObject
 	{
-        static const UINT FrameCount = 2;
-        UINT m_width;
-        UINT m_height;
-
         Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
 
-        Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12Device> m_device;
-        Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-        UINT m_rtvDescriptorSize;
 
-        // Synchronization objects.
-        UINT m_frameIndex;
-
-        bool Present(std::string& errorMessage);
         bool Create(std::string& errorMessage);
-        void UpdateCurrentFrameIndex();
 
         void InitProperties(interpreter::NativeObject& nativeObject) override;
     public:
