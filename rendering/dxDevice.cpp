@@ -135,63 +135,6 @@ bool rendering::DXDevice::LoadAssets(DXBuffer* vertexBuffer, std::string& errorM
     return true;
 }
 
-bool rendering::DXDevice::WaitForPreviousFrame(std::string& errorMessage)
-{
-#if false
-    // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-    // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-    // sample illustrates how to use fences for efficient resource usage and to
-    // maximize GPU utilization.
-
-    // Signal and increment the fence value.
-    const UINT64 fence = m_fenceValue;
-    THROW_ERROR(
-        m_commandQueue->Signal(m_fence, fence),
-        "Can't signal the Fence!"
-        )
-    m_fenceValue++;
-
-    // Wait until the previous frame is finished.
-    if (m_fence->GetCompletedValue() < fence)
-    {
-        THROW_ERROR(
-            m_fence->SetEventOnCompletion(fence, m_fenceEvent),
-            "Can't set Fence Event!"
-        )
-        WaitForSingleObject(m_fenceEvent, INFINITE);
-    }
-
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-#endif
-    return true;
-}
-
-bool rendering::DXDevice::Render(std::string& errorMessage)
-{
-#if false
-    bool res;
-    // Record all the commands we need to render the scene into the command list.
-    res = PopulateCommandList(errorMessage);
-    if (!res) {
-        return false;
-    }
-
-    // Execute the command list.
-    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-    // Present the frame.
-    THROW_ERROR(m_swapChain->Present(1, 0),
-        "Can't present Swap Chain!")
-
-    res = WaitForPreviousFrame(errorMessage);
-    if (!res) {
-        return false;
-    }
-#endif
-    return true;
-}
-
 bool rendering::DXDevice::Present(std::string& errorMessage)
 {    
     THROW_ERROR(m_swapChain->Present(1, 0),
@@ -287,22 +230,6 @@ return Value();
             if (!res) {
                 THROW_EXCEPTION(errorMessage)
             }
-        }
-
-        return Value();
-    });
-
-    Value& render = GetOrCreateProperty(nativeObject, "render");
-    render = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-        Value self = scope.GetProperty("self");
-        NativeObject* selfContainer = static_cast<NativeObject*>(self.GetManagedValue());
-        DXDevice& device = static_cast<DXDevice&>(selfContainer->GetNativeObject());
-
-        std::string errorMessage;
-        bool res = device.Render(errorMessage);
-
-        if (!res) {
-            THROW_EXCEPTION(errorMessage)
         }
 
         return Value();

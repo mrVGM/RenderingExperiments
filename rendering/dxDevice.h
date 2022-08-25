@@ -30,10 +30,7 @@ namespace rendering
         Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12Device> m_device;
         Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-        Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-        Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
         UINT m_rtvDescriptorSize;
 
         // App resources.
@@ -42,20 +39,15 @@ namespace rendering
 
         // Synchronization objects.
         UINT m_frameIndex;
-        HANDLE m_fenceEvent;
-        ID3D12Fence* m_fence = nullptr;
-        UINT64 m_fenceValue;
 
         bool LoadPipeline(HWND hWnd, ID3D12CommandQueue* commandQueue, std::string& errorMessage);
         bool LoadAssets(DXBuffer* svertexBuffer, std::string& errorMessage);
-        bool WaitForPreviousFrame(std::string& errorMessage);
 
-        bool Render(std::string& errorMessage);
         bool Present(std::string& errorMessage);
         bool Create(std::string& errorMessage);
         void UpdateCurrentFrameIndex();
 
-        virtual void InitProperties(interpreter::NativeObject& nativeObject);
+        void InitProperties(interpreter::NativeObject& nativeObject) override;
     public:
 
         ID3D12Device& GetDevice();
