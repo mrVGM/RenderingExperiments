@@ -4,6 +4,7 @@
 #include "dxDevice.h"
 #include "dxVertexShader.h"
 #include "dxPixelShader.h"
+#include "dxSwapChain.h"
 
 void rendering::DXCommandList::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -49,7 +50,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -60,12 +61,19 @@ return Value();
             THROW_EXCEPTION("Please supply a device!")
         }
 
+        Value swapChainValue = scope.GetProperty("param1");
+        DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
+
+        if (!swapChain) {
+            THROW_EXCEPTION("Please supply a swap chain!")
+        }
+
         std::string error;
         bool res = commandList->Populate(
-            &device->m_viewport,
-            &device->m_scissorRect,
-            device->GetCurrentRTVDescriptor(),
-            device->GetCurrentRenderTarget(),
+            &swapChain->m_viewport,
+            &swapChain->m_scissorRect,
+            swapChain->GetCurrentRTVDescriptor(),
+            swapChain->GetCurrentRenderTarget(),
             device->GetVertexBufferView(),
             error);
 

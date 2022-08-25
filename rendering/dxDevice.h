@@ -56,6 +56,7 @@ namespace rendering
         CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const;
         const D3D12_VERTEX_BUFFER_VIEW* GetVertexBufferView() const;
         ID3D12Resource* GetCurrentRenderTarget() const;
+        IDXGIFactory4* GetFactory() const;
 	};
 
 }

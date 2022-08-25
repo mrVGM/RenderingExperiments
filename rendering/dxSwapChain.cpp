@@ -152,7 +152,6 @@ return Value();
             THROW_EXCEPTION("Please supply a command queue!")
         }
 
-#if false
         std::string error;
         bool res = swapChain->Create(
             device->GetFactory(),
@@ -166,7 +165,6 @@ return Value();
         if (!res) {
             THROW_EXCEPTION(error)
         }
-#endif
 
         return Value();
     });

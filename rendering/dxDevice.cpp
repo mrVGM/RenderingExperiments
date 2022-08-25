@@ -274,3 +274,8 @@ ID3D12Resource* rendering::DXDevice::GetCurrentRenderTarget() const
 {
     return m_renderTargets[m_frameIndex].Get();
 }
+
+IDXGIFactory4* rendering::DXDevice::GetFactory() const
+{
+    return m_factory.Get();
+}

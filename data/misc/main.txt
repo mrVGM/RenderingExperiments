@@ -56,6 +56,7 @@ let setupShaders = func() {
 
 
 let device = api.device();
+let swapChain = api.swapChain();
 let fence = api.fence();
 let vertexBuff = api.buffer();
 let commandList = api.commandList();
@@ -64,7 +65,9 @@ let commandQueue = api.commandQueue();
 let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
-	device.init(wnd, commandQueue);
+	swapChain.create(device, wnd, commandQueue);
+
+	#device.init(wnd, commandQueue);
 	commandList.create(device, vertexShader, pixelShader);
 	fence.create(device);
 	print("General Init!");
@@ -97,15 +100,15 @@ let render = func() {
 
 		frameDone.wait(fence, func(arg) {
 			try {
-				device.present();
+				swapChain.present();
 				render();
 			} catch(exc) {
 				print(e);
 			}
 		});
 
-		device.updateCurrentFrameIndex();
-		commandList.populate(device);
+		swapChain.updateCurrentFrameIndex();
+		commandList.populate(device, swapChain);
 		commandList.execute(commandQueue, fence, frameDone.getID());
 	} catch(e) {
 		print(e);
