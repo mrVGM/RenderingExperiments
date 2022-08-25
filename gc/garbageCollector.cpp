@@ -1,11 +1,28 @@
 #include "garbageCollector.h"
 
 #include <queue>
+#include <thread>
+
+namespace
+{
+	bool m_running = false;
+	std::thread* m_thread = nullptr;
+
+	void run()
+	{
+		while (m_running) {
+			interpreter::GarbageCollector::GetInstance().CollectGarbage();
+		}
+	}
+}
 
 interpreter::GarbageCollector* interpreter::GarbageCollector::m_instance = nullptr;
 
 interpreter::GarbageCollector::GarbageCollector()
 {
+	m_submitted = &m_commands1;
+	m_running = true;
+	m_thread = new std::thread(run);
 }
 
 interpreter::GarbageCollector& interpreter::GarbageCollector::GetInstance()
@@ -58,15 +75,65 @@ interpreter::GarbageCollector::ManagedValue* interpreter::GarbageCollector::Find
 
 void interpreter::GarbageCollector::CollectGarbage()
 {
-	if (m_collectingGarbage) {
+	std::vector<GCCommand>* m_currentCommands = nullptr;
+
+	m_batchMutex.lock();
+	m_mutex.lock();
+
+	m_currentCommands = m_submitted;
+	if (m_submitted == &m_commands1) {
+		m_submitted = &m_commands2;
+	}
+	else {
+		m_submitted = &m_commands1;
+	}
+	m_submitted->clear();
+
+	m_mutex.unlock();
+	m_batchMutex.unlock();
+	
+	if (m_currentCommands->empty()) {
 		return;
 	}
 
-	if (m_instructionsBatches > 0) {
-		return;
-	}
+	for (int i = 0; i < m_currentCommands->size(); ++i) {
+		GCCommand& cur = (*m_currentCommands)[i];
+		switch(cur.m_type) {
+		case GCCommandType::GCAddExplicitRef:
+		{
+			ManagedValue& mv = FindOrCreateValue(cur.value1);
+			++mv.m_explicitRefs;
+			break;
+		}
+		case GCCommandType::GCRemoveExplicitRef:
+		{
+			ManagedValue* mv = FindValue(cur.value1);
+			--mv->m_explicitRefs;
+			break;
+		}
+		case GCCommandType::GCAddImplicitRef:
+		{
+			ManagedValue* refBy = FindValue(cur.value2);
+			refBy->m_implicitRefs.push_back(cur.value1);
+			break;
+		}
+		case GCCommandType::GCRemoveImplicitRef:
+		{
+			ManagedValue* refBy = FindValue(cur.value2);
+			if (!refBy) {
+				break;
+			}
 
-	m_collectingGarbage = true;
+			for (std::vector<IManagedValue*>::iterator it = refBy->m_implicitRefs.begin(); it != refBy->m_implicitRefs.end(); ++it) {
+				if ((*it) == cur.value1) {
+					refBy->m_implicitRefs.erase(it);
+					break;
+				}
+			}
+			break;
+		}
+		}
+	}
 
 	std::queue<ManagedValue*> q;
 
@@ -111,36 +178,39 @@ void interpreter::GarbageCollector::CollectGarbage()
 	for (int i = 0; i < dead.size(); ++i) {
 		delete dead[i];
 	}
-
-	m_collectingGarbage = false;
 }
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 {
-	//m_mutex.lock();
+	m_mutex.lock();
 
-	ManagedValue& mv = FindOrCreateValue(value);
-	++mv.m_explicitRefs;
+	GCCommand gcCommand;
+	gcCommand.m_type = GCCommandType::GCAddExplicitRef;
+	gcCommand.value1 = value;
+	m_submitted->push_back(gcCommand);
 
-	CollectGarbage();
-
-	//m_mutex.unlock();
+	m_mutex.unlock();
 }
 
 void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 {
-	//m_mutex.lock();
+	m_mutex.lock();
 
-	ManagedValue* mv = FindValue(value);
-	--mv->m_explicitRefs;
+	GCCommand gcCommand;
+	gcCommand.m_type = GCCommandType::GCRemoveExplicitRef;
+	gcCommand.value1 = value;
+	m_submitted->push_back(gcCommand);
 
-	CollectGarbage();
-
-	//m_mutex.unlock();
+	m_mutex.unlock();
 }
 
 interpreter::GarbageCollector::~GarbageCollector()
 {
+	m_running = false;
+	m_thread->join();
+	delete m_thread;
+	m_thread = nullptr;
+
 	for (int i = 0; i < m_allValues.size(); ++i) {
 		delete m_allValues[i];
 	}
@@ -148,45 +218,38 @@ interpreter::GarbageCollector::~GarbageCollector()
 
 void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	//m_mutex.lock();
+	m_mutex.lock();
 	
-	ManagedValue* refBy = FindValue(referencedBy);
-	refBy->m_implicitRefs.push_back(value);
-	CollectGarbage();
+	GCCommand gcCommand;
+	gcCommand.m_type = GCCommandType::GCAddImplicitRef;
+	gcCommand.value1 = value;
+	gcCommand.value2 = referencedBy;
+	m_submitted->push_back(gcCommand);
 
-	//m_mutex.unlock();
+	m_mutex.unlock();
 }
 
 void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	//m_mutex.lock();
+	m_mutex.lock();
 
-	ManagedValue* refBy = FindValue(referencedBy);
-	if (!refBy) {
-		return;
-	}
+	GCCommand gcCommand;
+	gcCommand.m_type = GCCommandType::GCRemoveImplicitRef;
+	gcCommand.value1 = value;
+	gcCommand.value2 = referencedBy;
+	m_submitted->push_back(gcCommand);
 
-	for (std::vector<IManagedValue*>::iterator it = refBy->m_implicitRefs.begin(); it != refBy->m_implicitRefs.end(); ++it) {
-		if ((*it) == value) {
-			refBy->m_implicitRefs.erase(it);
-			break;
-		}
-	}
-
-	CollectGarbage();
-
-	//m_mutex.unlock();
+	m_mutex.unlock();
 }
 
 interpreter::GarbageCollector::GCInstructionsBatch::GCInstructionsBatch()
 {
-	++GetInstance().m_instructionsBatches;
+	GetInstance().m_batchMutex.lock();
 }
 
 interpreter::GarbageCollector::GCInstructionsBatch::~GCInstructionsBatch()
 {
-	--GetInstance().m_instructionsBatches;
-	GetInstance().CollectGarbage();
+	GetInstance().m_batchMutex.unlock();
 }
 
 interpreter::IManagedValue::~IManagedValue()

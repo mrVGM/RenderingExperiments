@@ -9,6 +9,22 @@ namespace interpreter
 {
 	class GarbageCollector 
 	{
+		enum GCCommandType
+		{
+			None,
+			GCAddExplicitRef,
+			GCRemoveExplicitRef,
+			GCAddImplicitRef,
+			GCRemoveImplicitRef,
+		};
+
+		struct GCCommand
+		{
+			GCCommandType m_type = GCCommandType::None;
+			IManagedValue* value1 = nullptr;
+			IManagedValue* value2 = nullptr;
+		};
+
 		struct ManagedValue
 		{
 			IManagedValue* m_managedValue = nullptr;
@@ -25,15 +41,17 @@ namespace interpreter
 
 		std::vector<ManagedValue*> m_allValues;
 
+		std::vector<GCCommand>* m_submitted = nullptr;
+		std::vector<GCCommand> m_commands1;
+		std::vector<GCCommand> m_commands2;
+
+
 		ManagedValue& FindOrCreateValue(IManagedValue* value);
 		ManagedValue* FindValue(IManagedValue* value);
 
-		void CollectGarbage();
-
-		int m_instructionsBatches = 0;
-		bool m_collectingGarbage = false;
 
 		std::mutex m_mutex;
+		std::mutex m_batchMutex;
 
 	public:
 
@@ -45,6 +63,8 @@ namespace interpreter
 
 		static GarbageCollector& GetInstance();
 		static void DisposeGC();
+
+		void CollectGarbage();
 
 		void AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy);
 		void RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy);
