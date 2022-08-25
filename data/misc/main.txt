@@ -66,9 +66,6 @@ let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
 	swapChain.create(device, wnd, commandQueue);
-
-	#device.init(wnd, commandQueue);
-	commandList.create(device, vertexShader, pixelShader);
 	fence.create(device);
 	print("General Init!");
 };
@@ -108,7 +105,7 @@ let render = func() {
 		});
 
 		swapChain.updateCurrentFrameIndex();
-		commandList.populate(device, swapChain);
+		commandList.populate(swapChain);
 		commandList.execute(commandQueue, fence, frameDone.getID());
 	} catch(e) {
 		print(e);
@@ -123,7 +120,7 @@ let heapLoaded = func() {
 		vertexBuff.copyData(vertexData);
 		print("Buffer Placed!");
 
-		device.load(vertexBuff);
+		commandList.create(device, vertexShader, pixelShader, vertexBuff);
 	} catch(e) {
 		print(e);
 	}

@@ -19,9 +19,17 @@ namespace rendering
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
+		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
-		bool Create(ID3D12Device* device, ID3DBlob* vertexShader, ID3DBlob* pixelShader, std::string& errorMessage);
+		bool Create(
+			ID3D12Device* device,
+			ID3DBlob* vertexShader,
+			ID3DBlob* pixelShader,
+			ID3D12Resource* vertexBuffer,
+			int vertexBufferWidth,
+			std::string& errorMessage);
 		bool Populate(
 			const CD3DX12_VIEWPORT* viewport,
 			CD3DX12_RECT* scissorRect,

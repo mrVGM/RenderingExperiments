@@ -5,6 +5,7 @@
 #include "dxVertexShader.h"
 #include "dxPixelShader.h"
 #include "dxSwapChain.h"
+#include "dxBuffer.h"
 
 void rendering::DXCommandList::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -15,7 +16,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -40,8 +41,22 @@ return Value();
             THROW_EXCEPTION("Please supply a pixel shader!")
         }
 
+        Value vertexBufferValue = scope.GetProperty("param3");
+        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
+
+        if (!vertexBuffer) {
+            THROW_EXCEPTION("Please supply a Vertex Buffer!")
+        }
+
         std::string error;
-        bool res = commandList->Create(&device->GetDevice(), vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), error);
+        bool res = commandList->Create(
+            &device->GetDevice(),
+            vertexShader->GetCompiledShader(),
+            pixelShader->GetCompiledShader(),
+            vertexBuffer->GetBuffer(),
+            vertexBuffer->GetBufferWidth(),
+            error);
+
         if (!res) {
             THROW_EXCEPTION(error)
         }
@@ -50,18 +65,11 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 1, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
-        Value deviceValue = scope.GetProperty("param0");
-        DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
-
-        if (!device) {
-            THROW_EXCEPTION("Please supply a device!")
-        }
-
-        Value swapChainValue = scope.GetProperty("param1");
+        Value swapChainValue = scope.GetProperty("param0");
         DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
 
         if (!swapChain) {
@@ -74,7 +82,7 @@ return Value();
             &swapChain->m_scissorRect,
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
-            device->GetVertexBufferView(),
+            &commandList->m_vertexBufferView,
             error);
 
         if (!res) {
@@ -125,9 +133,23 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXCommandList::Create(ID3D12Device* device, ID3DBlob* vertexShader, ID3DBlob* pixelShader, std::string& errorMessage)
+bool rendering::DXCommandList::Create(
+    ID3D12Device* device,
+    ID3DBlob* vertexShader,
+    ID3DBlob* pixelShader,
+    ID3D12Resource* vertexBuffer,
+    int vertexBufferWidth,
+    std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
+
+    // Create the vertex buffer.
+    {
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.SizeInBytes = vertexBufferWidth;
+    }
 
     // Create an empty root signature.
     {
