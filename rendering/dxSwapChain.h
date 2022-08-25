@@ -2,6 +2,8 @@
 
 #include "nativeObject.h"
 
+#include "d3dx12.h"
+
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
@@ -34,5 +36,10 @@ namespace rendering
 		bool Present(std::string& errorMessage);
 		void UpdateCurrentFrameIndex();
 	public:
+		CD3DX12_VIEWPORT m_viewport;
+		CD3DX12_RECT m_scissorRect;
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const;
+		ID3D12Resource* GetCurrentRenderTarget() const;
 	};
 }

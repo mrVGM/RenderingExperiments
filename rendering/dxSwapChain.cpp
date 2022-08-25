@@ -28,6 +28,11 @@ bool rendering::DXSwapChain::Create(
 {
     using Microsoft::WRL::ComPtr;
 
+    m_frameIndex = 0;
+    m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height));
+    m_scissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(width), static_cast<LONG>(height));
+    m_rtvDescriptorSize = 0;
+
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.BufferCount = FrameCount;
@@ -103,6 +108,18 @@ void rendering::DXSwapChain::UpdateCurrentFrameIndex()
 }
 
 #undef THROW_ERROR
+
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE rendering::DXSwapChain::GetCurrentRTVDescriptor() const
+{
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+}
+
+ID3D12Resource* rendering::DXSwapChain::GetCurrentRenderTarget() const
+{
+    return m_renderTargets[m_frameIndex].Get();
+}
+
 
 void rendering::DXSwapChain::InitProperties(interpreter::NativeObject& nativeObject)
 {
