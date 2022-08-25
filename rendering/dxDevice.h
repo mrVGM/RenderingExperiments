@@ -30,7 +30,6 @@ namespace rendering
         Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12Device> m_device;
         Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
         Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
         Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
@@ -48,8 +47,7 @@ namespace rendering
         UINT64 m_fenceValue;
 
         bool LoadPipeline(HWND hWnd, ID3D12CommandQueue* commandQueue, std::string& errorMessage);
-        bool LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage);
-        bool PopulateCommandList(std::string& errorMessage);
+        bool LoadAssets(DXBuffer* svertexBuffer, std::string& errorMessage);
         bool WaitForPreviousFrame(std::string& errorMessage);
 
         bool Render(std::string& errorMessage);

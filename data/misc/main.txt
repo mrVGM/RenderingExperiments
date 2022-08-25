@@ -116,7 +116,7 @@ let heapLoaded = func() {
 		vertexBuff.copyData(vertexData);
 		print("Buffer Placed!");
 
-		device.load(vertexShader, pixelShader, fence, vertexBuff);
+		device.load(vertexBuff);
 	} catch(e) {
 		print(e);
 	}

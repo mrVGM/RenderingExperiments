@@ -115,15 +115,10 @@ bool rendering::DXDevice::LoadPipeline(HWND hWnd, ID3D12CommandQueue* commandQue
         }
     }
 
-    THROW_ERROR(
-        m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)),
-        "Can't create Command Allocator!"
-    )
-
     return true;
 }
 
-bool rendering::DXDevice::LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShader, ID3D12Fence* fence, DXBuffer* vertexBuffer, std::string& errorMessage)
+bool rendering::DXDevice::LoadAssets(DXBuffer* vertexBuffer, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
@@ -136,139 +131,6 @@ bool rendering::DXDevice::LoadAssets(ID3DBlob* vertexShader, ID3DBlob* pixelShad
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBuffer->GetBufferWidth();
     }
-
-#if false
-    // Create an empty root signature.
-    {
-        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-        ComPtr<ID3DBlob> signature;
-        ComPtr<ID3DBlob> error;
-        THROW_ERROR(
-            D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
-            "Can't serialize Root Signature!")
-
-        THROW_ERROR(
-            m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)),
-            "Can't Create Root Signature!")
-    }
-
-    // Create the pipeline state, which includes compiling and loading shaders.
-    {
-        // Define the vertex input layout.
-        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-        };
-
-        // Describe and create the graphics pipeline state object (PSO).
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-        psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader);
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader);
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.StencilEnable = FALSE;
-        psoDesc.SampleMask = UINT_MAX;
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.SampleDesc.Count = 1;
-        THROW_ERROR(
-            m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)),
-            "Can't create Graphics Pipeline State!")
-    }
-
-    // Create the command list.
-    THROW_ERROR(
-        m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)),
-        "Can't create Command List!")
-
-    // Command lists are created in the recording state, but there is nothing
-    // to record yet. The main loop expects it to be closed, so close it now.
-    THROW_ERROR(
-        m_commandList->Close(),
-        "Can't close command List!")
-
-    
-
-    // Create synchronization objects and wait until assets have been uploaded to the GPU.
-    {
-        m_fence = fence;
-        m_fenceValue = 1;
-
-        // Create an event handle to use for frame synchronization.
-        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (m_fenceEvent == nullptr)
-        {
-            THROW_ERROR(
-                HRESULT_FROM_WIN32(GetLastError()),
-                "Can't create Fence Event!"
-            );
-        }
-
-        // Wait for the command list to execute; we are reusing the same command 
-        // list in our main loop but for now, we just want to wait for setup to 
-        // complete before continuing.
-        bool res = WaitForPreviousFrame(errorMessage);
-        if (!res) {
-            return false;
-        }
-    }
-#endif
-    return true;
-}
-
-bool rendering::DXDevice::PopulateCommandList(std::string& errorMessage)
-{
-    // Command list allocators can only be reset when the associated 
-    // command lists have finished execution on the GPU; apps should use 
-    // fences to determine GPU execution progress.
-    THROW_ERROR(
-        m_commandAllocator->Reset(),
-        "Can't reset Command Allocator!")
-
-    // However, when ExecuteCommandList() is called on a particular command 
-    // list, that command list can then be reset at any time and must be before 
-    // re-recording.
-    THROW_ERROR(
-        m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()),
-        "Can't reset Command List!")
-
-    // Set necessary state.
-    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->RSSetViewports(1, &m_viewport);
-    m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
-    // Indicate that the back buffer will be used as a render target.
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-    // Record commands.
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(3, 1, 0, 0);
-
-    // Indicate that the back buffer will now be used to present.
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-
-    THROW_ERROR(
-        m_commandList->Close(),
-        "Can't close Command List!")
 
     return true;
 }
@@ -409,31 +271,11 @@ return Value();
 	});
 
     Value& load = GetOrCreateProperty(nativeObject, "load");
-    load = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+    load = CreateNativeMethod(nativeObject, 1, [](Value scope) {
         Value self = scope.GetProperty("self");
         DXDevice& device = static_cast<DXDevice&>(*NativeObject::ExtractNativeObject(self));
 
-        Value vertexShaderValue = scope.GetProperty("param0");
-        Value pixelShaderValue = scope.GetProperty("param1");
-
-        Value fenceValue = scope.GetProperty("param2");
-        Value vertexBufferValue = scope.GetProperty("param3");
-
-        DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
-        if (!vertexShader) {
-            THROW_EXCEPTION("Please supply a Vertex Shader!")
-        }
-
-        DXPixelShader* pixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(pixelShaderValue));
-        if (!pixelShader) {
-            THROW_EXCEPTION("Please supply a Pixel Shader!")
-        }
-
-        DXFence* fence = dynamic_cast<DXFence*>(NativeObject::ExtractNativeObject(fenceValue));
-        if (!fence) {
-            THROW_EXCEPTION("Please supply a Fence!")
-        }
-
+        Value vertexBufferValue = scope.GetProperty("param0");
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
         if (!vertexBuffer) {
             THROW_EXCEPTION("Please supply a Vertex Buffer!")
@@ -441,7 +283,7 @@ return Value();
 
         std::string errorMessage;
         {
-            bool res = device.LoadAssets(vertexShader->GetCompiledShader(), pixelShader->GetCompiledShader(), fence->GetFence(), vertexBuffer, errorMessage);
+            bool res = device.LoadAssets(vertexBuffer, errorMessage);
             if (!res) {
                 THROW_EXCEPTION(errorMessage)
             }
