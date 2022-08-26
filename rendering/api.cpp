@@ -15,6 +15,7 @@
 #include "dxCommandList.h"
 #include "dxCommandQueue.h"
 #include "dxSwapChain.h"
+#include "dxDescriptorHeap.h"
 
 namespace rendering
 {
@@ -79,6 +80,11 @@ namespace rendering
 		m_api.SetProperty("swapChain", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXSwapChain* swapChain = new DXSwapChain();
 			return NativeObject::Create(swapChain);
+		}));
+
+		m_api.SetProperty("descriptorHeap", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXDescriptorHeap* descriptorHeap = new DXDescriptorHeap();
+			return NativeObject::Create(descriptorHeap);
 		}));
 	}
 }

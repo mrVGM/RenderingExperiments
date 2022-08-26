@@ -30,6 +30,8 @@ add_library (Rendering
 	"dxCommandQueue.cpp"
 	"dxSwapChain.h"
 	"dxSwapChain.cpp"
+	"dxDescriptorHeap.h"
+	"dxDescriptorHeap.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
