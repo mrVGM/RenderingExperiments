@@ -32,6 +32,12 @@ vertexData.push(0);
 vertexData.push(1);
 vertexData.push(1);
 
+let cbData = [];
+let index = 0;
+while (index < 256) {
+	cbData.push(0);
+	index = index + 1;
+}
 
 let dragCrt = func() {
 	if (wnd.isAlive() == 0) {
@@ -59,6 +65,7 @@ let device = api.device();
 let swapChain = api.swapChain();
 let fence = api.fence();
 let vertexBuff = api.buffer();
+let constantBuff = api.buffer();
 let commandList = api.commandList();
 let commandQueue = api.commandQueue();
 
@@ -140,7 +147,13 @@ let heapLoaded = func() {
 		vertexBuff.init(84);
 		vertexBuff.place(device, vertexHeap, 0);
 		vertexBuff.copyData(vertexData);
-		print("Buffer Placed!");
+		print("Vertex Buffer Placed!");
+
+		constantBuff.init(256);
+		constantBuff.place(device, cbHeap, 0);
+		constantBuff.copyData(cbData);
+		print("Constant Buffer Placed!");
+
 
 		commandList.create(device, vertexShader, pixelShader, vertexBuff, 28);
 	} catch(e) {
