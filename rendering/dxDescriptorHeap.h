@@ -21,5 +21,6 @@ namespace rendering
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 	public:
+		ID3D12DescriptorHeap* GetHeap() const;
 	};
 }

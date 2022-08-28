@@ -92,3 +92,8 @@ return Value();
 
 #undef THROW_EXCEPTION
 }
+
+ID3D12DescriptorHeap* rendering::DXDescriptorHeap::GetHeap() const
+{
+    return m_heap.Get();
+}
