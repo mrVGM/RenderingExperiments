@@ -117,6 +117,15 @@ let loadHeap = func(onLoaded) {
 	cbHeap.makeResident(fence, cbHeapSignal);
 };
 
+let update = func() {
+	cbData[0] = cbData[0] + 0.001;
+	if (cbData[0] > 1) {
+		cbData[0] = -1;
+	}
+
+	constantBuff.copyData(cbData);
+};
+
 let render = func() {
 	if (wnd.isAlive() == 0) {
 		return;
@@ -129,6 +138,8 @@ let render = func() {
 		frameDone.wait(fence, func(arg) {
 			try {
 				swapChain.present();
+
+				update();
 				render();
 			} catch(exc) {
 				print(e);
