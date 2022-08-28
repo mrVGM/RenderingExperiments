@@ -70,20 +70,42 @@ let generalInit = func() {
 	print("General Init!");
 };
 
-let heap = api.heap();
+let vertexHeap = api.heap();
+let cbHeap = api.heap();
 
 let loadHeap = func(onLoaded) {
-	let fenceEvent = api.fenceEvent();
-	fenceEvent.create();
-	fenceEvent.wait(fence, func(arg) {
-		print("Heap Loaded!");
-		onLoaded();
-	});
-	let signal = fenceEvent.getID();
+	let waiting = 2;
 
-	heap.create(device, 100, "UPLOAD");
-	print("Heap Created!");
-	heap.makeResident(fence, signal);
+	let fe1 = api.fenceEvent();
+	fe1.create();
+	fe1.wait(fence, func(arg) {
+		waiting = waiting - 1;
+		print("Vertex Heap Loaded!");
+
+		if (waiting == 0) {
+			onLoaded();
+		}
+	});
+	let vHeapSignal = fe1.getID();
+
+	let fe2 = api.fenceEvent();
+	fe2.create();
+	fe2.wait(fence, func(arg) {
+		waiting = waiting - 1;
+		print("Constant Buffer Heap Loaded!");
+
+		if (waiting == 0) {
+			onLoaded();
+		}
+	});
+	let cbHeapSignal = fe2.getID();
+
+	vertexHeap.create(device, 100, "UPLOAD");
+	print("Vertex Heap Created!");
+	cbHeap.create(device, 256, "UPLOAD");
+	print("Constant Buffer Heap Created!");
+	vertexHeap.makeResident(fence, vHeapSignal);
+	cbHeap.makeResident(fence, cbHeapSignal);
 };
 
 let render = func() {
@@ -116,7 +138,7 @@ let render = func() {
 let heapLoaded = func() {
 	try {
 		vertexBuff.init(84);
-		vertexBuff.place(device, heap, 0);
+		vertexBuff.place(device, vertexHeap, 0);
 		vertexBuff.copyData(vertexData);
 		print("Buffer Placed!");
 
