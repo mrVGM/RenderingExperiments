@@ -6,6 +6,7 @@
 #include "dxPixelShader.h"
 #include "dxSwapChain.h"
 #include "dxBuffer.h"
+#include "dxDescriptorHeap.h"
 
 void rendering::DXCommandList::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -75,7 +76,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -86,6 +87,13 @@ return Value();
             THROW_EXCEPTION("Please supply a swap chain!")
         }
 
+        Value cbvHeapValue = scope.GetProperty("param1");
+        DXDescriptorHeap* cbvHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(cbvHeapValue));
+
+        if (!cbvHeap) {
+            THROW_EXCEPTION("Please supply a constant buffer heap!")
+        }
+
         std::string error;
         bool res = commandList->Populate(
             &swapChain->m_viewport,
@@ -93,6 +101,7 @@ return Value();
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
             &commandList->m_vertexBufferView,
+            cbvHeap->GetHeap(),
             error);
 
         if (!res) {
@@ -162,20 +171,43 @@ bool rendering::DXCommandList::Create(
         m_vertexBufferView.SizeInBytes = vertexBufferWidth;
     }
 
-    // Create an empty root signature.
+    // Create a root signature consisting of a descriptor table with a single CBV.
     {
-        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+
+        // This is the highest version the sample supports. If CheckFeatureSupport succeeds, the HighestVersion returned will not be greater than this.
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+
+        if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData)))) {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+        }
+
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+
+        // Allow input layout and deny uneccessary access to certain pipeline stages.
+        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
         THROW_ERROR(
-            D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
-            "Can't serialize Root Signature!")
+            D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error),
+            "Can't serialize a root signature!")
 
         THROW_ERROR(
             device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)),
-            "Can't Create Root Signature!")
+            "Can't create a root signature!")
     }
 
 
@@ -229,6 +261,7 @@ bool rendering::DXCommandList::Populate(
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+    ID3D12DescriptorHeap* cbvHeap,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -247,6 +280,11 @@ bool rendering::DXCommandList::Populate(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+
+    ID3D12DescriptorHeap* ppHeaps[] = { cbvHeap };
+    m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    m_commandList->SetGraphicsRootDescriptorTable(0, cbvHeap->GetGPUDescriptorHandleForHeapStart());
+
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 

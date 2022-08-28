@@ -69,6 +69,8 @@ let constantBuff = api.buffer();
 let commandList = api.commandList();
 let commandQueue = api.commandQueue();
 
+let cbDescriptorHeap = api.descriptorHeap();
+
 let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
@@ -134,7 +136,7 @@ let render = func() {
 		});
 
 		swapChain.updateCurrentFrameIndex();
-		commandList.populate(swapChain);
+		commandList.populate(swapChain, cbDescriptorHeap);
 		commandList.execute(commandQueue, fence, frameDone.getID());
 	} catch(e) {
 		print(e);
@@ -154,7 +156,9 @@ let heapLoaded = func() {
 		constantBuff.copyData(cbData);
 		print("Constant Buffer Placed!");
 
-
+		let cbuffs = [];
+		cbuffs.push(constantBuff);
+		cbDescriptorHeap.create(device, cbuffs);
 		commandList.create(device, vertexShader, pixelShader, vertexBuff, 28);
 	} catch(e) {
 		print(e);
