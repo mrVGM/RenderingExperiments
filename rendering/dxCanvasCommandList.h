@@ -12,7 +12,7 @@
 
 namespace rendering
 {
-	class DXCommandList : public interpreter::INativeObject
+	class DXCanvasCommandList : public interpreter::INativeObject
 	{
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;

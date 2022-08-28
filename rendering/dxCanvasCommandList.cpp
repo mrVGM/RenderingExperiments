@@ -1,4 +1,4 @@
-#include "dxCommandList.h"
+#include "dxCanvasCommandList.h"
 
 #include "nativeFunc.h"
 #include "dxDevice.h"
@@ -8,7 +8,7 @@
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
 
-void rendering::DXCommandList::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::DXCanvasCommandList::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -19,7 +19,7 @@ return Value();
     Value& create = GetOrCreateProperty(nativeObject, "create");
     create = CreateNativeMethod(nativeObject, 5, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value deviceValue = scope.GetProperty("param0");
         DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
@@ -78,7 +78,7 @@ return Value();
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
     populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value swapChainValue = scope.GetProperty("param0");
         DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
@@ -114,7 +114,7 @@ return Value();
     Value& execute = GetOrCreateProperty(nativeObject, "execute");
     execute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCommandList* commandList = dynamic_cast<DXCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
@@ -152,7 +152,7 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXCommandList::Create(
+bool rendering::DXCanvasCommandList::Create(
     ID3D12Device* device,
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
@@ -216,8 +216,8 @@ bool rendering::DXCommandList::Create(
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
         // Describe and create the graphics pipeline state object (PSO).
@@ -255,7 +255,7 @@ bool rendering::DXCommandList::Create(
     return true;
 }
 
-bool rendering::DXCommandList::Populate(
+bool rendering::DXCanvasCommandList::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
@@ -301,7 +301,7 @@ bool rendering::DXCommandList::Populate(
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
-    m_commandList->DrawInstanced(3, 1, 0, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     {
@@ -316,7 +316,7 @@ bool rendering::DXCommandList::Populate(
     return true;
 }
 
-bool rendering::DXCommandList::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+bool rendering::DXCanvasCommandList::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);

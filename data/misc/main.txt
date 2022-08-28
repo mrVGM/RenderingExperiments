@@ -8,29 +8,35 @@ let aspect = w / h;
 print(aspect);
 
 let vertexData = [];
-vertexData.push(0.0);
-vertexData.push(0.25 * aspect);
-vertexData.push(0);
-vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(-1);
 vertexData.push(0);
 vertexData.push(0);
-vertexData.push(1);
 
-vertexData.push(0.25);
-vertexData.push(-0.25 * aspect);
-vertexData.push(0);
-vertexData.push(0);
+vertexData.push(-1);
 vertexData.push(1);
 vertexData.push(0);
 vertexData.push(1);
 
-vertexData.push(-0.25);
-vertexData.push(-0.25 * aspect);
-vertexData.push(0);
-vertexData.push(0);
-vertexData.push(0);
 vertexData.push(1);
 vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
 
 let cbData = [];
 let index = 0;
@@ -122,6 +128,8 @@ let update = func() {
 	if (cbData[0] > 1) {
 		cbData[0] = -1;
 	}
+	cbData[2] = 0.5;
+	cbData[3] = 0.5;
 
 	constantBuff.copyData(cbData);
 };
@@ -157,7 +165,7 @@ let render = func() {
 
 let heapLoaded = func() {
 	try {
-		vertexBuff.init(84);
+		vertexBuff.init(96);
 		vertexBuff.place(device, vertexHeap, 0);
 		vertexBuff.copyData(vertexData);
 		print("Vertex Buffer Placed!");
@@ -170,7 +178,7 @@ let heapLoaded = func() {
 		let cbuffs = [];
 		cbuffs.push(constantBuff);
 		cbDescriptorHeap.create(device, cbuffs);
-		commandList.create(device, vertexShader, pixelShader, vertexBuff, 28);
+		commandList.create(device, vertexShader, pixelShader, vertexBuff, 16);
 	} catch(e) {
 		print(e);
 	}
