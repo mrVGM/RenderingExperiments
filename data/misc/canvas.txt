@@ -140,6 +140,10 @@ let createCanvas = func(device, fence, vertexShader, pixelShader, onReady) {
 			commandList.execute(commandQueue, fence, fe.getID());
 		};
 
+		res.setClearing = func(clearing) {
+			commandList.setClearing(clearing);
+		};
+
 		print("#ready");
 		onReady(res);
 	});

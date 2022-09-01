@@ -43,6 +43,8 @@ cbData.push(0.5);
 cbData.push(0.5);
 
 let canvas = none;
+let canvas2 = none;
+
 let createCanvas = require("canvas.txt");
 
 let update = func() {
@@ -61,13 +63,22 @@ let render = func() {
 		return;
 	}
 
+	let swap = func() {
+		swapChain.present();
+
+		update();
+		render();
+	};
+
 	try {
 		swapChain.updateCurrentFrameIndex();
-		canvas.render(swapChain, commandQueue, func() {
-			swapChain.present();
 
-			update();
-			render();
+		canvas.render(swapChain, commandQueue, func() {
+			swap();
+		});
+
+		canvas.render(swapChain, commandQueue, func() {
+			swap();
 		});
 	} catch(e) {
 		print(e);
@@ -91,11 +102,29 @@ let startRender = func() {
 try {
 	setupShaders();
 	generalInit();
+
+	let waiting = 2;
+
 	createCanvas(device, fence, vertexShader, pixelShader, func(cnv) {
+		waiting = waiting - 1;
 		canvas = cnv;
 		print(canvas);
-		startRender();
+
+		if (waiting == 0) {
+			startRender();
+		}
 	});
+
+	createCanvas(device, fence, vertexShader, pixelShader, func(cnv) {
+		waiting = waiting - 1;
+		canvas2 = cnv;
+		print(canvas2);
+
+		if (waiting == 0) {
+			startRender();
+		}
+	});
+
 } catch(e) {
 	print(e);
 }
