@@ -28,8 +28,6 @@ let swapChain = api.swapChain();
 let fence = api.fence();
 let commandQueue = api.commandQueue();
 
-let cbDescriptorHeap = api.descriptorHeap();
-
 let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
@@ -64,23 +62,13 @@ let render = func() {
 	}
 
 	try {
-		let frameDone = api.fenceEvent();
-		frameDone.create();
-
-		frameDone.wait(fence, func(arg) {
-			try {
-				swapChain.present();
-
-				update();
-				render();
-			} catch(exc) {
-				print(e);
-			}
-		});
-
 		swapChain.updateCurrentFrameIndex();
-		canvas.commandList.populate(swapChain, cbDescriptorHeap);
-		canvas.commandList.execute(commandQueue, fence, frameDone.getID());
+		canvas.render(swapChain, commandQueue, func() {
+			swapChain.present();
+
+			update();
+			render();
+		});
 	} catch(e) {
 		print(e);
 	}
@@ -90,7 +78,6 @@ let startRender = func() {
 	try {
 		let cbuffs = [];
 		cbuffs.push(canvas.constantBuff);
-		cbDescriptorHeap.create(device, cbuffs);
 		print("Ready to Render!");
 
 	} catch(e) {
