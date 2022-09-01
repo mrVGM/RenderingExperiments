@@ -1,50 +1,6 @@
 let wnd = api.window();
 wnd.create(600, 400);
 
-let w = wnd.width();
-let h = wnd.height();
-
-let aspect = w / h;
-print(aspect);
-
-let vertexData = [];
-vertexData.push(-1);
-vertexData.push(-1);
-vertexData.push(0);
-vertexData.push(0);
-
-vertexData.push(-1);
-vertexData.push(1);
-vertexData.push(0);
-vertexData.push(1);
-
-vertexData.push(1);
-vertexData.push(1);
-vertexData.push(1);
-vertexData.push(1);
-
-vertexData.push(-1);
-vertexData.push(-1);
-vertexData.push(0);
-vertexData.push(0);
-
-vertexData.push(1);
-vertexData.push(1);
-vertexData.push(1);
-vertexData.push(1);
-
-vertexData.push(1);
-vertexData.push(-1);
-vertexData.push(1);
-vertexData.push(0);
-
-let cbData = [];
-let index = 0;
-while (index < 256) {
-	cbData.push(0);
-	index = index + 1;
-}
-
 let dragCrt = func() {
 	if (wnd.isAlive() == 0) {
 		print("Window closed!");
@@ -70,8 +26,6 @@ let setupShaders = func() {
 let device = api.device();
 let swapChain = api.swapChain();
 let fence = api.fence();
-let vertexBuff = api.buffer();
-let constantBuff = api.buffer();
 let commandList = api.commandList();
 let commandQueue = api.commandQueue();
 
@@ -85,43 +39,14 @@ let generalInit = func() {
 	print("General Init!");
 };
 
-let vertexHeap = api.heap();
-let cbHeap = api.heap();
+let cbData = [];
+cbData.push(0);
+cbData.push(0);
+cbData.push(0.5);
+cbData.push(0.5);
 
-let loadHeap = func(onLoaded) {
-	let waiting = 2;
-
-	let fe1 = api.fenceEvent();
-	fe1.create();
-	fe1.wait(fence, func(arg) {
-		waiting = waiting - 1;
-		print("Vertex Heap Loaded!");
-
-		if (waiting == 0) {
-			onLoaded();
-		}
-	});
-	let vHeapSignal = fe1.getID();
-
-	let fe2 = api.fenceEvent();
-	fe2.create();
-	fe2.wait(fence, func(arg) {
-		waiting = waiting - 1;
-		print("Constant Buffer Heap Loaded!");
-
-		if (waiting == 0) {
-			onLoaded();
-		}
-	});
-	let cbHeapSignal = fe2.getID();
-
-	vertexHeap.create(device, 100, "UPLOAD");
-	print("Vertex Heap Created!");
-	cbHeap.create(device, 256, "UPLOAD");
-	print("Constant Buffer Heap Created!");
-	vertexHeap.makeResident(fence, vHeapSignal);
-	cbHeap.makeResident(fence, cbHeapSignal);
-};
+let canvas = none;
+let createCanvas = require("canvas.txt");
 
 let update = func() {
 	cbData[0] = cbData[0] + 0.001;
@@ -131,7 +56,7 @@ let update = func() {
 	cbData[2] = 0.5;
 	cbData[3] = 0.5;
 
-	constantBuff.copyData(cbData);
+	canvas.constantBuff.copyData(cbData);
 };
 
 let render = func() {
@@ -162,34 +87,30 @@ let render = func() {
 	}
 };
 
-
-let heapLoaded = func() {
+let startRender = func() {
 	try {
-		vertexBuff.init(96);
-		vertexBuff.place(device, vertexHeap, 0);
-		vertexBuff.copyData(vertexData);
-		print("Vertex Buffer Placed!");
-
-		constantBuff.init(256);
-		constantBuff.place(device, cbHeap, 0);
-		constantBuff.copyData(cbData);
-		print("Constant Buffer Placed!");
-
 		let cbuffs = [];
-		cbuffs.push(constantBuff);
+		cbuffs.push(canvas.constantBuff);
 		cbDescriptorHeap.create(device, cbuffs);
-		commandList.create(device, vertexShader, pixelShader, vertexBuff, 16);
+		commandList.create(device, vertexShader, pixelShader, canvas.vertexBuff, 16);
+		print("Ready to Render!");
+
 	} catch(e) {
 		print(e);
 	}
 
 	render();
+
 };
 
 try {
 	setupShaders();
 	generalInit();
-	loadHeap(heapLoaded);
+	createCanvas(device, fence, func(cnv) {
+		canvas = cnv;
+		print(canvas);
+		startRender();
+	});
 } catch(e) {
 	print(e);
 }

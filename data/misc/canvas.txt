@@ -1,0 +1,130 @@
+let vertexData = [];
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+
+let vertexDataLoaded = 0;
+let vertexHeap = api.heap();
+let vertexBuff = api.buffer();
+
+let loadVertexData = func(device, fence, onVertexDataLoaded) {
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, func(arg) {
+		print("#Vertex Heap Loaded!");
+
+		vertexBuff.init(96);
+		vertexBuff.place(device, vertexHeap, 0);
+		vertexBuff.copyData(vertexData);
+		print("#Vertex Buffer Loaded!");
+
+		onVertexDataLoaded();
+	});
+
+	let vHeapSignal = fe.getID();
+	vertexHeap.create(device, 96, "UPLOAD");
+	print("#Vertex Heap Created!");
+	vertexHeap.makeResident(fence, vHeapSignal);
+};
+
+let loadConstantData = func(device, fence, onConstantDataLoaded) {
+	let constantBuff = api.buffer();
+	let constantHeap = api.heap();
+	
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, func(arg) {
+		print("#Constant Heap Loaded!");
+
+		let cbData = [];
+		let index = 0;
+		while (index < 256) {
+			cbData.push(0);
+			index = index + 1;
+		}
+		cbData[2] = 0.5;
+		cbData[3] = 0.5;
+
+		constantBuff.init(256);
+		constantBuff.place(device, constantHeap, 0);
+		constantBuff.copyData(cbData);
+		print("#Constant Buffer Loaded!");
+		onConstantDataLoaded(constantHeap, constantBuff);
+	});
+
+	let cbHeapSignal = fe.getID();
+	constantHeap.create(device, 256, "UPLOAD");
+	print("#Constant Heap Created!");
+	constantHeap.makeResident(fence, cbHeapSignal);
+};
+
+
+let loadData = func(device, fence, onReady) {
+	let waiting = 1;
+	let heap = none;
+	let buff = none;
+
+	if (vertexDataLoaded == 0) {
+		waiting = 2;
+		vertexDataLoaded = 1;
+
+		loadVertexData(device, fence, func() {
+			waiting = waiting - 1;
+			if (waiting == 0) {
+				onReady(heap, buff);
+			}
+		});
+	}
+
+	loadConstantData(device, fence, func(cHeap, cBuff) {
+		heap = cHeap;
+		buff = cBuff;
+
+		waiting = waiting - 1;
+		if (waiting == 0) {
+			onReady(heap, buff);
+		}
+	});
+};
+
+let createCanvas = func(device, fence, onReady) {
+
+	loadData(device, fence, func(heap, buff) {
+		let res = {};
+		res.heap = heap;
+		res.constantBuff = buff;
+		res.vertexBuff = vertexBuff;
+
+		print("#ready");
+		onReady(res);
+	});
+};
+
+
+export = createCanvas;
