@@ -26,7 +26,6 @@ let setupShaders = func() {
 let device = api.device();
 let swapChain = api.swapChain();
 let fence = api.fence();
-let commandList = api.commandList();
 let commandQueue = api.commandQueue();
 
 let cbDescriptorHeap = api.descriptorHeap();
@@ -80,8 +79,8 @@ let render = func() {
 		});
 
 		swapChain.updateCurrentFrameIndex();
-		commandList.populate(swapChain, cbDescriptorHeap);
-		commandList.execute(commandQueue, fence, frameDone.getID());
+		canvas.commandList.populate(swapChain, cbDescriptorHeap);
+		canvas.commandList.execute(commandQueue, fence, frameDone.getID());
 	} catch(e) {
 		print(e);
 	}
@@ -92,7 +91,6 @@ let startRender = func() {
 		let cbuffs = [];
 		cbuffs.push(canvas.constantBuff);
 		cbDescriptorHeap.create(device, cbuffs);
-		commandList.create(device, vertexShader, pixelShader, canvas.vertexBuff, 16);
 		print("Ready to Render!");
 
 	} catch(e) {
@@ -106,7 +104,7 @@ let startRender = func() {
 try {
 	setupShaders();
 	generalInit();
-	createCanvas(device, fence, func(cnv) {
+	createCanvas(device, fence, vertexShader, pixelShader, func(cnv) {
 		canvas = cnv;
 		print(canvas);
 		startRender();

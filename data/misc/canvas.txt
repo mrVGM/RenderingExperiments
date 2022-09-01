@@ -113,13 +113,18 @@ let loadData = func(device, fence, onReady) {
 	});
 };
 
-let createCanvas = func(device, fence, onReady) {
+let createCanvas = func(device, fence, vertexShader, pixelShader, onReady) {
 
 	loadData(device, fence, func(heap, buff) {
 		let res = {};
 		res.heap = heap;
 		res.constantBuff = buff;
 		res.vertexBuff = vertexBuff;
+
+		let commandList = api.commandList();
+		commandList.create(device, vertexShader, pixelShader, vertexBuff, 16);
+
+		res.commandList = commandList;
 
 		print("#ready");
 		onReady(res);
