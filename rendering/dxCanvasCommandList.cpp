@@ -143,6 +143,20 @@ return Value();
         return Value();
     });
 
+    Value& clearing = GetOrCreateProperty(nativeObject, "setClearing");
+    clearing = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value clear = scope.GetProperty("param0");
+        if (clear.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a boolean value!")
+        }
+
+        commandList->m_clearing = static_cast<bool>(clear.GetNum());
+        return Value();
+    });
+
 #undef THROW_EXCEPTION
 }
 
@@ -298,7 +312,9 @@ bool rendering::DXCanvasCommandList::Populate(
 
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    if (m_clearing) {
+        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    }
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
     m_commandList->DrawInstanced(6, 1, 0, 0);

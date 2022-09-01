@@ -74,10 +74,10 @@ let render = func() {
 		swapChain.updateCurrentFrameIndex();
 
 		canvas.render(swapChain, commandQueue, func() {
-			swap();
+			let dummy = 1;
 		});
 
-		canvas.render(swapChain, commandQueue, func() {
+		canvas2.render(swapChain, commandQueue, func() {
 			swap();
 		});
 	} catch(e) {
@@ -118,6 +118,7 @@ try {
 	createCanvas(device, fence, vertexShader, pixelShader, func(cnv) {
 		waiting = waiting - 1;
 		canvas2 = cnv;
+		canvas2.setClearing(0);
 		print(canvas2);
 
 		if (waiting == 0) {
