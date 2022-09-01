@@ -9,23 +9,36 @@
 //
 //*********************************************************
 
+cbuffer SceneConstantBuffer : register(b0)
+{
+    float2 centerPos;
+    float2 scale;
+
+    float4 padding[15];
+};
+
 struct PSInput
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float2 uv : UV;
 };
 
-PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 {
     PSInput result;
 
-    result.position = position;
-    result.color = color;
+    result.position = float4(position * scale + centerPos, 0, 1);
+    result.uv = uv;
 
     return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return float4(1.0, 0.0, 0.0, 1.0);
+    float2 offset = input.uv - float2(0.5, 0.5);
+    float l = length(offset);
+    if (l > 0.5) {
+        return float4(0, 0, 0, 1);
+    }
+    return float4(1, 1, 1, 1);
 }

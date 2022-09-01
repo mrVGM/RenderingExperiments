@@ -13,12 +13,20 @@ let dragCrt = func() {
 dragCrt();
 
 let vertexShader = api.vertexShader();
+let vertexShader2 = api.vertexShader();
 let pixelShader = api.pixelShader();
+let pixelShader2 = api.pixelShader();
 
 let setupShaders = func() {
 	let shaderCode = readFile("shaders.hlsl");
+	let shaderCode2 = readFile("shaders2.hlsl");
+
 	vertexShader.compile(shaderCode);
 	pixelShader.compile(shaderCode);
+
+	vertexShader2.compile(shaderCode2);
+	pixelShader2.compile(shaderCode2);
+
 	print("Shaders compiled!");
 };
 
@@ -48,14 +56,18 @@ let canvas2 = none;
 let createCanvas = require("canvas.txt");
 
 let update = func() {
-	cbData[0] = cbData[0] + 0.001;
-	if (cbData[0] > 1) {
-		cbData[0] = -1;
-	}
+	cbData[0] = -0.5;
+	cbData[1] = -0.5;
+	cbData[2] = 0.5;
+	cbData[3] = 0.5;
+	canvas.constantBuff.copyData(cbData);
+
+	cbData[0] = 0.5;
+	cbData[1] = 0.5;
 	cbData[2] = 0.5;
 	cbData[3] = 0.5;
 
-	canvas.constantBuff.copyData(cbData);
+	canvas2.constantBuff.copyData(cbData);
 };
 
 let render = func() {
@@ -115,7 +127,7 @@ try {
 		}
 	});
 
-	createCanvas(device, fence, vertexShader, pixelShader, func(cnv) {
+	createCanvas(device, fence, vertexShader2, pixelShader2, func(cnv) {
 		waiting = waiting - 1;
 		canvas2 = cnv;
 		canvas2.setClearing(0);
