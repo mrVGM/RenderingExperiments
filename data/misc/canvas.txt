@@ -50,7 +50,9 @@ let loadVertexData = func(device, fence, onVertexDataLoaded) {
 	let vHeapSignal = fe.getID();
 	vertexHeap.create(device, 96, "UPLOAD");
 	print("#Vertex Heap Created!");
-	vertexHeap.makeResident(fence, vHeapSignal);
+	timeout(func() {
+		vertexHeap.makeResident(fence, vHeapSignal);
+	}, 0);
 };
 
 let loadConstantData = func(device, fence, onConstantDataLoaded) {
@@ -81,7 +83,10 @@ let loadConstantData = func(device, fence, onConstantDataLoaded) {
 	let cbHeapSignal = fe.getID();
 	constantHeap.create(device, 256, "UPLOAD");
 	print("#Constant Heap Created!");
-	constantHeap.makeResident(fence, cbHeapSignal);
+
+	timeout(func() {
+		constantHeap.makeResident(fence, cbHeapSignal);
+	}, 0);
 };
 
 
@@ -136,8 +141,10 @@ let createCanvas = func(device, fence, vertexShader, pixelShader, onReady) {
 				onReady();
 			});
 
-			commandList.populate(swapChain, cbDescriptorHeap);
-			commandList.execute(commandQueue, fence, fe.getID());
+			timeout(func() {
+				commandList.populate(swapChain, cbDescriptorHeap);
+				commandList.execute(commandQueue, fence, fe.getID());
+			}, 0);
 		};
 
 		res.setClearing = func(clearing) {
