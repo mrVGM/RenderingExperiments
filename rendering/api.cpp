@@ -17,6 +17,7 @@
 #include "dxSwapChain.h"
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
+#include "dxRenderCanvasesCL.h"
 
 namespace rendering
 {
@@ -91,6 +92,11 @@ namespace rendering
 		m_api.SetProperty("computeShader", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXComputeShader* computeShader = new DXComputeShader();
 			return NativeObject::Create(computeShader);
+		}));
+
+		m_api.SetProperty("renderCanvasesCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXRenderCanvasesCL* renderCanvasesCL = new DXRenderCanvasesCL();
+			return NativeObject::Create(renderCanvasesCL);
 		}));
 	}
 }

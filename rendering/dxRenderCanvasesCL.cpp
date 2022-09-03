@@ -206,12 +206,7 @@ bool rendering::DXRenderCanvasesCL::Execute(
     const std::vector<ID3D12GraphicsCommandList*>& canvases,
     std::string& errorMessage)
 {
-    ID3D12CommandList* ppCommandLists[] = { canvases[0] };
-    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-    commandQueue->Signal(fence, signal);
-
-#if false
-
+    
     ID3D12CommandList* clearCommandList[] = { m_clearRTCL.Get() };
     commandQueue->ExecuteCommandLists(_countof(clearCommandList), clearCommandList);
 
@@ -224,8 +219,6 @@ bool rendering::DXRenderCanvasesCL::Execute(
 
     ID3D12CommandList* finishCommandList[] = { m_finishCL.Get() };
     commandQueue->ExecuteCommandLists(_countof(finishCommandList), finishCommandList);
-#endif
-
 
     THROW_ERROR(
         commandQueue->Signal(fence, signal),

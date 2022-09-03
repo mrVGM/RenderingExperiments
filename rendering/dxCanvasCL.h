@@ -19,8 +19,6 @@ namespace rendering
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
-		bool m_clearing = true;
-
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;

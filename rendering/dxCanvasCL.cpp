@@ -143,19 +143,6 @@ return Value();
         return Value();
     });
 
-    Value& clearing = GetOrCreateProperty(nativeObject, "setClearing");
-    clearing = CreateNativeMethod(nativeObject, 1, [](Value scope) {
-        Value selfValue = scope.GetProperty("self");
-        DXCanvasCL* commandList = dynamic_cast<DXCanvasCL*>(NativeObject::ExtractNativeObject(selfValue));
-
-        Value clear = scope.GetProperty("param0");
-        if (clear.GetType() != ScriptingValueType::Number) {
-            THROW_EXCEPTION("Please supply a boolean value!")
-        }
-
-        commandList->m_clearing = static_cast<bool>(clear.GetNum());
-        return Value();
-    });
 
 #undef THROW_EXCEPTION
 }
@@ -302,28 +289,28 @@ bool rendering::DXCanvasCL::Populate(
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 
+#if false
     // Indicate that the back buffer will be used as a render target.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
         m_commandList->ResourceBarrier(1, &barrier);
     }
+#endif 
+
 
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-    // Record commands.
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    if (m_clearing) {
-        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    }
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
     m_commandList->DrawInstanced(6, 1, 0, 0);
 
+#if false
     // Indicate that the back buffer will now be used to present.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         m_commandList->ResourceBarrier(1, &barrier);
     }
+#endif
 
     THROW_ERROR(
         m_commandList->Close(),

@@ -36,6 +36,8 @@ add_library (Rendering
 	"dxComputeShader.cpp"
 	"dxClearRTCL.h"
 	"dxClearRTCL.cpp"
+	"dxrenderCanvasesCL.h"
+	"dxrenderCanvasesCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
