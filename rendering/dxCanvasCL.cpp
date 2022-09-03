@@ -341,5 +341,10 @@ bool rendering::DXCanvasCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fenc
     return true;
 }
 
+ID3D12GraphicsCommandList* rendering::DXCanvasCL::GetCommandList() const
+{
+    return m_commandList.Get();
+}
+
 
 #undef THROW_ERROR
