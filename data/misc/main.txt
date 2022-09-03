@@ -70,12 +70,15 @@ let update = func() {
 	canvas2.constantBuff.copyData(cbData);
 };
 
+let frame = 0;
+
 let render = func() {
 	if (wnd.isAlive() == 0) {
 		return;
 	}
 
 	let swap = func() {
+		frame = frame + 1;
 		swapChain.present();
 
 		update();
@@ -85,13 +88,10 @@ let render = func() {
 	try {
 		swapChain.updateCurrentFrameIndex();
 
-		canvas.render(swapChain, commandQueue, func() {
-			let dummy = 1;
-		});
-
-		canvas2.render(swapChain, commandQueue, func() {
+		canvas.render(swapChain, commandQueue, fence, frame, func() {
 			swap();
 		});
+
 	} catch(e) {
 		print(e);
 	}
@@ -99,19 +99,8 @@ let render = func() {
 
 let startRender = func() {
 	print("Starting to render!");
-	return;
-
-	try {
-		let cbuffs = [];
-		cbuffs.push(canvas.constantBuff);
-		print("Ready to Render!");
-
-	} catch(e) {
-		print(e);
-	}
 
 	render();
-
 };
 
 try {

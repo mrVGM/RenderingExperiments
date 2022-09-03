@@ -135,17 +135,15 @@ let createCanvas = func(device, vertexShader, pixelShader, onReady) {
 		cbDescriptorHeap.create(device, cBuffs);
 		res.descriptorHeap = cbDescriptorHeap;
 
-		res.render = func(swapChain, commandQueue, onReady) {
+		res.render = func(swapChain, commandQueue, fence, frame, onReady) {
 			let fe = api.fenceEvent();
 			fe.create();
-			fe.wait(fence, func(arg) {
+			fe.wait(fence, frame, func(arg) {
 				onReady();
 			});
 
-			timeout(func() {
-				commandList.populate(swapChain, cbDescriptorHeap);
-				commandList.execute(commandQueue, fence, fe.getID());
-			}, 0);
+			canvasCL.populate(swapChain, cbDescriptorHeap);
+			canvasCL.execute(commandQueue, fence, frame);
 		};
 
 		print("#ready");
