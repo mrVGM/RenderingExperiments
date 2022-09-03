@@ -1,4 +1,4 @@
-#include "dxCanvasCommandList.h"
+#include "dxCanvasCL.h"
 
 #include "nativeFunc.h"
 #include "dxDevice.h"
@@ -8,7 +8,7 @@
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
 
-void rendering::DXCanvasCommandList::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::DXCanvasCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -19,7 +19,7 @@ return Value();
     Value& create = GetOrCreateProperty(nativeObject, "create");
     create = CreateNativeMethod(nativeObject, 5, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCL* commandList = dynamic_cast<DXCanvasCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value deviceValue = scope.GetProperty("param0");
         DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
@@ -78,7 +78,7 @@ return Value();
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
     populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCL* commandList = dynamic_cast<DXCanvasCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value swapChainValue = scope.GetProperty("param0");
         DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
@@ -114,7 +114,7 @@ return Value();
     Value& execute = GetOrCreateProperty(nativeObject, "execute");
     execute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCL* commandList = dynamic_cast<DXCanvasCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
@@ -146,7 +146,7 @@ return Value();
     Value& clearing = GetOrCreateProperty(nativeObject, "setClearing");
     clearing = CreateNativeMethod(nativeObject, 1, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXCanvasCommandList* commandList = dynamic_cast<DXCanvasCommandList*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCanvasCL* commandList = dynamic_cast<DXCanvasCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value clear = scope.GetProperty("param0");
         if (clear.GetType() != ScriptingValueType::Number) {
@@ -166,7 +166,7 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXCanvasCommandList::Create(
+bool rendering::DXCanvasCL::Create(
     ID3D12Device* device,
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
@@ -269,7 +269,7 @@ bool rendering::DXCanvasCommandList::Create(
     return true;
 }
 
-bool rendering::DXCanvasCommandList::Populate(
+bool rendering::DXCanvasCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
@@ -332,7 +332,7 @@ bool rendering::DXCanvasCommandList::Populate(
     return true;
 }
 
-bool rendering::DXCanvasCommandList::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+bool rendering::DXCanvasCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);

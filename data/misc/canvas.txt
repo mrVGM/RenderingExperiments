@@ -33,10 +33,13 @@ let vertexDataLoaded = 0;
 let vertexHeap = api.heap();
 let vertexBuff = api.buffer();
 
-let loadVertexData = func(device, fence, onVertexDataLoaded) {
+let loadVertexData = func(device, onVertexDataLoaded) {
+	let fence = api.fence();
+	fence.create(device);
+
 	let fe = api.fenceEvent();
 	fe.create();
-	fe.wait(fence, func(arg) {
+	fe.wait(fence, 1, func(arg) {
 		print("#Vertex Heap Loaded!");
 
 		vertexBuff.init(96);
@@ -47,21 +50,20 @@ let loadVertexData = func(device, fence, onVertexDataLoaded) {
 		onVertexDataLoaded();
 	});
 
-	let vHeapSignal = fe.getID();
 	vertexHeap.create(device, 96, "UPLOAD");
 	print("#Vertex Heap Created!");
-	timeout(func() {
-		vertexHeap.makeResident(fence, vHeapSignal);
-	}, 0);
+	vertexHeap.makeResident(fence, 1);
 };
 
-let loadConstantData = func(device, fence, onConstantDataLoaded) {
+let loadConstantData = func(device, onConstantDataLoaded) {
+	let fence = api.fence();
+	fence.create(device);
 	let constantBuff = api.buffer();
 	let constantHeap = api.heap();
 	
 	let fe = api.fenceEvent();
 	fe.create();
-	fe.wait(fence, func(arg) {
+	fe.wait(fence, 1, func(arg) {
 		print("#Constant Heap Loaded!");
 
 		let cbData = [];
@@ -80,17 +82,14 @@ let loadConstantData = func(device, fence, onConstantDataLoaded) {
 		onConstantDataLoaded(constantHeap, constantBuff);
 	});
 
-	let cbHeapSignal = fe.getID();
 	constantHeap.create(device, 256, "UPLOAD");
 	print("#Constant Heap Created!");
 
-	timeout(func() {
-		constantHeap.makeResident(fence, cbHeapSignal);
-	}, 0);
+	constantHeap.makeResident(fence, 1);
 };
 
 
-let loadData = func(device, fence, onReady) {
+let loadData = func(device, onReady) {
 	let waiting = 1;
 	let heap = none;
 	let buff = none;
@@ -99,7 +98,7 @@ let loadData = func(device, fence, onReady) {
 		waiting = 2;
 		vertexDataLoaded = 1;
 
-		loadVertexData(device, fence, func() {
+		loadVertexData(device, func() {
 			waiting = waiting - 1;
 			if (waiting == 0) {
 				onReady(heap, buff);
@@ -107,7 +106,7 @@ let loadData = func(device, fence, onReady) {
 		});
 	}
 
-	loadConstantData(device, fence, func(cHeap, cBuff) {
+	loadConstantData(device, func(cHeap, cBuff) {
 		heap = cHeap;
 		buff = cBuff;
 
@@ -118,21 +117,23 @@ let loadData = func(device, fence, onReady) {
 	});
 };
 
-let createCanvas = func(device, fence, vertexShader, pixelShader, onReady) {
+let createCanvas = func(device, vertexShader, pixelShader, onReady) {
 
-	loadData(device, fence, func(heap, buff) {
+	loadData(device, func(heap, buff) {
 		let res = {};
 		res.heap = heap;
 		res.constantBuff = buff;
 		res.vertexBuff = vertexBuff;
 
-		let commandList = api.commandList();
-		commandList.create(device, vertexShader, pixelShader, vertexBuff, 16);
+		let canvasCL = api.canvasCL();
+		canvasCL.create(device, vertexShader, pixelShader, vertexBuff, 16);
+		res.commandList = canvasCL;
 
 		let cbDescriptorHeap = api.descriptorHeap();
 		let cBuffs = [];
 		cBuffs.push(buff);
 		cbDescriptorHeap.create(device, cBuffs);
+		res.descriptorHeap = cbDescriptorHeap;
 
 		res.render = func(swapChain, commandQueue, onReady) {
 			let fe = api.fenceEvent();
@@ -145,10 +146,6 @@ let createCanvas = func(device, fence, vertexShader, pixelShader, onReady) {
 				commandList.populate(swapChain, cbDescriptorHeap);
 				commandList.execute(commandQueue, fence, fe.getID());
 			}, 0);
-		};
-
-		res.setClearing = func(clearing) {
-			commandList.setClearing(clearing);
 		};
 
 		print("#ready");

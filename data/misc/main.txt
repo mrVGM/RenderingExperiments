@@ -98,6 +98,9 @@ let render = func() {
 };
 
 let startRender = func() {
+	print("Starting to render!");
+	return;
+
 	try {
 		let cbuffs = [];
 		cbuffs.push(canvas.constantBuff);
@@ -117,7 +120,7 @@ try {
 
 	let waiting = 2;
 
-	createCanvas(device, fence, vertexShader, pixelShader, func(cnv) {
+	createCanvas(device, vertexShader, pixelShader, func(cnv) {
 		waiting = waiting - 1;
 		canvas = cnv;
 		print(canvas);
@@ -127,10 +130,9 @@ try {
 		}
 	});
 
-	createCanvas(device, fence, vertexShader2, pixelShader2, func(cnv) {
+	createCanvas(device, vertexShader2, pixelShader2, func(cnv) {
 		waiting = waiting - 1;
 		canvas2 = cnv;
-		canvas2.setClearing(0);
 		print(canvas2);
 
 		if (waiting == 0) {

@@ -18,6 +18,5 @@ namespace rendering
 		Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
 	public:
 		ID3D12Fence* GetFence() const;
-		int GetEventID();
 	};
 }

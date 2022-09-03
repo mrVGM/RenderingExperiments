@@ -12,7 +12,7 @@
 #include "dxFence.h"
 #include "dxFenceEvent.h"
 #include "dxBuffer.h"
-#include "dxCanvasCommandList.h"
+#include "dxCanvasCL.h"
 #include "dxCommandQueue.h"
 #include "dxSwapChain.h"
 #include "dxDescriptorHeap.h"
@@ -68,9 +68,9 @@ namespace rendering
 			return NativeObject::Create(buffer);
 		}));
 
-		m_api.SetProperty("commandList", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXCanvasCommandList* commandList = new DXCanvasCommandList();
-			return NativeObject::Create(commandList);
+		m_api.SetProperty("canvasCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXCanvasCL* canvasCL = new DXCanvasCL();
+			return NativeObject::Create(canvasCL);
 		}));
 
 		m_api.SetProperty("commandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {

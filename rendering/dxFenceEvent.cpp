@@ -51,7 +51,7 @@ return Value();
     });
 
     Value& wait = GetOrCreateProperty(nativeObject, "wait");
-    wait = CreateNativeMethod(nativeObject, 2, [&](Value scope) {
+    wait = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
         Value self = scope.GetProperty("self");
         DXFenceEvent* fenceEvent = static_cast<DXFenceEvent*>(NativeObject::ExtractNativeObject(self));
 
@@ -61,12 +61,17 @@ return Value();
             THROW_EXCEPTION("Please supply a Fence!");
         }
 
-        Value func = scope.GetProperty("param1");
+        Value triggerValue = scope.GetProperty("param1");
+        if (triggerValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply trigger value!");
+        }
+
+        Value func = scope.GetProperty("param2");
         if (func.GetType() != ScriptingValueType::Object) {
             THROW_EXCEPTION("Please supply a Callback!");
         }
 
-        fenceEvent->m_id = fence->GetEventID();
+        fenceEvent->m_id = static_cast<int>(triggerValue.GetNum());
 
         std::string error;
         bool res = fenceEvent->AttachToFence(*fence, error);
