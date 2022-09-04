@@ -1,0 +1,102 @@
+let loadBuff = func(device, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+	
+	let buff = api.buffer();
+	let heap = api.heap();
+
+	let initBuffer = func() {
+		print("$Heap Loaded!");
+
+		let cbData = [];
+		let index = 0;
+		while (index < 256) {
+			cbData.push(0);
+			index = index + 1;
+		}
+
+		buff.init(256);
+		buff.setStride(16);
+		buff.place(device, heap, 0);
+		buff.copyData(cbData);
+
+		print("$Buffer Loaded!");
+		onReady(heap, buff);
+	};
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		try {
+			initBuffer();
+		} catch(e) {
+			print(e);
+		}
+	});
+
+	heap.create(device, 256, "UPLOAD");
+	print("$Heap Created!");
+	heap.makeResident(fence, 1);
+};
+
+let compileShader = func() {
+	let shaderCode = readFile("compute.hlsl");
+	let computeShader = api.computeShader();
+	computeShader.compile(shaderCode);
+	return computeShader;
+};
+
+
+let init = func(device, onReady) {
+	let computeCommandQueue = api.computeCommandQueue();
+	computeCommandQueue.create(device);
+	let shader = compileShader();
+	let computeCL = api.computeCL();
+	computeCL.create(device, shader);
+
+	let waiting = 2;
+
+	let srvHeap = none;
+	let srvBuff = none;
+	let cbHeap = none;
+	let cBuff = none;
+
+	let callReady = func() {
+		let res = {};
+		res.srvHeap = srvHeap;
+		res.srvBuff = srvBuff;
+		res.cbHeap = cbHeap;
+		res.cBuff = cBuff;
+
+		res.commandQueue = computeCommandQueue;
+		res.commandList = computeCL;
+
+		res.dispatch = func() {
+			print("Dispatch!");
+		};
+
+		onReady(res);
+	};
+
+	loadBuff(device, func(heap, buff) {
+		waiting = waiting - 1;
+		srvHeap = heap;
+		srvBuff = buff;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+	loadBuff(device, func(heap, buff) {
+		waiting = waiting - 1;
+		cbHeap = heap;
+		cBuff = buff;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+};
+
+export = init;

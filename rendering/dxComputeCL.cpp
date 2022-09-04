@@ -2,11 +2,10 @@
 
 #include "nativeFunc.h"
 #include "dxDevice.h"
-#include "dxVertexShader.h"
-#include "dxPixelShader.h"
 #include "dxSwapChain.h"
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
+#include "dxComputeShader.h"
 
 void rendering::DXComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -28,8 +27,8 @@ return Value();
             THROW_EXCEPTION("Please supply a device!")
         }
 
-        Value vertexShaderValue = scope.GetProperty("param1");
-        DXVertexShader* computeShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
+        Value computeShaderValue = scope.GetProperty("param1");
+        DXComputeShader* computeShader = dynamic_cast<DXComputeShader*>(NativeObject::ExtractNativeObject(computeShaderValue));
 
         if (!computeShader) {
             THROW_EXCEPTION("Please supply a compute shader!")

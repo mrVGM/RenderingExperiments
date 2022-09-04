@@ -97,9 +97,25 @@ let startRender = func() {
 	render();
 };
 
+let computeInit = func() {
+	let init = require("compute.txt");
+	init(device, func(obj) {
+		print("COMPUTE");
+
+
+	});
+};
+
 try {
 	setupShaders();
 	generalInit();
+
+	try {
+		computeInit();
+	} catch(e) {
+		print(e);
+	}
+
 
 	let waiting = 2;
 
