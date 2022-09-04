@@ -33,6 +33,8 @@ return Value();
 			THROW_EXCEPTION("Please supply a valid buffer width!");
 		}
 		buffer->m_width = width;
+		buffer->m_stride = width;
+
 		return Value();
 	});
 
@@ -109,6 +111,25 @@ return Value();
 		return Value();
 	});
 
+	Value& setStride = GetOrCreateProperty(nativeObject, "setStride");
+	setStride = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXBuffer* buffer = static_cast<DXBuffer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value strideValue = scope.GetProperty("param0");
+		if (strideValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply buffer stride!");
+		}
+
+		int stride = static_cast<int>(strideValue.GetNum());
+		if (stride < 0 || buffer->m_width % stride != 0) {
+			THROW_EXCEPTION("Please supply a valid buffer stride!");
+		}
+
+		buffer->m_stride = stride;
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -148,6 +169,16 @@ ID3D12Resource* rendering::DXBuffer::GetBuffer() const
 UINT rendering::DXBuffer::GetBufferWidth() const
 {
 	return m_width;
+}
+
+UINT rendering::DXBuffer::GetStride() const
+{
+	return m_stride;
+}
+
+UINT rendering::DXBuffer::GetElementCount() const
+{
+	return m_width / m_stride;
 }
 
 #undef THROW_ERROR

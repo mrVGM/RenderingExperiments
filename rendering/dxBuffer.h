@@ -11,6 +11,7 @@ namespace rendering
 	class DXBuffer : public interpreter::INativeObject
 	{
 		UINT m_width = -1;
+		UINT m_stride = -1;
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_buffer;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
@@ -20,5 +21,7 @@ namespace rendering
 	public:
 		ID3D12Resource* GetBuffer() const;
 		UINT GetBufferWidth() const;
+		UINT GetStride() const;
+		UINT GetElementCount() const;
 	};
 }
