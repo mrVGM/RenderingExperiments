@@ -18,6 +18,7 @@
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
 #include "dxRenderCanvasesCL.h"
+#include "dxComputeCommandQueue.h"
 
 namespace rendering
 {
@@ -97,6 +98,11 @@ namespace rendering
 		m_api.SetProperty("renderCanvasesCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXRenderCanvasesCL* renderCanvasesCL = new DXRenderCanvasesCL();
 			return NativeObject::Create(renderCanvasesCL);
+		}));
+
+		m_api.SetProperty("computeCommandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXComputeCommandQueue* commandQuue = new DXComputeCommandQueue();
+			return NativeObject::Create(commandQuue);
 		}));
 	}
 }
