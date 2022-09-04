@@ -228,7 +228,7 @@ bool rendering::DXComputeCL::Populate(
         "Can't reset Command List!")
 
     m_commandList->SetPipelineState(m_pipelineState.Get());
-    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetComputeRootSignature(m_rootSignature.Get());
 
     ID3D12DescriptorHeap* ppHeaps[] = { srvUavHeap };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
