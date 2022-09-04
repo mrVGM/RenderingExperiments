@@ -18,7 +18,9 @@ let loadBuff = func(device, allowUA, onReady) {
 		buff.init(256);
 		buff.setStride(16);
 		buff.place(device, heap, 0, allowUA);
-		buff.copyData(cbData);
+		if (allowUA == 0) {
+			buff.copyData(cbData);
+		}
 
 		print("$Buffer Loaded!");
 		onReady(heap, buff);
@@ -34,7 +36,12 @@ let loadBuff = func(device, allowUA, onReady) {
 		}
 	});
 
-	heap.create(device, 256, "UPLOAD");
+	let heapType = "UPLOAD";
+	if (allowUA == 1) {
+		heapType = "DEFAULT";
+	}
+
+	heap.create(device, 256, heapType);
 	print("$Heap Created!");
 	heap.makeResident(fence, 1);
 };
