@@ -45,7 +45,11 @@ return false;
         if (type.GetType() != ScriptingValueType::String) {
             EXCEPTION("Invalid Descriptor!")
         }
+
+        bool processed = false;
+
         if (type.GetString() == "cbv") {
+            processed = true;
             Value buffValue = obj->GetProperty("buffer");
             DXBuffer* buff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(buffValue));
             if (!buff) {
@@ -57,8 +61,53 @@ return false;
             cbvDesc.SizeInBytes = buff->GetBufferWidth();
 
             device->CreateConstantBufferView(&cbvDesc, handle);
-            handle.Offset(incrementSize);
         }
+
+        if (type.GetString() == "srv") {
+            processed = true;
+            Value buffValue = obj->GetProperty("buffer");
+            DXBuffer* buff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(buffValue));
+            if (!buff) {
+                EXCEPTION("Invalid Descriptor!")
+            }
+
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer.FirstElement = 0;
+            srvDesc.Buffer.NumElements = buff->GetElementCount();
+            srvDesc.Buffer.StructureByteStride = buff->GetStride();
+            srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+            device->CreateShaderResourceView(buff->GetBuffer(), &srvDesc, handle);
+        }
+
+        if (type.GetString() == "auv") {
+            processed = true;
+            Value buffValue = obj->GetProperty("buffer");
+            DXBuffer* buff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(buffValue));
+            if (!buff) {
+                EXCEPTION("Invalid Descriptor!")
+            }
+
+            D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+            uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+            uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+            uavDesc.Buffer.FirstElement = 0;
+            uavDesc.Buffer.NumElements = buff->GetElementCount();
+            uavDesc.Buffer.StructureByteStride = buff->GetStride();
+            uavDesc.Buffer.CounterOffsetInBytes = 0;
+            uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+            device->CreateUnorderedAccessView(buff->GetBuffer(), nullptr, &uavDesc, handle);
+        }
+
+        if (!processed) {
+            EXCEPTION("Invalid Descriptor!")
+        }
+
+        handle.Offset(incrementSize);
     }
 	return true;
 #undef EXCEPTION
