@@ -69,6 +69,9 @@ let update = func() {
 };
 
 let canvasRenderer = require("canvasRenderer.txt");
+
+let computeData = none;
+
 let render = func() {
 	if (wnd.isAlive() == 0) {
 		return;
@@ -78,7 +81,7 @@ let render = func() {
 		swapChain.updateCurrentFrameIndex();
 		canvasRenderer.render(commandQueue, swapChain, func() {
 			swapChain.present();
-			update();
+			#update();
 			render();
 		});
 
@@ -98,7 +101,7 @@ let startRender = func() {
 };
 
 
-let drawing = func() {
+let drawing = func(overrideBuff) {
 	try {
 		let waiting = 2;
 
@@ -112,7 +115,7 @@ let drawing = func() {
 			}
 		});
 
-		createCanvas(device, vertexShader2, pixelShader2, none, func(cnv) {
+		createCanvas(device, vertexShader2, pixelShader2, overrideBuff, func(cnv) {
 			waiting = waiting - 1;
 			canvas2 = cnv;
 			print(canvas2);
@@ -131,8 +134,8 @@ let computeInit = require("compute.txt");
 let compute = func() {
 	computeInit(device, func(obj) {
 		obj.dispatch();
-
-		drawing();
+		computeData = obj;
+		drawing(obj.uavBuff);
 	});
 };
 
