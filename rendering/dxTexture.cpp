@@ -44,6 +44,7 @@ return Value();
 
 		texture->m_width = width;
 		texture->m_height = height;
+		texture->m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 		return Value();
 	});
@@ -113,7 +114,7 @@ bool rendering::DXTexture::Place(
 
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.MipLevels = 1;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.Format = m_format;
 	textureDesc.Width = m_width;
 	textureDesc.Height = m_height;
 	textureDesc.Flags = flags;
@@ -132,6 +133,11 @@ bool rendering::DXTexture::Place(
 ID3D12Resource* rendering::DXTexture::GetTexture() const
 {
 	return m_texture.Get();
+}
+
+DXGI_FORMAT rendering::DXTexture::GetFormat() const
+{
+	return m_format;
 }
 
 #undef THROW_ERROR

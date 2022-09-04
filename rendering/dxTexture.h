@@ -10,6 +10,7 @@ namespace rendering
 {
 	class DXTexture : public interpreter::INativeObject
 	{
+		DXGI_FORMAT m_format;
 		UINT m_width = -1;
 		UINT m_height = -1;
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_texture;
@@ -24,5 +25,6 @@ namespace rendering
 			std::string& errorMessage);
 	public:
 		ID3D12Resource* GetTexture() const;
+		DXGI_FORMAT GetFormat() const;
 	};
 }

@@ -4,6 +4,7 @@
 #include "nativeFunc.h"
 #include "dxDevice.h"
 #include "dxBuffer.h"
+#include "dxTexture.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -101,6 +102,38 @@ return false;
             uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
             device->CreateUnorderedAccessView(buff->GetBuffer(), nullptr, &uavDesc, handle);
+        }
+
+        if (type.GetString() == "srv_tex") {
+            processed = true;
+            Value texValue = obj->GetProperty("texture");
+            DXTexture* tex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(texValue));
+            if (!tex) {
+                EXCEPTION("Invalid Descriptor!")
+            }
+
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = tex->GetFormat();
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MipLevels = 1;
+
+            device->CreateShaderResourceView(tex->GetTexture(), &srvDesc, handle);
+        }
+
+        if (type.GetString() == "uav_tex") {
+            processed = true;
+            Value texValue = obj->GetProperty("texture");
+            DXTexture* tex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(texValue));
+            if (!tex) {
+                EXCEPTION("Invalid Descriptor!")
+            }
+
+            D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+            uavDesc.Format = tex->GetFormat();
+            uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+
+            device->CreateUnorderedAccessView(tex->GetTexture(), nullptr, &uavDesc, handle);
         }
 
         if (!processed) {
