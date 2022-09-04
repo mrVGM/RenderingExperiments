@@ -20,6 +20,7 @@
 #include "dxRenderCanvasesCL.h"
 #include "dxComputeCommandQueue.h"
 #include "dxComputeCL.h"
+#include "dxTexture.h"
 
 namespace rendering
 {
@@ -109,6 +110,11 @@ namespace rendering
 		m_api.SetProperty("computeCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXComputeCL* computeCL = new DXComputeCL();
 			return NativeObject::Create(computeCL);
+		}));
+
+		m_api.SetProperty("texture", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXTexture* texture = new DXTexture();
+			return NativeObject::Create(texture);
 		}));
 	}
 }
