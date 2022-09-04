@@ -97,7 +97,17 @@ let init = func(device, onReady) {
 
 		res.dispatch = func() {
 			print("Dispatch!");
-			computeCL.populate(res.descHeap, cBuff, 1, 1, 1);
+#			computeCL.populate(res.descHeap, cBuff, 1, 1, 1);
+#
+#			let fence = api.fence();
+#			fence.create(device);
+#			let fe = api.fenceEvent();
+#			fe.create();
+#			fe.wait(fence, 1, func(arg) {
+#				print("Computation Done!");
+#			});
+#
+#			#computeCL.execute(computeCommandQueue, fence, 1);
 		};
 
 		onReady(res);
