@@ -75,12 +75,12 @@ let init = func(device, onReady) {
 		
 		let buffs = [];
 		let srvDesc = {};
-		srvDesc.type = "srv";
+		srvDesc.type = "srv_buff";
 		srvDesc.buffer = srvBuff;
 		buffs.push(srvDesc);
 
 		let uavDesc = {};
-		uavDesc.type = "uav";
+		uavDesc.type = "uav_buff";
 		uavDesc.buffer = uavBuff;
 		buffs.push(uavDesc);
 

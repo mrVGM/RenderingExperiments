@@ -63,7 +63,7 @@ return false;
             device->CreateConstantBufferView(&cbvDesc, handle);
         }
 
-        if (type.GetString() == "srv") {
+        if (type.GetString() == "srv_buff") {
             processed = true;
             Value buffValue = obj->GetProperty("buffer");
             DXBuffer* buff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(buffValue));
@@ -83,7 +83,7 @@ return false;
             device->CreateShaderResourceView(buff->GetBuffer(), &srvDesc, handle);
         }
 
-        if (type.GetString() == "uav") {
+        if (type.GetString() == "uav_buff") {
             processed = true;
             Value buffValue = obj->GetProperty("buffer");
             DXBuffer* buff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(buffValue));
