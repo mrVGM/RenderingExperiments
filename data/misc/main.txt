@@ -97,47 +97,37 @@ let startRender = func() {
 	render();
 };
 
-let computeInit = func() {
-	let init = require("compute.txt");
-	init(device, func(obj) {
-		print("COMPUTE");
-		obj.dispatch();
-	});
-};
 
-try {
-	setupShaders();
-	generalInit();
-
+let drawing = func() {
 	try {
-		computeInit();
+		setupShaders();
+		generalInit();
+
+		let waiting = 2;
+
+		createCanvas(device, vertexShader, pixelShader, none, func(cnv) {
+			waiting = waiting - 1;
+			canvas = cnv;
+			print(canvas);
+
+			if (waiting == 0) {
+				startRender();
+			}
+		});
+
+		createCanvas(device, vertexShader2, pixelShader2, none, func(cnv) {
+			waiting = waiting - 1;
+			canvas2 = cnv;
+			print(canvas2);
+
+			if (waiting == 0) {
+				startRender();
+			}
+		});
+
 	} catch(e) {
 		print(e);
 	}
+};
 
-
-	let waiting = 2;
-
-	createCanvas(device, vertexShader, pixelShader, func(cnv) {
-		waiting = waiting - 1;
-		canvas = cnv;
-		print(canvas);
-
-		if (waiting == 0) {
-			startRender();
-		}
-	});
-
-	createCanvas(device, vertexShader2, pixelShader2, func(cnv) {
-		waiting = waiting - 1;
-		canvas2 = cnv;
-		print(canvas2);
-
-		if (waiting == 0) {
-			startRender();
-		}
-	});
-
-} catch(e) {
-	print(e);
-}
+drawing();
