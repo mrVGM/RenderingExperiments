@@ -13,16 +13,14 @@ cbuffer SceneConstantBuffer : register(b0)
 {
     float2 centerPos;
     float2 scale;
-    float4 coloe;
 
-    float4 padding[14];
+    float4 padding[15];
 };
 
 struct PSInput
 {
     float4 position : SV_POSITION;
     float2 uv : UV;
-    float4 coloe : COLOE;
 };
 
 PSInput VSMain(float2 position : POSITION, float2 uv : UV)
@@ -31,8 +29,6 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 
     result.position = float4(position * scale + centerPos, 0, 1);
     result.uv = uv;
-
-    result.coloe = coloe;
 
     return result;
 }
@@ -44,5 +40,5 @@ float4 PSMain(PSInput input) : SV_TARGET
     if (l > 0.5) {
         return float4(0, 0, 0, 1);
     }
-    return input.coloe;
+    return float4(1, 1, 1, 1);
 }

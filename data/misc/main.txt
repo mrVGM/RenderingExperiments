@@ -81,7 +81,7 @@ let render = func() {
 		swapChain.updateCurrentFrameIndex();
 		canvasRenderer.render(commandQueue, swapChain, func() {
 			swapChain.present();
-			#update();
+			update();
 			render();
 		});
 
