@@ -33,7 +33,6 @@ let setupShaders = func() {
 
 let device = api.device();
 let swapChain = api.swapChain();
-let fence = api.fence();
 let commandQueue = api.commandQueue();
 let renderCNV = require("canvasRenderer.txt");
 
@@ -41,8 +40,6 @@ let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
 	swapChain.create(device, wnd, commandQueue);
-	fence.create(device);
-
 	print("General Init!");
 };
 
@@ -72,41 +69,19 @@ let update = func() {
 	canvas2.constantBuff.copyData(cbData);
 };
 
-let frame = 0;
-
 let render = func() {
 	if (wnd.isAlive() == 0) {
 		return;
 	}
 
-	let swap = func() {
-		frame = frame + 1;
-		swapChain.present();
-
-		update();
-		render();
-	};
-
 	try {
 		swapChain.updateCurrentFrameIndex();
-
-		let cnvs = [];
-
-		renderCNV.populate(swapChain);
-		#canvas.commandList.populate(swapChain, canvas.descriptorHeap);
-		#canvas2.commandList.populate(swapChain, canvas2.descriptorHeap);
-
-		cnvs.push(canvas.commandList);
-		cnvs.push(canvas2.commandList);
-
-		let fe = api.fenceEvent();
-		fe.create();
-
-		fe.wait(fence, frame, func(arg) {
-			swap();
+		renderCNV.render(commandQueue, swapChain, func() {
+			swapChain.present();
+			update();
+			render();
 		});
 
-		renderCNV.execute(commandQueue, fence, frame);
 	} catch(e) {
 		print(e);
 	}

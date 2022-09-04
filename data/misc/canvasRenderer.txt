@@ -1,10 +1,14 @@
 let renderer = api.renderCanvasesCL();
+let myFence = api.fence();
+let myFrame = 0;
+
 let cnvs = [];
 
 let obj = {};
 
 let create = func(device) {
 	renderer.create(device);
+	myFence.create(device);
 };
 let populate = func(swapChain) {
 	renderer.populate(swapChain);
@@ -30,9 +34,23 @@ let addCanvas = func(canvas) {
 	cnvs.push(canvas);
 };
 
+let render = func(commandQueue, swapChain, onReady) {
+	populate(swapChain);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(myFence, myFrame, func(arg) {
+		myFrame = myFrame + 1;
+		onReady();
+	});
+
+	execute(commandQueue, myFence, myFrame);
+};
+
 obj.create = create;
 obj.populate = populate;
 obj.execute = execute;
 obj.addCanvas = addCanvas;
+obj.render = render;
 
 export = obj;
