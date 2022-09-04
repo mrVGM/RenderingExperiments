@@ -20,7 +20,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
 	Value& init = GetOrCreateProperty(nativeObject, "init");
-	init = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+	init = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -42,15 +42,21 @@ return Value();
 			THROW_EXCEPTION("Please supply a valid texture height!");
 		}
 
+		Value allowUAValue = scope.GetProperty("param2");
+		if (allowUAValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply UA value!");
+		}
+
 		texture->m_width = width;
 		texture->m_height = height;
+		texture->m_allowUA = static_cast<bool>(allowUAValue.GetNum());
 		texture->m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 		return Value();
 	});
 
 	Value& place = GetOrCreateProperty(nativeObject, "place");
-	place = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+	place = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -77,17 +83,12 @@ return Value();
 			THROW_EXCEPTION("Please supply a valid heap offset!");
 		}
 
-		Value allowUAValue = scope.GetProperty("param3");
-		if (allowUAValue.GetType() != ScriptingValueType::Number) {
-			THROW_EXCEPTION("Please supply allow UA value!");
-		}
 
 		std::string error;
 		bool res = texture->Place(
 			&device->GetDevice(),
 			heap->GetHeap(),
 			offset,
-			static_cast<bool>(allowUAValue.GetNum()),
 			error);
 
 		if (!res) {
@@ -97,6 +98,23 @@ return Value();
 		return Value();
 	});
 
+	Value& getAllocationSize = GetOrCreateProperty(nativeObject, "getAllocationSize");
+	getAllocationSize = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value deviceValue = scope.GetProperty("param0");
+		DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
+
+		if (!device) {
+			THROW_EXCEPTION("Please supply device!");
+		}
+
+		D3D12_RESOURCE_ALLOCATION_INFO info = texture->GetTextureAllocationInfo(&device->GetDevice());
+
+		return Value(info.SizeInBytes);
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -104,11 +122,26 @@ bool rendering::DXTexture::Place(
 	ID3D12Device* device,
 	ID3D12Heap* heap,
 	UINT64 heapOffset,
-	bool allowUA,
 	std::string& errorMessage)
 {
+	D3D12_RESOURCE_DESC textureDesc = GetTextureDescription();
+	
+	THROW_ERROR(
+		device->CreatePlacedResource(heap, heapOffset, &textureDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_texture)),
+		"Can't place texture in the heap!")
+
+	return true;
+}
+
+ID3D12Resource* rendering::DXTexture::GetTexture() const
+{
+	return m_texture.Get();
+}
+
+D3D12_RESOURCE_DESC rendering::DXTexture::GetTextureDescription() const
+{
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
-	if (allowUA) {
+	if (m_allowUA) {
 		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}
 
@@ -123,21 +156,19 @@ bool rendering::DXTexture::Place(
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-	THROW_ERROR(
-		device->CreatePlacedResource(heap, heapOffset, &textureDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_texture)),
-		"Can't place buffer in the heap!")
-
-	return true;
-}
-
-ID3D12Resource* rendering::DXTexture::GetTexture() const
-{
-	return m_texture.Get();
+	return textureDesc;
 }
 
 DXGI_FORMAT rendering::DXTexture::GetFormat() const
 {
 	return m_format;
+}
+
+D3D12_RESOURCE_ALLOCATION_INFO rendering::DXTexture::GetTextureAllocationInfo(ID3D12Device* device)
+{
+	D3D12_RESOURCE_DESC textureDesc = GetTextureDescription();
+	D3D12_RESOURCE_ALLOCATION_INFO info = device->GetResourceAllocationInfo(0, 1, &textureDesc);
+	return info;
 }
 
 #undef THROW_ERROR

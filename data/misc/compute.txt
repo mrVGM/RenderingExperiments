@@ -46,6 +46,38 @@ let loadBuff = func(device, allowUA, onReady) {
 	heap.makeResident(fence, 1);
 };
 
+let loadTex = func(device, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+	
+	let tex = api.texture();
+	tex.init(100, 100, 1);
+
+	let heap = api.heap();
+
+	let placeTex = func() {
+		print("$Heap Loaded!");
+		tex.place(device, heap, 0);
+
+		print("$Texture Loaded!");
+		onReady(heap, tex);
+	};
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		try {
+			placeTex();
+		} catch(e) {
+			print(e);
+		}
+	});
+
+	heap.create(device, tex.getAllocationSize(device), "DEFAULT");
+	print("$Heap Created!");
+	heap.makeResident(fence, 1);
+};
+
 let compileShader = func() {
 	let shaderCode = readFile("compute.hlsl");
 	let computeShader = api.computeShader();
@@ -68,7 +100,7 @@ let init = func(device, onReady) {
 	let cbHeap = none;
 	let cBuff = none;
 	let uavHeap = none;
-	let uavBuff = none;
+	let uavTex = none;
 
 	let createDescHeap = func() {
 		let descHeap = api.descriptorHeap();
@@ -80,8 +112,8 @@ let init = func(device, onReady) {
 		buffs.push(srvDesc);
 
 		let uavDesc = {};
-		uavDesc.type = "uav_buff";
-		uavDesc.buffer = uavBuff;
+		uavDesc.type = "uav_tex";
+		uavDesc.texture = uavTex;
 		buffs.push(uavDesc);
 
 		descHeap.create(device, buffs);
@@ -96,7 +128,7 @@ let init = func(device, onReady) {
 		res.cbHeap = cbHeap;
 		res.cBuff = cBuff;
 		res.uavHeap = uavHeap;
-		res.uavBuff = uavBuff;
+		res.uavTex = uavTex;
 
 		res.commandQueue = computeCommandQueue;
 		res.commandList = computeCL;
@@ -140,10 +172,10 @@ let init = func(device, onReady) {
 		}
 	});
 
-	loadBuff(device, 1, func(heap, buff) {
+	loadTex(device, func(heap, tex) {
 		waiting = waiting - 1;
 		uavHeap = heap;
-		uavBuff = buff;
+		uavTex = tex;
 
 		if (waiting == 0) {
 			callReady();

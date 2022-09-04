@@ -115,7 +115,7 @@ let drawing = func(overrideBuff) {
 			}
 		});
 
-		createCanvas(device, vertexShader2, pixelShader2, overrideBuff, func(cnv) {
+		createCanvas(device, vertexShader2, pixelShader2, none, func(cnv) {
 			waiting = waiting - 1;
 			canvas2 = cnv;
 			print(canvas2);
