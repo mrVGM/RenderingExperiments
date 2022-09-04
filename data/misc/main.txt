@@ -101,8 +101,7 @@ let computeInit = func() {
 	let init = require("compute.txt");
 	init(device, func(obj) {
 		print("COMPUTE");
-
-
+		obj.dispatch();
 	});
 };
 

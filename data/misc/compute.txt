@@ -93,12 +93,12 @@ let init = func(device, onReady) {
 
 		res.commandQueue = computeCommandQueue;
 		res.commandList = computeCL;
+		res.descHeap = createDescHeap();
 
 		res.dispatch = func() {
 			print("Dispatch!");
+			computeCL.populate(res.descHeap, cBuff, 1, 1, 1);
 		};
-
-		res.descHeap = createDescHeap();
 
 		onReady(res);
 	};

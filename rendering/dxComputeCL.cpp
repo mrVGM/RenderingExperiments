@@ -52,7 +52,7 @@ return Value();
         Value selfValue = scope.GetProperty("self");
         DXComputeCL* commandList = dynamic_cast<DXComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
-        Value srvUavHeapValue = scope.GetProperty("param1");
+        Value srvUavHeapValue = scope.GetProperty("param0");
         DXDescriptorHeap* srvUavHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(srvUavHeapValue));
 
         if (!srvUavHeap) {
