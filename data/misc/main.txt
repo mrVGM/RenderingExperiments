@@ -106,7 +106,7 @@ let render = func() {
 			swap();
 		});
 
-		renderCNV.execute(commandQueue, fence, frame, cnvs);
+		renderCNV.execute(commandQueue, fence, frame);
 	} catch(e) {
 		print(e);
 	}

@@ -16,8 +16,15 @@ let populate = func(swapChain) {
 		cur.commandList.populate(swapChain, cur.descriptorHeap);
 	}
 };
-let execute = func(commandQueue, fence, frame, cnvs) {
-	renderer.execute(commandQueue, fence, frame, cnvs);
+let execute = func(commandQueue, fence, frame) {
+	let tmp = [];
+	let i = 0;
+	while (i < cnvs.length) {
+		let cur = cnvs[i];
+		i = i + 1;
+		tmp.push(cur.commandList);
+	}
+	renderer.execute(commandQueue, fence, frame, tmp);
 };
 let addCanvas = func(canvas) {
 	cnvs.push(canvas);
