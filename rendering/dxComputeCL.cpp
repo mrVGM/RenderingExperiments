@@ -6,6 +6,7 @@
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
+#include "dxComputeCommandQueue.h"
 
 void rendering::DXComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -103,9 +104,9 @@ return Value();
         DXComputeCL* commandList = dynamic_cast<DXComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
-        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+        DXComputeCommandQueue* commandQueue = dynamic_cast<DXComputeCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
         if (!commandQueue) {
-            THROW_EXCEPTION("Please supply a Command Queue!")
+            THROW_EXCEPTION("Please supply a Compute Command Queue!")
         }
         
         Value fenceValue = scope.GetProperty("param1");

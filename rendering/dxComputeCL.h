@@ -3,7 +3,6 @@
 #include "nativeObject.h"
 
 #include "d3dx12.h"
-#include "dxCommandQueue.h"
 #include "dxFence.h"
 
 #include <d3d12.h>
