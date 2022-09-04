@@ -34,7 +34,6 @@ let setupShaders = func() {
 let device = api.device();
 let swapChain = api.swapChain();
 let commandQueue = api.commandQueue();
-let renderCNV = require("canvasRenderer.txt");
 
 let generalInit = func() {
 	device.create();
@@ -69,6 +68,7 @@ let update = func() {
 	canvas2.constantBuff.copyData(cbData);
 };
 
+let canvasRenderer = require("canvasRenderer.txt");
 let render = func() {
 	if (wnd.isAlive() == 0) {
 		return;
@@ -76,7 +76,7 @@ let render = func() {
 
 	try {
 		swapChain.updateCurrentFrameIndex();
-		renderCNV.render(commandQueue, swapChain, func() {
+		canvasRenderer.render(commandQueue, swapChain, func() {
 			swapChain.present();
 			update();
 			render();
@@ -90,9 +90,9 @@ let render = func() {
 let startRender = func() {
 	print("Starting to render!");
 
-	renderCNV.create(device);
-	renderCNV.addCanvas(canvas);
-	renderCNV.addCanvas(canvas2);
+	canvasRenderer.create(device);
+	canvasRenderer.addCanvas(canvas);
+	canvasRenderer.addCanvas(canvas2);
 
 	render();
 };
