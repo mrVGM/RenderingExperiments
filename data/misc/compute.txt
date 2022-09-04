@@ -1,4 +1,4 @@
-let loadBuff = func(device, onReady) {
+let loadBuff = func(device, allowUA, onReady) {
 	let fence = api.fence();
 	fence.create(device);
 	
@@ -17,7 +17,7 @@ let loadBuff = func(device, onReady) {
 
 		buff.init(256);
 		buff.setStride(16);
-		buff.place(device, heap, 0);
+		buff.place(device, heap, 0, allowUA);
 		buff.copyData(cbData);
 
 		print("$Buffer Loaded!");
@@ -113,7 +113,7 @@ let init = func(device, onReady) {
 		onReady(res);
 	};
 
-	loadBuff(device, func(heap, buff) {
+	loadBuff(device, 0, func(heap, buff) {
 		waiting = waiting - 1;
 		srvHeap = heap;
 		srvBuff = buff;
@@ -123,7 +123,7 @@ let init = func(device, onReady) {
 		}
 	});
 
-	loadBuff(device, func(heap, buff) {
+	loadBuff(device, 0, func(heap, buff) {
 		waiting = waiting - 1;
 		cbHeap = heap;
 		cBuff = buff;
@@ -133,7 +133,7 @@ let init = func(device, onReady) {
 		}
 	});
 
-	loadBuff(device, func(heap, buff) {
+	loadBuff(device, 1, func(heap, buff) {
 		waiting = waiting - 1;
 		uavHeap = heap;
 		uavBuff = buff;

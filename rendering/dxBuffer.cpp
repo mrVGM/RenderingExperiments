@@ -39,7 +39,7 @@ return Value();
 	});
 
 	Value& place = GetOrCreateProperty(nativeObject, "place");
-	place = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+	place = CreateNativeMethod(nativeObject, 4, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXBuffer* buffer = static_cast<DXBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -66,8 +66,20 @@ return Value();
 			THROW_EXCEPTION("Please supply a valid heap offset!");
 		}
 
+		Value allowUAValue = scope.GetProperty("param3");
+		if (allowUAValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply allow UA value!");
+		}
+
 		std::string error;
-		bool res = buffer->Place(&device->GetDevice(), heap->GetHeap(), offset, buffer->m_width, error);
+		bool res = buffer->Place(
+			&device->GetDevice(),
+			heap->GetHeap(),
+			offset,
+			buffer->m_width,
+			static_cast<bool>(allowUAValue.GetNum()),
+			error);
+
 		if (!res) {
 			THROW_EXCEPTION(error);
 		}
@@ -133,9 +145,19 @@ return Value();
 #undef THROW_EXCEPTION
 }
 
-bool rendering::DXBuffer::Place(ID3D12Device* device, ID3D12Heap* heap, UINT64 heapOffset, UINT64 width, std::string& errorMessage)
+bool rendering::DXBuffer::Place(
+	ID3D12Device* device,
+	ID3D12Heap* heap,
+	UINT64 heapOffset,
+	UINT64 width,
+	bool allowUA,
+	std::string& errorMessage)
 {
-	CD3DX12_RESOURCE_DESC bufferDescription = CD3DX12_RESOURCE_DESC::Buffer(width);
+	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+	if (allowUA) {
+		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+	CD3DX12_RESOURCE_DESC bufferDescription = CD3DX12_RESOURCE_DESC::Buffer(width, flags);
 
 	THROW_ERROR(
 		device->CreatePlacedResource(heap, heapOffset, &bufferDescription, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_buffer)),

@@ -43,7 +43,7 @@ let loadVertexData = func(device, onVertexDataLoaded) {
 		print("#Vertex Heap Loaded!");
 
 		vertexBuff.init(96);
-		vertexBuff.place(device, vertexHeap, 0);
+		vertexBuff.place(device, vertexHeap, 0, 0);
 		vertexBuff.copyData(vertexData);
 		print("#Vertex Buffer Loaded!");
 
@@ -76,7 +76,7 @@ let loadConstantData = func(device, onConstantDataLoaded) {
 		cbData[3] = 0.5;
 
 		constantBuff.init(256);
-		constantBuff.place(device, constantHeap, 0);
+		constantBuff.place(device, constantHeap, 0, 0);
 		constantBuff.copyData(cbData);
 		print("#Constant Buffer Loaded!");
 		onConstantDataLoaded(constantHeap, constantBuff);
