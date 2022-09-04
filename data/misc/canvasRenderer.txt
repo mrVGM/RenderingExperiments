@@ -1,0 +1,19 @@
+let renderer = api.renderCanvasesCL();
+
+let obj = {};
+
+let create = func(device) {
+	renderer.create(device);
+};
+let populate = func(swapChain) {
+	renderer.populate(swapChain);
+};
+let execute = func(commandQueue, fence, frame, cnvs) {
+	renderer.execute(commandQueue, fence, frame, cnvs);
+};
+
+obj.create = create;
+obj.populate = populate;
+obj.execute = execute;
+
+export = obj;
