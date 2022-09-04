@@ -2,8 +2,6 @@
 
 #include "nativeObject.h"
 
-#include "dxBuffer.h"
-
 #include <d3d12.h>
 #include <wrl.h>
 #include <vector>
@@ -16,7 +14,7 @@ namespace rendering
 
 		bool Create(
 			ID3D12Device* device,
-			const std::vector<DXBuffer*>& constantBuffers,
+			const std::vector<interpreter::Value>& buffers,
 			std::string& errorMessage);
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;

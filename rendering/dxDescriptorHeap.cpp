@@ -3,6 +3,7 @@
 #include "d3dx12.h"
 #include "nativeFunc.h"
 #include "dxDevice.h"
+#include "dxBuffer.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -12,11 +13,13 @@ if (FAILED(hRes)) {\
 
 bool rendering::DXDescriptorHeap::Create(
     ID3D12Device* device,
-    const std::vector<DXBuffer*>& constantBuffers,
+    const std::vector<interpreter::Value>& buffers,
     std::string& errorMessage)
 {
+    using namespace interpreter;
+
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-    cbvHeapDesc.NumDescriptors = constantBuffers.size();
+    cbvHeapDesc.NumDescriptors = buffers.size();
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
@@ -27,18 +30,38 @@ bool rendering::DXDescriptorHeap::Create(
     CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_heap->GetCPUDescriptorHandleForHeapStart());
     UINT incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    for (int i = 0; i < constantBuffers.size(); ++i) {
-        DXBuffer* curBuffer = constantBuffers[i];
+#define EXCEPTION(message)\
+errorMessage = message;\
+return false;
 
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-        cbvDesc.BufferLocation = curBuffer->GetBuffer()->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = curBuffer->GetBufferWidth();
+    for (int i = 0; i < buffers.size(); ++i) {
+        const Value& cur = buffers[i];
 
-        device->CreateConstantBufferView(&cbvDesc, handle);
-        handle.Offset(incrementSize);
+        if (cur.GetType() != ScriptingValueType::Object) {
+            EXCEPTION("Invalid Descriptor!")
+        }
+        IManagedValue* obj = cur.GetManagedValue();
+        Value type = obj->GetProperty("type");
+        if (type.GetType() != ScriptingValueType::String) {
+            EXCEPTION("Invalid Descriptor!")
+        }
+        if (type.GetString() == "cbv") {
+            Value buffValue = obj->GetProperty("buffer");
+            DXBuffer* buff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(buffValue));
+            if (!buff) {
+                EXCEPTION("Invalid Descriptor!")
+            }
+
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+            cbvDesc.BufferLocation = buff->GetBuffer()->GetGPUVirtualAddress();
+            cbvDesc.SizeInBytes = buff->GetBufferWidth();
+
+            device->CreateConstantBufferView(&cbvDesc, handle);
+            handle.Offset(incrementSize);
+        }
     }
-
 	return true;
+#undef EXCEPTION
 }
 
 #undef THROW_ERROR
@@ -70,19 +93,8 @@ return Value();
             THROW_EXCEPTION("Please supply list of buffers!")
         }
 
-        std::vector<DXBuffer*> buffers;
-        for (int i = 0; i < bufferList.size(); ++i) {
-            Value tmp = bufferList[i];
-            DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(tmp));
-
-            if (!buffer) {
-                THROW_EXCEPTION("Buffer list contains other kind of elements!")
-            }
-            buffers.push_back(buffer);
-        }
-
         std::string error;
-        bool res = heap->Create(&device->GetDevice(), buffers, error);
+        bool res = heap->Create(&device->GetDevice(), bufferList, error);
         if (!res) {
             THROW_EXCEPTION(error)
         }

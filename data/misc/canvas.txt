@@ -131,7 +131,12 @@ let createCanvas = func(device, vertexShader, pixelShader, onReady) {
 
 		let cbDescriptorHeap = api.descriptorHeap();
 		let cBuffs = [];
-		cBuffs.push(buff);
+
+		let buffDesc = {};
+		buffDesc.type = "cbv";
+		buffDesc.buffer = buff;
+
+		cBuffs.push(buffDesc);
 		cbDescriptorHeap.create(device, cBuffs);
 		res.descriptorHeap = cbDescriptorHeap;
 

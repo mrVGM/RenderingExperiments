@@ -9,7 +9,6 @@
 
 #include "d3dx12.h"
 #include "nativeObject.h"
-#include "dxBuffer.h"
 
 namespace rendering
 {
