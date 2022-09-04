@@ -100,9 +100,6 @@ let startRender = func() {
 
 let drawing = func() {
 	try {
-		setupShaders();
-		generalInit();
-
 		let waiting = 2;
 
 		createCanvas(device, vertexShader, pixelShader, none, func(cnv) {
@@ -130,4 +127,20 @@ let drawing = func() {
 	}
 };
 
-drawing();
+let computeInit = require("compute.txt");
+let compute = func() {
+	computeInit(device, func(obj) {
+		obj.dispatch();
+
+		drawing();
+	});
+};
+
+try {
+	setupShaders();
+	generalInit();
+
+	compute();
+} catch(e) {
+	print(e);
+}
