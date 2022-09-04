@@ -93,8 +93,8 @@ let render = func() {
 		let cnvs = [];
 
 		renderCNV.populate(swapChain);
-		canvas.commandList.populate(swapChain, canvas.descriptorHeap);
-		canvas2.commandList.populate(swapChain, canvas2.descriptorHeap);
+		#canvas.commandList.populate(swapChain, canvas.descriptorHeap);
+		#canvas2.commandList.populate(swapChain, canvas2.descriptorHeap);
 
 		cnvs.push(canvas.commandList);
 		cnvs.push(canvas2.commandList);
@@ -116,6 +116,8 @@ let startRender = func() {
 	print("Starting to render!");
 
 	renderCNV.create(device);
+	renderCNV.addCanvas(canvas);
+	renderCNV.addCanvas(canvas2);
 
 	render();
 };

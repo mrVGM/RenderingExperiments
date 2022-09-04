@@ -1,4 +1,5 @@
 let renderer = api.renderCanvasesCL();
+let cnvs = [];
 
 let obj = {};
 
@@ -7,13 +8,24 @@ let create = func(device) {
 };
 let populate = func(swapChain) {
 	renderer.populate(swapChain);
+
+	let i = 0;
+	while (i < cnvs.length) {
+		let cur = cnvs[i];
+		i = i + 1;
+		cur.commandList.populate(swapChain, cur.descriptorHeap);
+	}
 };
 let execute = func(commandQueue, fence, frame, cnvs) {
 	renderer.execute(commandQueue, fence, frame, cnvs);
+};
+let addCanvas = func(canvas) {
+	cnvs.push(canvas);
 };
 
 obj.create = create;
 obj.populate = populate;
 obj.execute = execute;
+obj.addCanvas = addCanvas;
 
 export = obj;
