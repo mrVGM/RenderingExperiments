@@ -92,17 +92,6 @@ let createCanvas = func(device, vertexShader, pixelShader, onReady) {
 		canvasCL.create(device, vertexShader, pixelShader, vertexBuff, 16);
 		res.commandList = canvasCL;
 
-		res.render = func(swapChain, commandQueue, fence, frame, onReady) {
-			let fe = api.fenceEvent();
-			fe.create();
-			fe.wait(fence, frame, func(arg) {
-				onReady();
-			});
-
-			canvasCL.populate(swapChain);
-			canvasCL.execute(commandQueue, fence, frame);
-		};
-
 		print("#ready");
 		onReady(res);
 	});
