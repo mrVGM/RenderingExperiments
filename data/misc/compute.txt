@@ -51,7 +51,7 @@ let loadTex = func(device, onReady) {
 	fence.create(device);
 	
 	let tex = api.texture();
-	tex.init(100, 100, 1);
+	tex.init(256, 256, 1);
 
 	let heap = api.heap();
 
@@ -136,7 +136,7 @@ let init = func(device, onReady) {
 
 		res.dispatch = func() {
 			print("Dispatch!");
-			computeCL.populate(res.descHeap, cBuff, 1, 1, 1);
+			computeCL.populate(res.descHeap, cBuff, 256, 256, 1, uavTex);
 
 			let fence = api.fence();
 			fence.create(device);

@@ -134,25 +134,6 @@ bool rendering::DXUpdateTextureCL::Create(ID3D12Device* device, std::string& err
 
 bool rendering::DXUpdateTextureCL::Populate(ID3D12Device* device, DXTexture* tex, std::string& errorMessage)
 {
-    m_uploadBuffer.Reset();
-
-    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(tex->GetTexture(), 0, 1);
-
-    CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-
-    THROW_ERROR(device->CreateCommittedResource(
-        &heapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &bufferDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&m_uploadBuffer)),
-        "Can't create Upload Buffer!")
-
-    std::vector<UINT8> texture;
-    GenerateTexData(texture, tex);
-
     THROW_ERROR(
         m_commandAllocator->Reset(),
         "Can't reset Command Allocator!")
@@ -161,15 +142,8 @@ bool rendering::DXUpdateTextureCL::Populate(ID3D12Device* device, DXTexture* tex
         m_commandList->Reset(m_commandAllocator.Get(), nullptr),
         "Can't reset Command List!")
 
-    D3D12_SUBRESOURCE_DATA textureData = {};
-    textureData.pData = &texture[0];
-    textureData.RowPitch = tex->GetTextureWidth() * tex->GetTexturePixelSize();
-    textureData.SlicePitch = textureData.RowPitch * tex->GetTextureHeight();
-
-    UpdateSubresources(m_commandList.Get(), tex->GetTexture(), m_uploadBuffer.Get(), 0, 0, 1, &textureData);
-
     {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex->GetTexture(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex->GetTexture(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         m_commandList->ResourceBarrier(1, &barrier);
     }
 
@@ -196,20 +170,20 @@ bool rendering::DXUpdateTextureCL::Execute(
     return true;
 }
 
-void rendering::DXUpdateTextureCL::GenerateTexData(std::vector<UINT8>& data, DXTexture* tex)
+void rendering::DXUpdateTextureCL::GenerateTexData(std::vector<float>& data, DXTexture* tex)
 {
     const UINT rowPitch = tex->GetTextureWidth() * tex->GetTexturePixelSize();
     const UINT textureSize = rowPitch * tex->GetTextureHeight();
 
-    data = std::vector<UINT8>(textureSize);
-    UINT8* pData = &data[0];
+    data = std::vector<float>(textureSize / 4);
+    float* pData = &data[0];
 
-    for (UINT n = 0; n < textureSize; n += tex->GetTexturePixelSize())
+    for (UINT n = 0; n < textureSize / 4; n += tex->GetTexturePixelSize() / 4)
     {
-        pData[n] = 0xff;        // R
-        pData[n + 1] = 0xff;    // G
-        pData[n + 2] = 0xff;    // B
-        pData[n + 3] = 0xff;    // A
+        pData[n] = 1;        // R
+        pData[n + 1] = 1;    // G
+        pData[n + 2] = 1;    // B
+        pData[n + 3] = 1;    // A
     }
 }
 

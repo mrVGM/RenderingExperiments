@@ -38,6 +38,7 @@ namespace rendering
 		bool Populate(
 			ID3D12DescriptorHeap* srvUavHeap,
 			ID3D12Resource* constantBuff,
+			ID3D12Resource* tex,
 			int threadGroupCountX,
 			int threadGroupCountY,
 			int threadGroupCountZ,

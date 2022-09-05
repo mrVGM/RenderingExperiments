@@ -38,7 +38,7 @@ namespace rendering
 			int signal,
 			std::string& errorMessage);
 
-		void GenerateTexData(std::vector<UINT8>& data, DXTexture* tex);
+		void GenerateTexData(std::vector<float>& data, DXTexture* tex);
 	public:
 	};
 }

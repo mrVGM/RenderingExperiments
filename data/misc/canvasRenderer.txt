@@ -3,22 +3,15 @@ let myFence = api.fence();
 let myFrame = 0;
 
 let cnvs = [];
-
-let texHeap = api.heap();
-let tex = api.texture();
 let texDescHeap = api.descriptorHeap();
 
-let texInit = func(device, commandQueue, onReady) {
+let texInit = func(device, commandQueue, tex, onReady) {
 	let fence = api.fence();
 	fence.create(device);
 
-	let fe = api.fenceEvent();
-	fe.create();
-	fe.wait(fence, 1, func(arg) {
-		print("Texture Heap Loaded!");
-		tex.place(device, texHeap, 0);
-		print("Texture Loaded!");
-
+	let updateFE = api.fenceEvent();
+	updateFE.create();
+	updateFE.wait(fence, 1, func(arg) {
 		let tmp = {};
 		tmp.type = "srv_tex";
 		tmp.texture = tex;
@@ -27,23 +20,13 @@ let texInit = func(device, commandQueue, onReady) {
 		l.push(tmp);
 		texDescHeap.create(device, l);
 
-		print("Texture descriptor heap created!");
-
-		let updateCL = api.updateTextureCL();
-		updateCL.create(device);
-		updateCL.populate(device, tex);
-
-		let updateFE = api.fenceEvent();
-		updateFE.create();
-		updateFE.wait(fence, 2, func(arg) {
-			onReady();
-		});
-		updateCL.execute(commandQueue, fence, 2);
+		onReady();
 	});
 
-	let size = tex.getAllocationSize(device);
-	texHeap.create(device, size, "DEFAULT");
-	texHeap.makeResident(fence, 1);
+	let updateCL = api.updateTextureCL();
+	updateCL.create(device);
+	updateCL.populate(device, tex);
+	updateCL.execute(commandQueue, fence, 1);
 };
 
 
@@ -52,8 +35,6 @@ let obj = {};
 let create = func(device) {
 	renderer.create(device);
 	myFence.create(device);
-
-	tex.init(256, 256, 0);
 };
 
 let populate = func(swapChain) {

@@ -7,6 +7,7 @@
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
 #include "dxComputeCommandQueue.h"
+#include "dxTexture.h"
 
 void rendering::DXComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -49,7 +50,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 5, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 6, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXComputeCL* commandList = dynamic_cast<DXComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -82,10 +83,18 @@ return Value();
             THROW_EXCEPTION("Please supply threadGroupCountZ!")
         }
 
+        Value texValue = scope.GetProperty("param5");
+        DXTexture* tex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(texValue));
+
+        if (!tex) {
+            THROW_EXCEPTION("Please supply a texture!")
+        }
+
         std::string error;
         bool res = commandList->Populate(
             srvUavHeap->GetHeap(),
             constantBuffer->GetBuffer(),
+            tex->GetTexture(),
             static_cast<int>(xValue.GetNum()),
             static_cast<int>(yValue.GetNum()),
             static_cast<int>(zValue.GetNum()),
@@ -215,6 +224,7 @@ bool rendering::DXComputeCL::Create(
 bool rendering::DXComputeCL::Populate(
     ID3D12DescriptorHeap* srvUavHeap,
     ID3D12Resource* constantBuff,
+    ID3D12Resource* tex,
     int threadGroupCountX,
     int threadGroupCountY,
     int threadGroupCountZ,
@@ -241,7 +251,17 @@ bool rendering::DXComputeCL::Populate(
     m_commandList->SetComputeRootDescriptorTable(ComputeRootSRVTable, srvHandle);
     m_commandList->SetComputeRootDescriptorTable(ComputeRootUAVTable, uavHandle);
 
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+
     m_commandList->Dispatch(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PRESENT);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
 
     THROW_ERROR(
         m_commandList->Close(),

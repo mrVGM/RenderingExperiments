@@ -50,7 +50,7 @@ return Value();
 		texture->m_width = width;
 		texture->m_height = height;
 		texture->m_allowUA = static_cast<bool>(allowUAValue.GetNum());
-		texture->m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		texture->m_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
 		return Value();
 	});
@@ -198,7 +198,7 @@ UINT rendering::DXTexture::GetTextureHeight() const
 
 UINT rendering::DXTexture::GetTexturePixelSize() const
 {
-	return 4;
+	return 16;
 }
 
 #undef THROW_ERROR
