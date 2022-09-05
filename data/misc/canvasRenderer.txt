@@ -4,12 +4,49 @@ let myFrame = 0;
 
 let cnvs = [];
 
+let texHeap = api.heap();
+let tex = api.texture();
+let texDescHeap = api.descriptorHeap();
+
+let texInit = func(device, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		print("Texture Heap Loaded!");
+		tex.place(device, texHeap, 0);
+		print("Texture Loaded!");
+
+		let tmp = {};
+		tmp.type = "srv_tex";
+		tmp.texture = tex;
+
+		let l = [];
+		l.push(tmp);
+		texDescHeap.create(device, l);
+
+		print("Texture descriptor heap created!");
+
+		onReady();
+	});
+
+	let size = tex.getAllocationSize(device);
+	texHeap.create(device, size, "DEFAULT");
+	texHeap.makeResident(fence, 1);
+};
+
+
 let obj = {};
 
 let create = func(device) {
 	renderer.create(device);
 	myFence.create(device);
+
+	tex.init(256, 256, 0);
 };
+
 let populate = func(swapChain) {
 	renderer.populate(swapChain);
 
@@ -17,7 +54,7 @@ let populate = func(swapChain) {
 	while (i < cnvs.length) {
 		let cur = cnvs[i];
 		i = i + 1;
-		cur.commandList.populate(swapChain);
+		cur.commandList.populate(swapChain, texDescHeap);
 	}
 };
 let execute = func(commandQueue, fence, frame) {
@@ -52,5 +89,6 @@ obj.populate = populate;
 obj.execute = execute;
 obj.addCanvas = addCanvas;
 obj.render = render;
+obj.texInit = texInit;
 
 export = obj;

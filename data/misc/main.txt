@@ -65,8 +65,10 @@ let startRender = func() {
 
 	canvasRenderer.create(device);
 	canvasRenderer.addCanvas(canvas);
-	
-	render();
+
+	canvasRenderer.texInit(device, func() {
+		render();
+	});
 };
 
 
