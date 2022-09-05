@@ -73,6 +73,7 @@ let canvasRenderer = require("canvasRenderer.txt");
 let computeData = none;
 
 let render = func() {
+
 	if (wnd.isAlive() == 0) {
 		return;
 	}

@@ -17,7 +17,7 @@ let populate = func(swapChain) {
 	while (i < cnvs.length) {
 		let cur = cnvs[i];
 		i = i + 1;
-		cur.commandList.populate(swapChain, cur.descriptorHeap);
+		cur.commandList.populate(swapChain);
 	}
 };
 let execute = func(commandQueue, fence, frame) {

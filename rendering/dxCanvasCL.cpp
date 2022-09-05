@@ -76,7 +76,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 1, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCanvasCL* commandList = dynamic_cast<DXCanvasCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -87,13 +87,6 @@ return Value();
             THROW_EXCEPTION("Please supply a swap chain!")
         }
 
-        Value cbvHeapValue = scope.GetProperty("param1");
-        DXDescriptorHeap* cbvHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(cbvHeapValue));
-
-        if (!cbvHeap) {
-            THROW_EXCEPTION("Please supply a constant buffer heap!")
-        }
-
         std::string error;
         bool res = commandList->Populate(
             &swapChain->m_viewport,
@@ -101,7 +94,6 @@ return Value();
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
             &commandList->m_vertexBufferView,
-            cbvHeap->GetHeap(),
             error);
 
         if (!res) {
@@ -262,7 +254,6 @@ bool rendering::DXCanvasCL::Populate(
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
-    ID3D12DescriptorHeap* cbvHeap,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
