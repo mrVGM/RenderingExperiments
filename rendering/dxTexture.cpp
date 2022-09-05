@@ -186,4 +186,19 @@ ID3D12Resource* rendering::DXTexture::GetResource() const
 	return GetTexture();
 }
 
+UINT rendering::DXTexture::GetTextureWidth() const
+{
+	return m_width;
+}
+
+UINT rendering::DXTexture::GetTextureHeight() const
+{
+	return m_height;
+}
+
+UINT rendering::DXTexture::GetTexturePixelSize() const
+{
+	return 4;
+}
+
 #undef THROW_ERROR

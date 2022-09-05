@@ -45,7 +45,7 @@ add_library (Rendering
 	"dxCopyCL.h"
 	"dxCopyCL.cpp"
 	"IDXResource.h"
-)
+ "dxUpdateTextureCL.h" "dxUpdateTextureCL.cpp")
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

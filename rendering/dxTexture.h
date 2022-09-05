@@ -34,5 +34,9 @@ namespace rendering
 		DXGI_FORMAT GetFormat() const;
 		
 		ID3D12Resource* GetResource() const override;
+
+		UINT GetTextureWidth() const;
+		UINT GetTextureHeight() const;
+		UINT GetTexturePixelSize() const;
 	};
 }
