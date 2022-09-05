@@ -59,11 +59,8 @@ let loadVertexData = func(device, onVertexDataLoaded) {
 };
 
 let loadData = func(device, onReady) {
-	let heap = none;
-	let buff = none;
-
 	if (vertexDataLoaded) {
-		onReady(heap, buff);
+		onReady();
 		return;
 	}
 
@@ -76,13 +73,12 @@ let loadData = func(device, onReady) {
 
 	loadVertexData(device, func() {
 		vertexDataLoaded = 1;
-		onReady(heap, buff);
+		onReady();
 
-		print(cachedCB.length);
 		let i = 0;
 		while (i < cachedCB.length) {
 			let curCB = cachedCB[i];
-			curCB(heap, buff);
+			curCB();
 			i = i + 1;
 		}
 	});
@@ -90,12 +86,8 @@ let loadData = func(device, onReady) {
 
 let createCanvas = func(device, vertexShader, pixelShader, onReady) {
 
-	loadData(device, func(heap, buff) {
+	loadData(device, func() {
 		let res = {};
-		res.heap = heap;
-		res.constantBuff = buff;
-		res.vertexBuff = vertexBuff;
-
 		let canvasCL = api.canvasCL();
 		canvasCL.create(device, vertexShader, pixelShader, vertexBuff, 16);
 		res.commandList = canvasCL;
