@@ -24,6 +24,7 @@ namespace rendering
 			ID3D12Device* device,
 			ID3D12Heap* heap,
 			UINT64 heapOffset,
+			D3D12_RESOURCE_STATES initialState,
 			std::string& errorMessage);
 
 		D3D12_RESOURCE_DESC GetTextureDescription() const;

@@ -13,6 +13,8 @@ namespace rendering
 {
 	class DXHeap : public interpreter::INativeObject
 	{
+		std::string m_heapType;
+
 		virtual void InitProperties(interpreter::NativeObject& nativeObject);
 
 		ID3D12Device3* m_device3 = nullptr;
@@ -24,6 +26,7 @@ namespace rendering
 		bool Evict(std::string& errorMessage);
 	public:
 		ID3D12Heap* GetHeap() const;
+		const std::string& GetHeapType() const;
 		~DXHeap();
 	};
 }

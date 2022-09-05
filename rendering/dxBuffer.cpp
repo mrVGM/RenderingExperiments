@@ -71,6 +71,16 @@ return Value();
 			THROW_EXCEPTION("Please supply allow UA value!");
 		}
 
+		D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;
+		
+		std::string heapType = heap->GetHeapType();
+		if (heapType == "UPLOAD") {
+			initialState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ;
+		}
+		if (heapType == "READBACK") {
+			initialState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST;
+		}
+
 		std::string error;
 		bool res = buffer->Place(
 			&device->GetDevice(),
@@ -78,6 +88,7 @@ return Value();
 			offset,
 			buffer->m_width,
 			static_cast<bool>(allowUAValue.GetNum()),
+			initialState,
 			error);
 
 		if (!res) {
@@ -151,6 +162,7 @@ bool rendering::DXBuffer::Place(
 	UINT64 heapOffset,
 	UINT64 width,
 	bool allowUA,
+	D3D12_RESOURCE_STATES initialState,
 	std::string& errorMessage)
 {
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
@@ -160,7 +172,7 @@ bool rendering::DXBuffer::Place(
 	CD3DX12_RESOURCE_DESC bufferDescription = CD3DX12_RESOURCE_DESC::Buffer(width, flags);
 
 	THROW_ERROR(
-		device->CreatePlacedResource(heap, heapOffset, &bufferDescription, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_buffer)),
+		device->CreatePlacedResource(heap, heapOffset, &bufferDescription, initialState, nullptr, IID_PPV_ARGS(&m_buffer)),
 		"Can't place buffer in the heap!")
 
 	return true;

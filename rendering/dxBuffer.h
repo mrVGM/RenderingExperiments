@@ -24,6 +24,7 @@ namespace rendering
 			UINT64 heapOffset,
 			UINT64 width,
 			bool allowUA,
+			D3D12_RESOURCE_STATES initialState,
 			std::string& errorMessage);
 		bool CopyData(void* data, int dataSize, std::string& error);
 	public:

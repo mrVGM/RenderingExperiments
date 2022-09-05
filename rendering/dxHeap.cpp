@@ -46,6 +46,7 @@ return Value();\
 		if (heapType != "DEFAULT" && heapType != "UPLOAD" && heapType != "READBACK") {
 			THROW_EXCEPTION("Please supply a valid heap type!")
 		}
+		heap->m_heapType = heapType;
 
 		D3D12_HEAP_TYPE type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT;
 		if (heapType == "UPLOAD") {
@@ -122,6 +123,14 @@ return Value();\
 		return Value();
 	});
 
+	Value& getHeapType = GetOrCreateProperty(nativeObject, "getHeapType");
+	getHeapType = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
+
+		return Value(heap->m_heapType);
+	});
+
 #undef THROW_EXCEPTION
 
 }
@@ -181,6 +190,11 @@ bool rendering::DXHeap::Evict(std::string& errorMessage)
 ID3D12Heap* rendering::DXHeap::GetHeap() const
 {
 	return m_heap.Get();
+}
+
+const std::string& rendering::DXHeap::GetHeapType() const
+{
+	return m_heapType;
 }
 
 rendering::DXHeap::~DXHeap()

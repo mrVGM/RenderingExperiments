@@ -83,12 +83,21 @@ return Value();
 			THROW_EXCEPTION("Please supply a valid heap offset!");
 		}
 
+		D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;
+		std::string heapType = heap->GetHeapType();
+		if (heapType == "UPLOAD") {
+			initialResourceState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ;
+		}
+		if (heapType == "READBACK") {
+			initialResourceState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST;
+		}
 
 		std::string error;
 		bool res = texture->Place(
 			&device->GetDevice(),
 			heap->GetHeap(),
 			offset,
+			initialResourceState,
 			error);
 
 		if (!res) {
@@ -122,12 +131,13 @@ bool rendering::DXTexture::Place(
 	ID3D12Device* device,
 	ID3D12Heap* heap,
 	UINT64 heapOffset,
+	D3D12_RESOURCE_STATES initialState,
 	std::string& errorMessage)
 {
 	D3D12_RESOURCE_DESC textureDesc = GetTextureDescription();
 	
 	THROW_ERROR(
-		device->CreatePlacedResource(heap, heapOffset, &textureDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_texture)),
+		device->CreatePlacedResource(heap, heapOffset, &textureDesc, initialState, nullptr, IID_PPV_ARGS(&m_texture)),
 		"Can't place texture in the heap!")
 
 	return true;
