@@ -118,11 +118,11 @@ bool rendering::DXUpdateTextureCL::Create(ID3D12Device* device, std::string& err
     using Microsoft::WRL::ComPtr;
 
     THROW_ERROR(
-        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&m_commandAllocator)),
+        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)),
         "Can't create Command Allocator!")
 
     THROW_ERROR(
-        device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)),
+        device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)),
         "Can't create Command List!")
 
     THROW_ERROR(

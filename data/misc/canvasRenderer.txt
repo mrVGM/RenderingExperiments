@@ -8,7 +8,7 @@ let texHeap = api.heap();
 let tex = api.texture();
 let texDescHeap = api.descriptorHeap();
 
-let texInit = func(device, onReady) {
+let texInit = func(device, commandQueue, onReady) {
 	let fence = api.fence();
 	fence.create(device);
 
@@ -29,7 +29,16 @@ let texInit = func(device, onReady) {
 
 		print("Texture descriptor heap created!");
 
-		onReady();
+		let updateCL = api.updateTextureCL();
+		updateCL.create(device);
+		updateCL.populate(device, tex);
+
+		let updateFE = api.fenceEvent();
+		updateFE.create();
+		updateFE.wait(fence, 2, func(arg) {
+			onReady();
+		});
+		updateCL.execute(commandQueue, fence, 2);
 	});
 
 	let size = tex.getAllocationSize(device);
