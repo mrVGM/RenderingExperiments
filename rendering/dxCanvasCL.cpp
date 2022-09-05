@@ -198,7 +198,7 @@ bool rendering::DXCanvasCL::Create(
             D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -282,9 +282,9 @@ bool rendering::DXCanvasCL::Populate(
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
-    ID3D12DescriptorHeap* ppHeaps[] = { cbvHeap };
-    m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-    m_commandList->SetGraphicsRootDescriptorTable(0, cbvHeap->GetGPUDescriptorHandleForHeapStart());
+    //ID3D12DescriptorHeap* ppHeaps[] = { cbvHeap };
+    //m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    //m_commandList->SetGraphicsRootDescriptorTable(0, cbvHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
