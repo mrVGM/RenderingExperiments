@@ -203,4 +203,9 @@ UINT rendering::DXBuffer::GetElementCount() const
 	return m_width / m_stride;
 }
 
+ID3D12Resource* rendering::DXBuffer::GetResource() const
+{
+	return GetBuffer();
+}
+
 #undef THROW_ERROR

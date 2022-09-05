@@ -2,13 +2,15 @@
 
 #include "nativeObject.h"
 
+#include "IDXResource.h"
+
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
 
 namespace rendering
 {
-	class DXBuffer : public interpreter::INativeObject
+	class DXBuffer : public interpreter::INativeObject, public IDXResource
 	{
 		UINT m_width = -1;
 		UINT m_stride = -1;
@@ -29,5 +31,7 @@ namespace rendering
 		UINT GetBufferWidth() const;
 		UINT GetStride() const;
 		UINT GetElementCount() const;
+
+		ID3D12Resource* GetResource() const override;
 	};
 }

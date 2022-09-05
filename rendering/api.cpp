@@ -21,6 +21,7 @@
 #include "dxComputeCommandQueue.h"
 #include "dxComputeCL.h"
 #include "dxTexture.h"
+#include "dxCopyCL.h"
 
 namespace rendering
 {
@@ -115,6 +116,11 @@ namespace rendering
 		m_api.SetProperty("texture", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXTexture* texture = new DXTexture();
 			return NativeObject::Create(texture);
+		}));
+
+		m_api.SetProperty("copyCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXCopyCL* copyCL = new DXCopyCL();
+			return NativeObject::Create(copyCL);
 		}));
 	}
 }

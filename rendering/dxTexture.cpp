@@ -171,4 +171,9 @@ D3D12_RESOURCE_ALLOCATION_INFO rendering::DXTexture::GetTextureAllocationInfo(ID
 	return info;
 }
 
+ID3D12Resource* rendering::DXTexture::GetResource() const
+{
+	return GetTexture();
+}
+
 #undef THROW_ERROR
