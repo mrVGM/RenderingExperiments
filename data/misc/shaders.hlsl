@@ -15,6 +15,8 @@ struct PSInput
     float2 uv       : UV;
 };
 
+SamplerState p_sampler : register(s0);
+
 PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 {
     PSInput result;
