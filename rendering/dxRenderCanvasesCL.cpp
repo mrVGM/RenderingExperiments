@@ -7,7 +7,6 @@
 #include "dxSwapChain.h"
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
-#include "dxClearRTCL.h"
 #include "dxCanvasCL.h"
 
 void rendering::DXRenderCanvasesCL::InitProperties(interpreter::NativeObject & nativeObject)

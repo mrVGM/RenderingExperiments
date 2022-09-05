@@ -34,8 +34,6 @@ add_library (Rendering
 	"dxDescriptorHeap.cpp"
 	"dxComputeShader.h"
 	"dxComputeShader.cpp"
-	"dxClearRTCL.h"
-	"dxClearRTCL.cpp"
 	"dxrenderCanvasesCL.h"
 	"dxrenderCanvasesCL.cpp"
 	"dxComputeCommandQueue.h"
