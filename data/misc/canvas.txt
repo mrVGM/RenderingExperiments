@@ -88,14 +88,9 @@ let loadData = func(device, onReady) {
 	});
 };
 
-let createCanvas = func(device, vertexShader, pixelShader, overrideBuff, onReady) {
+let createCanvas = func(device, vertexShader, pixelShader, onReady) {
 
-	loadData(device, func(heap, pBuff) {
-		let buff = pBuff;
-		if (overrideBuff != none) {
-			buff = overrideBuff;
-		}
-
+	loadData(device, func(heap, buff) {
 		let res = {};
 		res.heap = heap;
 		res.constantBuff = buff;

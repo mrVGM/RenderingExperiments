@@ -13,20 +13,14 @@ let dragCrt = func() {
 dragCrt();
 
 let vertexShader = api.vertexShader();
-let vertexShader2 = api.vertexShader();
 let pixelShader = api.pixelShader();
-let pixelShader2 = api.pixelShader();
 
 let setupShaders = func() {
 	let shaderCode = readFile("shaders.hlsl");
-	let shaderCode2 = readFile("shaders2.hlsl");
 
 	vertexShader.compile(shaderCode);
 	pixelShader.compile(shaderCode);
-
-	vertexShader2.compile(shaderCode2);
-	pixelShader2.compile(shaderCode2);
-
+	
 	print("Shaders compiled!");
 };
 
@@ -42,14 +36,7 @@ let generalInit = func() {
 	print("General Init!");
 };
 
-let cbData = [];
-cbData.push(0);
-cbData.push(0);
-cbData.push(0.5);
-cbData.push(0.5);
-
 let canvas = none;
-let canvas2 = none;
 
 let createCanvas = require("canvas.txt");
 let canvasRenderer = require("canvasRenderer.txt");
@@ -78,36 +65,17 @@ let startRender = func() {
 
 	canvasRenderer.create(device);
 	canvasRenderer.addCanvas(canvas);
-	canvasRenderer.addCanvas(canvas2);
-
+	
 	render();
 };
 
 
-let drawing = func(overrideBuff) {
+let drawing = func() {
 	try {
-		let waiting = 2;
-
-		createCanvas(device, vertexShader, pixelShader, none, func(cnv) {
-			waiting = waiting - 1;
+		createCanvas(device, vertexShader, pixelShader, func(cnv) {
 			canvas = cnv;
-			print(canvas);
-
-			if (waiting == 0) {
-				startRender();
-			}
+			startRender();
 		});
-
-		createCanvas(device, vertexShader2, pixelShader2, none, func(cnv) {
-			waiting = waiting - 1;
-			canvas2 = cnv;
-			print(canvas2);
-
-			if (waiting == 0) {
-				startRender();
-			}
-		});
-
 	} catch(e) {
 		print(e);
 	}
@@ -118,14 +86,13 @@ let compute = func() {
 	computeInit(device, func(obj) {
 		obj.dispatch();
 		computeData = obj;
-		drawing(obj.uavBuff);
+		drawing();
 	});
 };
 
 try {
 	setupShaders();
 	generalInit();
-
 	compute();
 } catch(e) {
 	print(e);
