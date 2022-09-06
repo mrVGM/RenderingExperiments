@@ -326,7 +326,7 @@ bool rendering::DXWorlyTextureComputeCL::Populate(
 
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        m_computeCL->ResourceBarrier(1, &barrier);
+        m_prepareForPixelCL->ResourceBarrier(1, &barrier);
     }
 
     THROW_ERROR(

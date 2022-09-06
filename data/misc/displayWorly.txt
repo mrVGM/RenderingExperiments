@@ -1,0 +1,126 @@
+let vertexData = [];
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+
+let vertexHeap = api.heap();
+let vertexBuff = api.buffer();
+
+let inUse = 0;
+
+let loadVertexData = func(device, onVertexDataLoaded) {
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		vertexBuff.init(96);
+		vertexBuff.place(device, vertexHeap, 0, 0);
+		vertexBuff.copyData(vertexData);
+
+		onVertexDataLoaded();
+	});
+
+	vertexHeap.create(device, 96, "UPLOAD");
+	vertexHeap.makeResident(fence, 1);
+};
+
+let requestRenderer = func(device, onReady) {
+	if (inUse) {
+		thow("Renderer already in use!");
+	}
+	inUse = 1;
+
+	let compileShaders = func() {
+		let shaderCode = readFile("shaders.hlsl");
+
+		let vertexShader = api.vertexShader();
+		vertexShader.compile(shaderCode);
+
+		let pixelShader = api.pixelShader();
+		pixelShader.compile(shaderCode);
+
+		let res = {};
+		res.vs = vertexShader;
+		res.ps = pixelShader;
+
+		return res;
+	};
+
+	let startRender = func(wnd, swapChain, commandQueue, worlyData) {
+
+		let shaders = compileShaders();
+
+		let displayWorlyCL = api.worly.displayWorly();
+		displayWorlyCL.create(device, shaders.vs, shaders.ps, vertexBuff, 16);
+
+		let descriptors = [];
+		let texDesc = {};
+		texDesc.type = "srv_tex";
+		texDesc.texture = worlyData.getUAVTex();
+
+		descriptors.push(texDesc);
+
+		let descHeap = api.descriptorHeap();
+		descHeap.create(device, descriptors);
+
+		let frame = 0;
+
+		let fence = api.fence();
+		fence.create(device);
+
+		let render = func() {
+			if (wnd.isAlive() == 0) {
+				return;
+			}
+
+			let renderFE = api.fenceEvent();
+			renderFE.create();
+
+			renderFE.wait(fence, frame, func(arg) {
+				swapChain.present();	
+				frame = frame + 1;
+				render();
+			});
+
+			swapChain.updateCurrentFrameIndex();
+			displayWorlyCL.populate(swapChain, descHeap);
+			displayWorlyCL.execute(commandQueue, fence, frame);
+		};
+
+		render();
+	};
+
+	loadVertexData(device, func() {
+		onReady(startRender);
+	});
+};
+
+export = requestRenderer;

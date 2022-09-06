@@ -307,6 +307,10 @@ bool rendering::DXDisplayWorlyCL::Populate(
         m_commandList->ResourceBarrier(1, &barrier);
     }
 
+    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 

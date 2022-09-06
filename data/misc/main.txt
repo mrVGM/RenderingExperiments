@@ -17,6 +17,7 @@ let swapChain = api.swapChain();
 let commandQueue = api.commandQueue();
 
 let worlyData = none;
+let worlyRenderer = none;
 
 let generalInit = func() {
 	device.create();
@@ -25,12 +26,38 @@ let generalInit = func() {
 	print("General Init!");
 };
 
+let tryStartRender = func() {
+	if (worlyData == none) {
+		return;
+	}
+	if (worlyRenderer == none) {
+		return;
+	}
+
+	try {
+		worlyRenderer(wnd, swapChain, commandQueue, worlyData);
+	}  catch(e) {
+		print(e);
+	}
+};
+
+let requestRenderer = func() {
+	let req = require("displayWorly.txt");
+	req(device, func(renderer) {
+		worlyRenderer = renderer;
+		print("Renderer acquired!");
+		tryStartRender();
+	});
+};
+
+
 let worlyExecute = func() {
 	try {
 		print("Texture Processing Begin!");
 		
 		worlyData.execute(device, commandQueue, func() {
 			print("Texture Processing End!");
+			tryStartRender();
 		});
 
 	} catch(e) {
@@ -51,6 +78,7 @@ let worlyInit = func() {
 try {
 	generalInit();
 	worlyInit();
+	requestRenderer();
 } catch(e) {
 	print(e);
 }
