@@ -46,6 +46,9 @@ void GetNeighbours(int2 coord, out float2 neighbours[9])
 
     for (int i = 0; i < 9; ++i) {
         int2 cur = coord + offsets[i];
+        int2 square = cur;
+
+
         if (cur.x < 0) {
             cur.x = m_srvSize - 1;
         }
@@ -61,7 +64,10 @@ void GetNeighbours(int2 coord, out float2 neighbours[9])
 
         SRVBuffElement curPoint = inData[CoordToIndex(cur)];
 
-        neighbours[i] = float2(curPoint.x, curPoint.y);
+        float2 curCoord = float2(curPoint.x, curPoint.y);
+        float2 localOffset = curCoord - cur;
+
+        neighbours[i] = square + localOffset;
     }
 }
 

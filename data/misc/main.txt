@@ -32,6 +32,10 @@ let startUpdateUV = func() {
 	offset.push(0);
 
 	let update = func() {
+		if (wnd.isAlive() == 0) {
+			return;
+		}
+
 		offset[0] = offset[0] + 0.0001;
 		offset[1] = offset[1] + 0.0001;
 
