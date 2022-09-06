@@ -141,6 +141,7 @@ return false;
 
             if (tex->GetTextureDimension() == 3) {
                 uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+                uavDesc.Texture3D.WSize = -1;
             }
 
             device->CreateUnorderedAccessView(tex->GetTexture(), nullptr, &uavDesc, handle);

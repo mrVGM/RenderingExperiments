@@ -62,7 +62,7 @@ let loadTex = func(device, texSize, onReady) {
 	fence.create(device);
 	
 	let tex = api.texture();
-	tex.init(texSize, texSize, 1);
+	tex.init3D(texSize, texSize, texSize, 1);
 
 	let heap = api.heap();
 
@@ -95,7 +95,7 @@ let compileShader = func() {
 let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 
 	compute.create(device, data.shader);
-	compute.populate(data.getConstantBuff(), data.getUAVTex(), data.descHeap, data.texSize, data.texSize, 1);
+	compute.populate(data.getConstantBuff(), data.getUAVTex(), data.descHeap, data.texSize, data.texSize, data.texSize);
 
 	let fence = api.fence();
 	fence.create(device);

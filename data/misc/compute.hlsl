@@ -6,7 +6,7 @@ struct SRVBuffElement
 };
 
 StructuredBuffer<SRVBuffElement> inData		: register(t0);    // SRV
-RWTexture2D<float4> outData			        : register(u0);    // UAV
+RWTexture3D<float4> outData			        : register(u0);    // UAV
 
 cbuffer InfoConstantBuff : register(b0)
 {
@@ -94,5 +94,5 @@ void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid
 
     float c = clamp(minDist, 0, 1);
     c = 1 - c;
-	outData[DTid.xy] = float4(c, c, c, 1);
+	outData[DTid] = float4(c, c, c, 1);
 }

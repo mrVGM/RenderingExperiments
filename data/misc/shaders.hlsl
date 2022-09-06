@@ -10,7 +10,7 @@ struct PSInput
     float2 uv       : UV;
 };
 
-Texture2D p_texture     : register(t0);
+Texture3D p_texture     : register(t0);
 SamplerState p_sampler  : register(s0);
 
 PSInput VSMain(float2 position : POSITION, float2 uv : UV)
@@ -25,5 +25,5 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return p_texture.Sample(p_sampler, input.uv + uvOffset);
+    return p_texture.Sample(p_sampler, float3(input.uv + uvOffset, 0.5));
 }
