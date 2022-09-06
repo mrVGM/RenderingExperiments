@@ -32,9 +32,12 @@ vertexData.push(0);
 let vertexHeap = api.heap();
 let vertexBuff = api.buffer();
 
+let constHeap = api.heap();
+let constBuff = api.buffer();
+
 let inUse = 0;
 
-let loadVertexData = func(device, onVertexDataLoaded) {
+let loadVertexData = func(device, onReady) {
 	let fence = api.fence();
 	fence.create(device);
 
@@ -45,11 +48,45 @@ let loadVertexData = func(device, onVertexDataLoaded) {
 		vertexBuff.place(device, vertexHeap, 0, 0);
 		vertexBuff.copyData(vertexData);
 
-		onVertexDataLoaded();
+		onReady();
 	});
 
 	vertexHeap.create(device, 96, "UPLOAD");
 	vertexHeap.makeResident(fence, 1);
+};
+
+let loadConstData = func(device, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		constBuff.init(256);
+		constBuff.place(device, constHeap, 0, 0);
+		onReady();
+	});
+
+	constHeap.create(device, 256, "UPLOAD");
+	constHeap.makeResident(fence, 1);
+};
+
+let loadData = func(device, onReady) {
+	let waiting = 2;
+
+	loadVertexData(device, func() {
+		waiting = waiting - 1;
+		if (waiting == 0) {
+			onReady();
+		}
+	});
+
+	loadConstData(device, func() {
+		waiting = waiting - 1;
+		if (waiting == 0) {
+			onReady();
+		}
+	});
 };
 
 let requestRenderer = func(device, onReady) {
@@ -79,7 +116,7 @@ let requestRenderer = func(device, onReady) {
 		let shaders = compileShaders();
 
 		let displayWorlyCL = api.worly.displayWorly();
-		displayWorlyCL.create(device, shaders.vs, shaders.ps, vertexBuff, 16);
+		displayWorlyCL.create(device, shaders.vs, shaders.ps, constBuff, vertexBuff, 16);
 
 		let descriptors = [];
 		let texDesc = {};
@@ -126,8 +163,11 @@ let requestRenderer = func(device, onReady) {
 		render();
 	};
 
-	loadVertexData(device, func() {
-		onReady(startRender);
+	loadData(device, func() {
+		let res = {};
+		res.startRender = startRender;
+		res.constBuff = constBuff;
+		onReady(res);
 	});
 };
 

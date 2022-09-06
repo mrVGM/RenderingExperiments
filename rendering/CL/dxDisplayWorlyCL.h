@@ -19,12 +19,15 @@ namespace rendering
 
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
+		ID3D12Resource* m_constantBuffer = nullptr;
+
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		bool Create(
 			ID3D12Device* device,
 			ID3DBlob* vertexShader,
 			ID3DBlob* pixelShader,
+			ID3D12Resource* constantBuffer,
 			ID3D12Resource* vertexBuffer,
 			int vertexBufferWidth,
 			int vertexBufferStride,

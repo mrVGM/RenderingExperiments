@@ -35,7 +35,7 @@ let tryStartRender = func() {
 	}
 
 	try {
-		worlyRenderer(wnd, swapChain, commandQueue, worlyData);
+		worlyRenderer.startRender(wnd, swapChain, commandQueue, worlyData);
 	}  catch(e) {
 		print(e);
 	}

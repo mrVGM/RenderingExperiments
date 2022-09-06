@@ -7,12 +7,9 @@ let loadCB = func(device, onReady) {
 	let heap = api.heap();
 
 	let initBuffer = func() {
-		print("CB Heap Loaded!");
-
 		buff.init(buffSize);
 		buff.place(device, heap, 0, 0);
 		
-		print("Constant Buffer Loaded!");
 		onReady(heap, buff);
 	};
 
@@ -28,7 +25,6 @@ let loadCB = func(device, onReady) {
 
 	let heapType = "UPLOAD";
 	heap.create(device, buffSize, heapType);
-	print("CB Heap Created!");
 	heap.makeResident(fence, 1);
 };
 
@@ -40,12 +36,9 @@ let loadSRVBuff = func(device, buffSize, onReady) {
 	let heap = api.heap();
 
 	let initBuffer = func() {
-		print("SRV Heap Loaded!");
-
 		buff.init(buffSize);
 		buff.place(device, heap, 0, 0);
 		
-		print("SRV Buffer Loaded!");
 		onReady(heap, buff);
 	};
 
@@ -61,7 +54,6 @@ let loadSRVBuff = func(device, buffSize, onReady) {
 
 	let heapType = "UPLOAD";
 	heap.create(device, buffSize, heapType);
-	print("SRV Heap Created!");
 	heap.makeResident(fence, 1);
 };
 
@@ -75,10 +67,7 @@ let loadTex = func(device, texSize, onReady) {
 	let heap = api.heap();
 
 	let placeTex = func() {
-		print("Texture Heap Loaded!");
 		tex.place(device, heap, 0);
-
-		print("Texture Loaded!");
 		onReady(heap, tex);
 	};
 
@@ -93,7 +82,6 @@ let loadTex = func(device, texSize, onReady) {
 	});
 
 	heap.create(device, tex.getAllocationSize(device), "DEFAULT");
-	print("Texture Heap Created!");
 	heap.makeResident(fence, 1);
 };
 

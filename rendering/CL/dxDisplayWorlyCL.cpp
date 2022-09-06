@@ -20,7 +20,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 5, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 6, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXDisplayWorlyCL* self = static_cast<DXDisplayWorlyCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -45,14 +45,21 @@ return Value();
             THROW_EXCEPTION("Please supply a pixel shader!")
         }
 
-        Value vertexBufferValue = scope.GetProperty("param3");
+        Value constantBufferValue = scope.GetProperty("param3");
+        DXBuffer* constantBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(constantBufferValue));
+
+        if (!constantBuffer) {
+            THROW_EXCEPTION("Please supply a Constant Buffer!")
+        }
+
+        Value vertexBufferValue = scope.GetProperty("param4");
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
 
         if (!vertexBuffer) {
             THROW_EXCEPTION("Please supply a Vertex Buffer!")
         }
 
-        Value vertexBufferStrideValue = scope.GetProperty("param4");
+        Value vertexBufferStrideValue = scope.GetProperty("param5");
         if (vertexBufferStrideValue.GetType() != ScriptingValueType::Number) {
             THROW_EXCEPTION("Please supply a Stride!")
         }
@@ -66,6 +73,7 @@ return Value();
             &device->GetDevice(),
             vertexShader->GetCompiledShader(),
             pixelShader->GetCompiledShader(),
+            constantBuffer->GetBuffer(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             stride,
@@ -160,12 +168,15 @@ bool rendering::DXDisplayWorlyCL::Create(
     ID3D12Device* device,
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
+    ID3D12Resource* constantBuffer,
     ID3D12Resource* vertexBuffer,
     int vertexBufferWidth,
     int vertexBufferStride,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
+
+    m_constantBuffer = constantBuffer;
 
     // Create the vertex buffer.
     {
@@ -187,9 +198,9 @@ bool rendering::DXDisplayWorlyCL::Create(
 
         D3D12_STATIC_SAMPLER_DESC sampler = {};
         sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         sampler.MipLODBias = 0;
         sampler.MaxAnisotropy = 0;
         sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
@@ -209,11 +220,12 @@ bool rendering::DXDisplayWorlyCL::Create(
 
         CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+        rootParameters[0].InitAsConstantBufferView(0, 0);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(1, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(2, rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -299,7 +311,9 @@ bool rendering::DXDisplayWorlyCL::Populate(
 
     ID3D12DescriptorHeap* ppHeaps[] = { descHeap };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-    m_commandList->SetGraphicsRootDescriptorTable(0, descHeap->GetGPUDescriptorHandleForHeapStart());
+
+    m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
 
     // Indicate that the back buffer will be used as a render target.
     {
