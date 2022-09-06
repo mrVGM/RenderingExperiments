@@ -111,7 +111,7 @@ let requestRenderer = func(device, onReady) {
 		return res;
 	};
 
-	let startRender = func(wnd, swapChain, commandQueue, worlyData) {
+	let startRender = func(wnd, swapChain, commandQueue, worlyData, onRender) {
 
 		let shaders = compileShaders();
 
@@ -145,6 +145,9 @@ let requestRenderer = func(device, onReady) {
 				renderFE.wait(fence, frame, func(arg) {
 					swapChain.present();	
 					frame = frame + 1;
+					if (onRender != none) {
+						onRender();
+					}
 					render();
 				});
 

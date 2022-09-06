@@ -2,7 +2,8 @@ struct SRVBuffElement
 {
     float x;
     float y;
-    float padding[2];
+    float z;
+    float padding;
 };
 
 StructuredBuffer<SRVBuffElement> inData		: register(t0);    // SRV
@@ -16,37 +17,37 @@ cbuffer InfoConstantBuff : register(b0)
     float m_padding[62];
 };
 
-int CoordToIndex(int2 coord)
+int CoordToIndex(int3 coord)
 {
-    return coord.y * m_srvSize + coord.x;
+    return coord.z * m_srvSize * m_srvSize + coord.y * m_srvSize + coord.x;
 }
 
-int2 IndexToCoord(int index)
+int3 IndexToCoord(int index)
 {
     int col = index % m_srvSize;
-    int row = index / m_srvSize;
+    int row = index % m_srvSize;
+    int plate = index / (m_srvSize * m_srvSize);
 
-    return int2(col, row);
+    return int3(col, row, plate);
 }
 
-void GetNeighbours(int2 coord, out float2 neighbours[9])
+void GetNeighbours(int3 coord, out float3 neighbours[27])
 {
-    int2 offsets[9] =
-    {
-        int2(0,     0),
-        int2(0,    -1),
-        int2(0,     1),
-        int2(-1,    0),
-        int2(-1,   -1),
-        int2(-1,    1),
-        int2(1,     0),
-        int2(1,    -1),
-        int2(1,     1)
-    };
+    int3 offsets[27];
 
-    for (int i = 0; i < 9; ++i) {
-        int2 cur = coord + offsets[i];
-        int2 square = cur;
+    int index = 0;
+    for (int k = -1; k < 2; ++k) {
+        for (int i = -1; i < 2; ++i) {
+            for (int j = -1; j < 2; ++j) {
+                offsets[index] = int3(j, i, k);
+                index = index + 1;
+            }
+        }
+    }
+
+    for (int i = 0; i < 27; ++i) {
+        int3 cur = coord + offsets[i];
+        int3 cube = cur;
 
 
         if (cur.x < 0) {
@@ -55,6 +56,7 @@ void GetNeighbours(int2 coord, out float2 neighbours[9])
         if (cur.x >= m_srvSize) {
             cur.x = 0;
         }
+
         if (cur.y < 0) {
             cur.y = m_srvSize - 1;
         }
@@ -62,30 +64,37 @@ void GetNeighbours(int2 coord, out float2 neighbours[9])
             cur.y = 0;
         }
 
+        if (cur.z < 0) {
+            cur.z = m_srvSize - 1;
+        }
+        if (cur.z >= m_srvSize) {
+            cur.z = 0;
+        }
+
         SRVBuffElement curPoint = inData[CoordToIndex(cur)];
 
-        float2 curCoord = float2(curPoint.x, curPoint.y);
-        float2 localOffset = curCoord - cur;
+        float3 curCoord = float3(curPoint.x, curPoint.y, curPoint.z);
+        float3 localOffset = curCoord - cur;
 
-        neighbours[i] = square + localOffset;
+        neighbours[i] = cube + localOffset;
     }
 }
 
 [numthreads(1, 1, 1)]
 void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
 {
-    float2 uv = float2(DTid.xy);
-    uv /= m_texSize;
+    float3 uvw = float3(DTid);
+    uvw /= m_texSize;
 
-    float2 gridCoord = uv * m_srvSize;
+    float3 gridCoord = uvw * m_srvSize;
 
-    int2 squareCoord = floor(gridCoord);
+    int3 squareCoord = floor(gridCoord);
 
-    float2 neighbours[9];
+    float3 neighbours[27];
     GetNeighbours(squareCoord, neighbours);
 
-    float minDist = 2;
-    for (int i = 0; i < 9; ++i) {
+    float minDist = 4;
+    for (int i = 0; i < 27; ++i) {
         float d = length(gridCoord - neighbours[i]);
         if (d < minDist) {
             minDist = d;

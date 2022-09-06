@@ -30,8 +30,9 @@ namespace
     {
         float m_x;
         float m_y;
+        float m_z;
 
-        float padding[2];
+        float padding;
     };
 }
 
@@ -467,19 +468,23 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, in
         buffer->Map(0, &readRange, &dst),
         "Can't map SRV Buffer!")
 
-    int arrSize = srvBuffSize * srvBuffSize;
+    int arrSize = srvBuffSize * srvBuffSize * srvBuffSize;
     SRVBuffElement* elements = new SRVBuffElement[arrSize];
 
-    for (int i = 0; i < srvBuffSize; ++i) {
-        for (int j = 0; j < srvBuffSize; ++j) {
-            int index = i * srvBuffSize + j;
-            SRVBuffElement& cur = elements[index];
+    for (int k = 0; k < srvBuffSize; ++k) {
+        for (int i = 0; i < srvBuffSize; ++i) {
+            for (int j = 0; j < srvBuffSize; ++j) {
+                int index = k * srvBuffSize * srvBuffSize + i * srvBuffSize + j;
+                SRVBuffElement& cur = elements[index];
 
-            float randX = (float)rand() / RAND_MAX;
-            float randY = (float)rand() / RAND_MAX;
+                float randX = (float)rand() / RAND_MAX;
+                float randY = (float)rand() / RAND_MAX;
+                float randZ = (float)rand() / RAND_MAX;
 
-            cur.m_x = j + randX;
-            cur.m_y = i + randY;
+                cur.m_x = j + randX;
+                cur.m_y = i + randY;
+                cur.m_z = k + randZ;
+            }
         }
     }
 
@@ -493,7 +498,7 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, in
 
 int rendering::DXWorlyTextureComputeCL::GetSRVBufferSize() const
 {
-    return SRVSize * SRVSize * sizeof(SRVBuffElement);
+    return SRVSize * SRVSize * SRVSize * sizeof(SRVBuffElement);
 }
 
 #undef THROW_ERROR
