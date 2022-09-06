@@ -1,13 +1,14 @@
 #include "CL/dxWorlyTextureComputeCL.h"
 
 #include "nativeFunc.h"
+
 #include "dxDevice.h"
-#include "dxSwapChain.h"
-#include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
 #include "dxComputeCommandQueue.h"
+#include "dxBuffer.h"
 #include "dxTexture.h"
+#include "dxFence.h"
 
 void rendering::DXWorlyTextureComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -20,7 +21,7 @@ return Value();
     Value& create = GetOrCreateProperty(nativeObject, "create");
     create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXWorlyTextureComputeCL* self = dynamic_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value deviceValue = scope.GetProperty("param0");
         DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
@@ -52,7 +53,7 @@ return Value();
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
     populate = CreateNativeMethod(nativeObject, 6, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXWorlyTextureComputeCL* self = dynamic_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value constantBufferValue = scope.GetProperty("param0");
         DXBuffer* constantBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(constantBufferValue));
@@ -111,7 +112,7 @@ return Value();
     Value& executeCompute = GetOrCreateProperty(nativeObject, "executeCompute");
     executeCompute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXWorlyTextureComputeCL* commandList = dynamic_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXWorlyTextureComputeCL* commandList = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXComputeCommandQueue* commandQueue = dynamic_cast<DXComputeCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
@@ -143,7 +144,7 @@ return Value();
     Value& executePrepareForPS = GetOrCreateProperty(nativeObject, "executePrepareForPS");
     executePrepareForPS = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXWorlyTextureComputeCL* commandList = dynamic_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXWorlyTextureComputeCL* commandList = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXComputeCommandQueue* commandQueue = dynamic_cast<DXComputeCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));

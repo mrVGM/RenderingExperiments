@@ -24,7 +24,7 @@ add_library (Rendering
 	"dxFenceEvent.cpp"
 	"dxBuffer.h"
 	"dxBuffer.cpp"
-	"dxCanvasCL.h"
+	"CL/dxDisplayWorlyCL.h"
 	"dxCanvasCL.cpp"
 	"dxCommandQueue.h"
 	"dxCommandQueue.cpp"
@@ -49,6 +49,8 @@ add_library (Rendering
 	"dxUpdateTextureCL.cpp"
 	"CL/dxWorlyTextureComputeCL.h"
 	"CL/dxWorlyTextureComputeCL.cpp"
+	"CL/dxDisplayWorlyCL.h"
+	"CL/dxDisplayWorlyCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
