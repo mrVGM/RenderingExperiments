@@ -301,16 +301,14 @@ bool rendering::DXDisplayWorlyCL::Populate(
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     m_commandList->SetGraphicsRootDescriptorTable(0, descHeap->GetGPUDescriptorHandleForHeapStart());
 
-    m_commandList->RSSetViewports(1, viewport);
-    m_commandList->RSSetScissorRects(1, scissorRect);
-
-#if false
     // Indicate that the back buffer will be used as a render target.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
         m_commandList->ResourceBarrier(1, &barrier);
     }
-#endif 
+
+    m_commandList->RSSetViewports(1, viewport);
+    m_commandList->RSSetScissorRects(1, scissorRect);
 
 
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
@@ -319,13 +317,11 @@ bool rendering::DXDisplayWorlyCL::Populate(
     m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
     m_commandList->DrawInstanced(6, 1, 0, 0);
 
-#if false
     // Indicate that the back buffer will now be used to present.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         m_commandList->ResourceBarrier(1, &barrier);
     }
-#endif
 
     THROW_ERROR(
         m_commandList->Close(),

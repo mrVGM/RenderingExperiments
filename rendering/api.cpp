@@ -24,6 +24,9 @@
 #include "dxCopyCL.h"
 #include "dxUpdateTextureCL.h"
 
+#include "CL/dxWorlyTextureComputeCL.h"
+#include "CL/dxDisplayWorlyCL.h"
+
 namespace rendering
 {
 	interpreter::Value m_api;
@@ -127,6 +130,19 @@ namespace rendering
 		m_api.SetProperty("updateTextureCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXUpdateTextureCL* updateTextureCL = new DXUpdateTextureCL();
 			return NativeObject::Create(updateTextureCL);
+		}));
+
+		m_api.SetProperty("worly", interpreter::utils::GetEmptyObject());
+		Value worly = m_api.GetProperty("worly");
+
+		worly.SetProperty("textureCompute", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXWorlyTextureComputeCL* worlyTextureComputeCL = new DXWorlyTextureComputeCL();
+			return NativeObject::Create(worlyTextureComputeCL);
+		}));
+
+		worly.SetProperty("displayWorly", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXDisplayWorlyCL* displayWorly = new DXDisplayWorlyCL();
+			return NativeObject::Create(displayWorly);
 		}));
 	}
 }
