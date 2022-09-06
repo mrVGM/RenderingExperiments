@@ -75,7 +75,7 @@ void GetNeighbours(int2 coord, out float2 neighbours[9])
 void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
 {
     float2 uv = float2(DTid.xy);
-    uv /= m_texSize - 1;
+    uv /= m_texSize;
 
     float2 gridCoord = uv * m_srvSize;
 
