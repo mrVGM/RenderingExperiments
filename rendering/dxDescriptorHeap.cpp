@@ -116,6 +116,12 @@ return false;
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
             srvDesc.Format = tex->GetFormat();
             srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+
+            if (tex->GetTextureDimension() == 3) {
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+            }
+
+            srvDesc.Texture3D.MipLevels = 1;
             srvDesc.Texture2D.MipLevels = 1;
 
             device->CreateShaderResourceView(tex->GetTexture(), &srvDesc, handle);
@@ -132,6 +138,10 @@ return false;
             D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
             uavDesc.Format = tex->GetFormat();
             uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+
+            if (tex->GetTextureDimension() == 3) {
+                uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+            }
 
             device->CreateUnorderedAccessView(tex->GetTexture(), nullptr, &uavDesc, handle);
         }

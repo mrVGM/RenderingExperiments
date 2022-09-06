@@ -55,6 +55,54 @@ return Value();
 		return Value();
 	});
 
+	Value& init3D = GetOrCreateProperty(nativeObject, "init3D");
+	init3D = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
+
+		texture->m_dimension = 3;
+
+		Value widthValue = scope.GetProperty("param0");
+		if (widthValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture width!");
+		}
+		int width = widthValue.GetNum();
+		if (width <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture width!");
+		}
+
+		Value heightValue = scope.GetProperty("param1");
+		if (heightValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture width!");
+		}
+		int height = heightValue.GetNum();
+		if (height <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture height!");
+		}
+
+		Value depthValue = scope.GetProperty("param2");
+		if (depthValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture depth!");
+		}
+		int depth = depthValue.GetNum();
+		if (depth <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture depth!");
+		}
+
+		Value allowUAValue = scope.GetProperty("param3");
+		if (allowUAValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply UA value!");
+		}
+
+		texture->m_width = width;
+		texture->m_height = height;
+		texture->m_depth = depth;
+		texture->m_allowUA = static_cast<bool>(allowUAValue.GetNum());
+		texture->m_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+		return Value();
+	});
+
 	Value& place = GetOrCreateProperty(nativeObject, "place");
 	place = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
@@ -155,16 +203,29 @@ D3D12_RESOURCE_DESC rendering::DXTexture::GetTextureDescription() const
 		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}
 
-	D3D12_RESOURCE_DESC textureDesc = {};
-	textureDesc.MipLevels = 1;
-	textureDesc.Format = m_format;
-	textureDesc.Width = m_width;
-	textureDesc.Height = m_height;
-	textureDesc.Flags = flags;
-	textureDesc.DepthOrArraySize = 1;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	CD3DX12_RESOURCE_DESC textureDesc = {};
+
+	if (m_dimension == 2) {
+		textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+			m_format,
+			m_width,
+			m_height,
+			1,
+			0,
+			1,
+			0,
+			flags);
+	}
+
+	if (m_dimension == 3) {
+		textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(
+			m_format,
+			m_width,
+			m_height,
+			m_depth,
+			0,
+			flags);
+	}
 
 	return textureDesc;
 }
@@ -194,6 +255,16 @@ UINT rendering::DXTexture::GetTextureWidth() const
 UINT rendering::DXTexture::GetTextureHeight() const
 {
 	return m_height;
+}
+
+UINT rendering::DXTexture::GetTextureDimension() const
+{
+	return m_dimension;
+}
+
+UINT rendering::DXTexture::GetTextureDepth() const
+{
+	return m_depth;
 }
 
 UINT rendering::DXTexture::GetTexturePixelSize() const
