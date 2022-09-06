@@ -25,10 +25,13 @@ namespace
         float m_padding[62];
     };
 
+    // needs to the 16-byte alligned, apparently
     struct SRVBuffElement
     {
         float m_x;
         float m_y;
+
+        float padding[2];
     };
 }
 
@@ -464,8 +467,7 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, in
         buffer->Map(0, &readRange, &dst),
         "Can't map SRV Buffer!")
 
-
-        int arrSize = srvBuffSize * srvBuffSize;
+    int arrSize = srvBuffSize * srvBuffSize;
     SRVBuffElement* elements = new SRVBuffElement[arrSize];
 
     for (int i = 0; i < srvBuffSize; ++i) {
