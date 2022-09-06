@@ -1,0 +1,225 @@
+let loadCB = func(device, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+	
+	let buffSize = 256;
+	let buff = api.buffer();
+	let heap = api.heap();
+
+	let initBuffer = func() {
+		print("CB Heap Loaded!");
+
+		buff.init(buffSize);
+		buff.place(device, heap, 0, 0);
+		
+		print("Constant Buffer Loaded!");
+		onReady(heap, buff);
+	};
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		try {
+			initBuffer();
+		} catch(e) {
+			print(e);
+		}
+	});
+
+	let heapType = "UPLOAD";
+	heap.create(device, buffSize, heapType);
+	print("CB Heap Created!");
+	heap.makeResident(fence, 1);
+};
+
+let loadSRVBuff = func(device, buffSize, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+
+	let buff = api.buffer();
+	let heap = api.heap();
+
+	let initBuffer = func() {
+		print("SRV Heap Loaded!");
+
+		buff.init(buffSize);
+		buff.place(device, heap, 0, 0);
+		
+		print("SRV Buffer Loaded!");
+		onReady(heap, buff);
+	};
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		try {
+			initBuffer();
+		} catch(e) {
+			print(e);
+		}
+	});
+
+	let heapType = "UPLOAD";
+	heap.create(device, buffSize, heapType);
+	print("SRV Heap Created!");
+	heap.makeResident(fence, 1);
+};
+
+let loadTex = func(device, texSize, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+	
+	let tex = api.texture();
+	tex.init(texSize, texSize, 1);
+
+	let heap = api.heap();
+
+	let placeTex = func() {
+		print("Texture Heap Loaded!");
+		tex.place(device, heap, 0);
+
+		print("Texture Loaded!");
+		onReady(heap, tex);
+	};
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		try {
+			placeTex();
+		} catch(e) {
+			print(e);
+		}
+	});
+
+	heap.create(device, tex.getAllocationSize(device), "DEFAULT");
+	print("Texture Heap Created!");
+	heap.makeResident(fence, 1);
+};
+
+let compileShader = func() {
+	let shaderCode = readFile("compute.hlsl");
+	let computeShader = api.computeShader();
+	computeShader.compile(shaderCode);
+	return computeShader;
+};
+
+let execute = func(device, data, graphicsCommandQueue, onReady) {
+	
+	let compute = api.worly.textureCompute();
+
+	compute.create(device, data.shader);
+	compute.populate(data.getConstantBuff(), data.getUAVTex(), data.descHeap, data.texSize, data.texSize, 1);
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let prepareForGraphics = func() {
+		let prepFE = api.fenceEvent();
+		prepFE.create();
+		prepFE.wait(fence, 2, func(arg) {
+			onReady();
+		});
+		compute.executePrepareForPS(graphicsCommandQueue, fence, 2);
+	};
+
+	let computeFE = api.fenceEvent();
+	computeFE.create();
+	computeFE.wait(fence, 1, func(arg) {
+		try {
+			prepareForGraphics();
+		} catch(e) {
+			print(e);
+		}
+	});
+
+	let computeCommandQueue = api.computeCommandQueue();
+	computeCommandQueue.create(device);
+	compute.executeCompute(computeCommandQueue, fence, 1);
+};
+
+let prepareData = func(device, srvBuffSize, texSize, onReady) {
+	let waiting = 3;
+	let srvHeap = none;
+	let srvBuff = none;
+	let cbHeap = none;
+	let cBuff = none;
+	let uavHeap = none;
+	let uavTex = none;
+
+	let createDescHeap = func() {
+		let descHeap = api.descriptorHeap();
+		
+		let buffs = [];
+		let srvDesc = {};
+		srvDesc.type = "srv_buff";
+		srvDesc.buffer = srvBuff;
+		buffs.push(srvDesc);
+
+		let uavDesc = {};
+		uavDesc.type = "uav_tex";
+		uavDesc.texture = uavTex;
+		buffs.push(uavDesc);
+
+		descHeap.create(device, buffs);
+
+		return descHeap;
+	};
+
+	let callReady = func() {
+		let res = {};
+		res.descHeap = createDescHeap();
+
+		res.getConstantBuff = func() {
+			return cBuff;
+		};
+		res.getSRVBuff = func() {
+			return srvBuff;
+		};
+		res.getUAVTex = func() {
+			return uavTex;
+		};
+
+		res.shader = compileShader();
+		res.texSize = texSize;
+
+		res.execute = func(device, graphicsCommandQueue, onReady) {
+			execute(device, res, graphicsCommandQueue, onReady);
+		};
+
+		onReady(res);
+	};
+
+	loadCB(device, func(heap, buff) {
+		waiting = waiting - 1;
+		cbHeap = heap;
+		cBuff = buff;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+	loadSRVBuff(device, srvBuffSize, func(heap, buff) {
+		waiting = waiting - 1;
+		srvHeap = heap;
+		srvBuff = buff;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+	loadTex(device, texSize, func(heap, tex) {
+		waiting = waiting - 1;
+		uavHeap = heap;
+		uavTex = tex;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+};
+
+export.prepare = prepareData;
+export.execute = execute;

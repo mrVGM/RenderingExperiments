@@ -1,35 +1,6 @@
 let wnd = api.window();
 wnd.create(600, 400);
 
-let aspect = wnd.width / wnd.height;
-print(aspect);
-
-let vertexData = [];
-vertexData.push(0.0);
-vertexData.push(0.25 * aspect);
-vertexData.push(0);
-vertexData.push(1);
-vertexData.push(0);
-vertexData.push(0);
-vertexData.push(1);
-
-vertexData.push(0.25);
-vertexData.push(-0.25 * aspect);
-vertexData.push(0);
-vertexData.push(0);
-vertexData.push(1);
-vertexData.push(0);
-vertexData.push(1);
-
-vertexData.push(-0.25);
-vertexData.push(-0.25 * aspect);
-vertexData.push(0);
-vertexData.push(0);
-vertexData.push(0);
-vertexData.push(1);
-vertexData.push(1);
-
-
 let dragCrt = func() {
 	if (wnd.isAlive() == 0) {
 		print("Window closed!");
@@ -41,101 +12,90 @@ let dragCrt = func() {
 };
 dragCrt();
 
-
-let device = api.device();
-
-let shaderCode = readFile("shaders.hlsl");
-
 let vertexShader = api.vertexShader();
 let pixelShader = api.pixelShader();
 
-let fence = api.fence();
-let vertexBuff = api.buffer();
+let setupShaders = func() {
+	let shaderCode = readFile("shaders.hlsl");
 
-let commandList = api.commandList();
-let commandQueue = api.commandQueue();
-
-let renderCrt = func() {
-	if (wnd.isAlive() == 0) {
-		return;
-	}
-
-	try {
-		device.render();
-	} catch(e) {
-		print(e);
-		return;
-	}
-
-	timeout(renderCrt);
-};
-
-let renderCrt2 = func() {
-	if (wnd.isAlive() == 0) {
-		return;
-	}
-
-	try {
-		let frameDone = api.fenceEvent();
-		frameDone.create();
-
-		frameDone.wait(fence, func(arg) {
-			device.present();
-			renderCrt2();
-		});
-
-		device.updateCurrentFrameIndex();
-		commandList.populate(device);
-		commandList.execute(commandQueue, fence, frameDone.getID());
-	} catch(e) {
-		print(e);
-		return;
-	}
-};
-
-
-
-try {
 	vertexShader.compile(shaderCode);
 	pixelShader.compile(shaderCode);
+	
 	print("Shaders compiled!");
+};
 
+
+let device = api.device();
+let swapChain = api.swapChain();
+let commandQueue = api.commandQueue();
+
+let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
+	swapChain.create(device, wnd, commandQueue);
+	print("General Init!");
+};
 
-	device.init(wnd, commandQueue);
+let canvas = none;
 
-	commandList.create(device, vertexShader, pixelShader);
-	
-	fence.create(device);
-	print("Fence created!");
+let createCanvas = require("canvas.txt");
+let canvasRenderer = require("canvasRenderer.txt");
+let computeData = none;
 
-	let fenceEvent = api.fenceEvent();
-	fenceEvent.create();
-	fenceEvent.wait(fence, func(arg) { 
-		print("Heap is now resident!");
-		try {
-			vertexBuff.init(84);
-			vertexBuff.place(device, heap, fenceEvent.getID());
-			vertexBuff.copyData(vertexData);
-			print("Buffer Placed!");
+let render = func() {
 
-			device.load(vertexShader, pixelShader, fence, vertexBuff);
-			renderCrt2();
-			#renderCrt();
-		} catch(exception) {
-			print(exception);
-		}
-		print("finished");
+	if (wnd.isAlive() == 0) {
+		return;
+	}
+
+	try {
+		swapChain.updateCurrentFrameIndex();
+		canvasRenderer.render(commandQueue, swapChain, func() {
+			swapChain.present();
+			render();
+		});
+
+	} catch(e) {
+		print(e);
+	}
+};
+
+let startRender = func() {
+	print("Starting to render!");
+
+	canvasRenderer.create(device);
+	canvasRenderer.addCanvas(canvas);
+
+	canvasRenderer.texInit(device, commandQueue, computeData.uavTex, func() {
+		render();
 	});
+};
 
 
-	let signal = fenceEvent.getID();
-	let heap = api.heap();
+let drawing = func() {
+	try {
+		createCanvas(device, vertexShader, pixelShader, func(cnv) {
+			canvas = cnv;
+			startRender();
+		});
+	} catch(e) {
+		print(e);
+	}
+};
 
-	heap.create(device, 100, "UPLOAD");
-	print("Heap Created!");
-	heap.makeResident(fence, signal);
-} catch (e) {
+let computeInit = require("compute.txt");
+let compute = func() {
+	computeInit(device, func(obj) {
+		obj.dispatch();
+		computeData = obj;
+		drawing();
+	});
+};
+
+try {
+	setupShaders();
+	generalInit();
+	compute();
+} catch(e) {
 	print(e);
 }

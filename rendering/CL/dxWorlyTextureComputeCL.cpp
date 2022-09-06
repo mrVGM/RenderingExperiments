@@ -5,6 +5,7 @@
 #include "dxDevice.h"
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
+#include "dxCommandQueue.h"
 #include "dxComputeCommandQueue.h"
 #include "dxBuffer.h"
 #include "dxTexture.h"
@@ -147,9 +148,9 @@ return Value();
         DXWorlyTextureComputeCL* commandList = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
-        DXComputeCommandQueue* commandQueue = dynamic_cast<DXComputeCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
         if (!commandQueue) {
-            THROW_EXCEPTION("Please supply a Compute Command Queue!")
+            THROW_EXCEPTION("Please supply a Graphics Command Queue!")
         }
 
         Value fenceValue = scope.GetProperty("param1");

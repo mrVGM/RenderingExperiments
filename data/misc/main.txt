@@ -12,22 +12,11 @@ let dragCrt = func() {
 };
 dragCrt();
 
-let vertexShader = api.vertexShader();
-let pixelShader = api.pixelShader();
-
-let setupShaders = func() {
-	let shaderCode = readFile("shaders.hlsl");
-
-	vertexShader.compile(shaderCode);
-	pixelShader.compile(shaderCode);
-	
-	print("Shaders compiled!");
-};
-
-
 let device = api.device();
 let swapChain = api.swapChain();
 let commandQueue = api.commandQueue();
+
+let worlyData = none;
 
 let generalInit = func() {
 	device.create();
@@ -36,23 +25,12 @@ let generalInit = func() {
 	print("General Init!");
 };
 
-let canvas = none;
-
-let createCanvas = require("canvas.txt");
-let canvasRenderer = require("canvasRenderer.txt");
-let computeData = none;
-
-let render = func() {
-
-	if (wnd.isAlive() == 0) {
-		return;
-	}
-
+let worlyExecute = func() {
 	try {
-		swapChain.updateCurrentFrameIndex();
-		canvasRenderer.render(commandQueue, swapChain, func() {
-			swapChain.present();
-			render();
+		print("Texture Processing Begin!");
+		
+		worlyData.execute(device, commandQueue, func() {
+			print("Texture Processing End!");
 		});
 
 	} catch(e) {
@@ -60,42 +38,19 @@ let render = func() {
 	}
 };
 
-let startRender = func() {
-	print("Starting to render!");
+let worlyInit = func() {
+	let worly = require("worlyCompute.txt");
+	worly.prepare(device, 256, 256, func(data) {
+		worlyData = data;
+		print("Worly Init!");
 
-	canvasRenderer.create(device);
-	canvasRenderer.addCanvas(canvas);
-
-	canvasRenderer.texInit(device, commandQueue, computeData.uavTex, func() {
-		render();
-	});
-};
-
-
-let drawing = func() {
-	try {
-		createCanvas(device, vertexShader, pixelShader, func(cnv) {
-			canvas = cnv;
-			startRender();
-		});
-	} catch(e) {
-		print(e);
-	}
-};
-
-let computeInit = require("compute.txt");
-let compute = func() {
-	computeInit(device, func(obj) {
-		obj.dispatch();
-		computeData = obj;
-		drawing();
+		worlyExecute();
 	});
 };
 
 try {
-	setupShaders();
 	generalInit();
-	compute();
+	worlyInit();
 } catch(e) {
 	print(e);
 }
