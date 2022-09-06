@@ -188,6 +188,9 @@ let prepareData = func(device, texSize, onReady) {
 			execute(compute, device, res, graphicsCommandQueue, onReady);
 		};
 
+		compute.setupCB(cBuff, texSize);
+		compute.setupSRVBuff(srvBuff);
+
 		onReady(res);
 	};
 
