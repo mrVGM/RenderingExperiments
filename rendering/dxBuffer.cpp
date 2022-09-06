@@ -180,7 +180,6 @@ bool rendering::DXBuffer::Place(
 
 bool rendering::DXBuffer::CopyData(void* data, int dataSize, std::string& errorMessage)
 {
-	UINT8* pVertexDataBegin;
 	CD3DX12_RANGE readRange(0, 0);
 
 	void* dst = nullptr;

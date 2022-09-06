@@ -11,6 +11,27 @@
 #include "dxTexture.h"
 #include "dxFence.h"
 
+#include <stdlib.h>
+
+namespace
+{
+    static const int SRVSize = 4;
+
+    struct ConstantBuffer
+    {
+        int m_texSize;
+        int m_srvSize;
+
+        float m_padding[62];
+    };
+
+    struct SRVBuffElement
+    {
+        float m_x;
+        float m_y;
+    };
+}
+
 void rendering::DXWorlyTextureComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
@@ -174,6 +195,63 @@ return Value();
         return Value();
     });
 
+    Value& setupCB = GetOrCreateProperty(nativeObject, "setupCB");
+    setupCB = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value bufferValue = scope.GetProperty("param0");
+        DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+
+        if (!buffer) {
+            THROW_EXCEPTION("Please supply a Constant Buffer!")
+        }
+
+        Value texSizeValue = scope.GetProperty("param1");
+        if (texSizeValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a Texture Size!")
+        }
+        int texSize = static_cast<int>(texSizeValue.GetNum());
+        if (texSize <= 0) {
+            THROW_EXCEPTION("Please supply a Valid Texture Size!")
+        }
+        std::string error;
+        bool res = self->SetConstantBuffer(buffer->GetBuffer(), texSize, SRVSize, error);
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+        return Value();
+        });
+
+    Value& setupSRVBuff = GetOrCreateProperty(nativeObject, "setupSRVBuff");
+    setupSRVBuff = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value bufferValue = scope.GetProperty("param0");
+        DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+
+        if (!buffer) {
+            THROW_EXCEPTION("Please supply a SRV Buffer!")
+        }
+
+        std::string error;
+        bool res = self->SetSRVBuffer(buffer->GetBuffer(), SRVSize, error);
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+        return Value();
+        });
+
+    Value& getSRVBufferSize = GetOrCreateProperty(nativeObject, "getSRVBufferSize");
+    getSRVBufferSize = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        return Value(self->GetSRVBufferSize());
+        });
 
 #undef THROW_EXCEPTION
 }
@@ -354,6 +432,66 @@ bool rendering::DXWorlyTextureComputeCL::ExecutePrepareForPS(ID3D12CommandQueue*
     commandQueue->Signal(fence, signal);
 
     return true;
+}
+
+bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffer, int texSize, int srvBuffSize, std::string& errorMessage)
+{
+    CD3DX12_RANGE readRange(0, 0);
+
+    void* dst = nullptr;
+
+    THROW_ERROR(
+        buffer->Map(0, &readRange, &dst),
+        "Can't map Constant Buffer!")
+
+        ConstantBuffer cb;
+    cb.m_texSize = texSize;
+    cb.m_srvSize = srvBuffSize;
+
+    memcpy(dst, &cb, sizeof(ConstantBuffer));
+    buffer->Unmap(0, nullptr);
+
+    return true;
+}
+
+bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, int srvBuffSize, std::string& errorMessage)
+{
+    CD3DX12_RANGE readRange(0, 0);
+
+    void* dst = nullptr;
+
+    THROW_ERROR(
+        buffer->Map(0, &readRange, &dst),
+        "Can't map SRV Buffer!")
+
+
+        int arrSize = srvBuffSize * srvBuffSize;
+    SRVBuffElement* elements = new SRVBuffElement[arrSize];
+
+    for (int i = 0; i < srvBuffSize; ++i) {
+        for (int j = 0; j < srvBuffSize; ++j) {
+            int index = i * srvBuffSize + j;
+            SRVBuffElement& cur = elements[index];
+
+            float randX = (float)rand() / RAND_MAX;
+            float randY = (float)rand() / RAND_MAX;
+
+            cur.m_x = j + randX;
+            cur.m_y = i + randY;
+        }
+    }
+
+    memcpy(dst, elements, arrSize * sizeof(SRVBuffElement));
+    buffer->Unmap(0, nullptr);
+
+    delete[] elements;
+
+    return true;
+}
+
+int rendering::DXWorlyTextureComputeCL::GetSRVBufferSize() const
+{
+    return SRVSize * SRVSize * sizeof(SRVBuffElement);
 }
 
 #undef THROW_ERROR
