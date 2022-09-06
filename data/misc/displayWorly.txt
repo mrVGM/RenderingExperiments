@@ -97,22 +97,30 @@ let requestRenderer = func(device, onReady) {
 		fence.create(device);
 
 		let render = func() {
-			if (wnd.isAlive() == 0) {
-				return;
+			let renderImpl = func() {
+				if (wnd.isAlive() == 0) {
+					return;
+				}
+
+				let renderFE = api.fenceEvent();
+				renderFE.create();
+
+				renderFE.wait(fence, frame, func(arg) {
+					swapChain.present();	
+					frame = frame + 1;
+					render();
+				});
+
+				swapChain.updateCurrentFrameIndex();
+				displayWorlyCL.populate(swapChain, descHeap);
+				displayWorlyCL.execute(commandQueue, fence, frame);
+			};
+
+			try {
+				renderImpl();
+			} catch(e) {
+				print(e);
 			}
-
-			let renderFE = api.fenceEvent();
-			renderFE.create();
-
-			renderFE.wait(fence, frame, func(arg) {
-				swapChain.present();	
-				frame = frame + 1;
-				render();
-			});
-
-			swapChain.updateCurrentFrameIndex();
-			displayWorlyCL.populate(swapChain, descHeap);
-			displayWorlyCL.execute(commandQueue, fence, frame);
 		};
 
 		render();
