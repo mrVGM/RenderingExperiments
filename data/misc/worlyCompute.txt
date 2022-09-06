@@ -104,9 +104,7 @@ let compileShader = func() {
 	return computeShader;
 };
 
-let execute = func(device, data, graphicsCommandQueue, onReady) {
-	
-	let compute = api.worly.textureCompute();
+let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 
 	compute.create(device, data.shader);
 	compute.populate(data.getConstantBuff(), data.getUAVTex(), data.descHeap, data.texSize, data.texSize, 1);
@@ -138,7 +136,10 @@ let execute = func(device, data, graphicsCommandQueue, onReady) {
 	compute.executeCompute(computeCommandQueue, fence, 1);
 };
 
-let prepareData = func(device, srvBuffSize, texSize, onReady) {
+let prepareData = func(device, texSize, onReady) {
+	let compute = api.worly.textureCompute();
+	let srvBuffSize = compute.getSRVBufferSize();
+
 	let waiting = 3;
 	let srvHeap = none;
 	let srvBuff = none;
@@ -184,7 +185,7 @@ let prepareData = func(device, srvBuffSize, texSize, onReady) {
 		res.texSize = texSize;
 
 		res.execute = func(device, graphicsCommandQueue, onReady) {
-			execute(device, res, graphicsCommandQueue, onReady);
+			execute(compute, device, res, graphicsCommandQueue, onReady);
 		};
 
 		onReady(res);
@@ -222,4 +223,3 @@ let prepareData = func(device, srvBuffSize, texSize, onReady) {
 };
 
 export.prepare = prepareData;
-export.execute = execute;

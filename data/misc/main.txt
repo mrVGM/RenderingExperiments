@@ -67,7 +67,7 @@ let worlyExecute = func() {
 
 let worlyInit = func() {
 	let worly = require("worlyCompute.txt");
-	worly.prepare(device, 256, 256, func(data) {
+	worly.prepare(device, 256, func(data) {
 		worlyData = data;
 
 		let r = 0.6;
