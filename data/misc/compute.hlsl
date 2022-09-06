@@ -1,5 +1,11 @@
-StructuredBuffer<float4> inData		: register(t0);    // SRV
-RWTexture2D<float4> outData			: register(u0);    // UAV
+struct SRVBuffElement
+{
+    float x;
+    float y;
+};
+
+StructuredBuffer<SRVBuffElement> inData		: register(t0);    // SRV
+RWTexture2D<float4> outData			        : register(u0);    // UAV
 
 cbuffer InfoConstantBuff : register(b0)
 {

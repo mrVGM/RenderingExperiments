@@ -62,7 +62,14 @@ bool rendering::DXPixelShader::Init(const std::string& shaderCode, std::string& 
         &error);
 
     if (FAILED(hRes)) {
-        errorMessage = "Can't compile shader!";
+        std::string mess = "Can't compile shader!";
+        if (error) {
+            char* compilationError = static_cast<char*>(error->GetBufferPointer());
+            mess += " - ";
+            mess += compilationError;
+        }
+        errorMessage = mess;
+
         return false;
     }
 
