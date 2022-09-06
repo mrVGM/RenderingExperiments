@@ -1,3 +1,9 @@
+cbuffer UVOffset : register(b0)
+{
+    float2 uvOffset;
+    float m_padding[62];
+};
+
 struct PSInput
 {
     float4 position : SV_POSITION;
@@ -19,5 +25,5 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return p_texture.Sample(p_sampler, input.uv);
+    return p_texture.Sample(p_sampler, input.uv + uvOffset);
 }
