@@ -25,14 +25,11 @@ namespace
         float m_padding[62];
     };
 
-    // needs to the 16-byte alligned, apparently
     struct SRVBuffElement
     {
         float m_x;
         float m_y;
         float m_z;
-
-        float padding;
     };
 }
 
@@ -255,7 +252,15 @@ return Value();
         DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         return Value(self->GetSRVBufferSize());
-        });
+    });
+
+    Value& getSRVBufferStride = GetOrCreateProperty(nativeObject, "getSRVBufferStride");
+    getSRVBufferStride = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        return Value(self->GetSRVBufferStride());
+    });
 
 #undef THROW_EXCEPTION
 }
@@ -498,7 +503,12 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, in
 
 int rendering::DXWorlyTextureComputeCL::GetSRVBufferSize() const
 {
-    return SRVSize * SRVSize * SRVSize * sizeof(SRVBuffElement);
+    return SRVSize * SRVSize * SRVSize * GetSRVBufferStride();
+}
+
+int rendering::DXWorlyTextureComputeCL::GetSRVBufferStride() const
+{
+    return sizeof(SRVBuffElement);
 }
 
 #undef THROW_ERROR

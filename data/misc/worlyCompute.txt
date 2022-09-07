@@ -28,7 +28,7 @@ let loadCB = func(device, onReady) {
 	heap.makeResident(fence, 1);
 };
 
-let loadSRVBuff = func(device, buffSize, onReady) {
+let loadSRVBuff = func(device, buffSize, buffStride, onReady) {
 	let fence = api.fence();
 	fence.create(device);
 
@@ -37,6 +37,7 @@ let loadSRVBuff = func(device, buffSize, onReady) {
 
 	let initBuffer = func() {
 		buff.init(buffSize);
+		buff.setStride(buffStride);
 		buff.place(device, heap, 0, 0);
 		
 		onReady(heap, buff);
@@ -127,6 +128,7 @@ let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 let prepareData = func(device, texSize, onReady) {
 	let compute = api.worly.textureCompute();
 	let srvBuffSize = compute.getSRVBufferSize();
+	let srvBuffStride = compute.getSRVBufferStride();
 
 	let waiting = 3;
 	let srvHeap = none;
@@ -192,7 +194,7 @@ let prepareData = func(device, texSize, onReady) {
 		}
 	});
 
-	loadSRVBuff(device, srvBuffSize, func(heap, buff) {
+	loadSRVBuff(device, srvBuffSize, srvBuffStride, func(heap, buff) {
 		waiting = waiting - 1;
 		srvHeap = heap;
 		srvBuff = buff;
