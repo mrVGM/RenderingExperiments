@@ -35,8 +35,8 @@ add_library (Rendering
 	"dxComputeShader.cpp"
 	"dxComputeCommandQueue.h"
 	"dxComputeCommandQueue.cpp"
-	"dxComputeCL.h"
-	"dxComputeCL.cpp"
+	
+	
 	"dxTexture.h"
 	"dxTexture.cpp"
 	"dxCopyCL.h"
