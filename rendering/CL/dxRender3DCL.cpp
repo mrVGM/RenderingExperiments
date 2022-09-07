@@ -20,7 +20,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 6, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXRender3DCL* self = static_cast<DXRender3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -45,38 +45,11 @@ return Value();
             THROW_EXCEPTION("Please supply a pixel shader!")
         }
 
-        Value constantBufferValue = scope.GetProperty("param3");
-        DXBuffer* constantBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(constantBufferValue));
-
-        if (!constantBuffer) {
-            THROW_EXCEPTION("Please supply a Constant Buffer!")
-        }
-
-        Value vertexBufferValue = scope.GetProperty("param4");
-        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
-
-        if (!vertexBuffer) {
-            THROW_EXCEPTION("Please supply a Vertex Buffer!")
-        }
-
-        Value vertexBufferStrideValue = scope.GetProperty("param5");
-        if (vertexBufferStrideValue.GetType() != ScriptingValueType::Number) {
-            THROW_EXCEPTION("Please supply a Stride!")
-        }
-        int stride = vertexBufferStrideValue.GetNum();
-        if (stride <= 0) {
-            THROW_EXCEPTION("Please supply a valid Stride!")
-        }
-
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
             vertexShader->GetCompiledShader(),
             pixelShader->GetCompiledShader(),
-            constantBuffer->GetBuffer(),
-            vertexBuffer->GetBuffer(),
-            vertexBuffer->GetBufferWidth(),
-            stride,
             error);
 
         if (!res) {
@@ -87,7 +60,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXRender3DCL* self = static_cast<DXRender3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -105,14 +78,34 @@ return Value();
             THROW_EXCEPTION("Please supply a descriptor heap!")
         }
 
+        Value vertexBufferValue = scope.GetProperty("param2");
+        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
+
+        if (!vertexBuffer) {
+            THROW_EXCEPTION("Please supply a Vertex Buffer!")
+        }
+
+        D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+        vertexBufferView.BufferLocation = vertexBuffer->GetBuffer()->GetGPUVirtualAddress();
+        vertexBufferView.SizeInBytes = vertexBuffer->GetBufferWidth();
+        vertexBufferView.StrideInBytes = vertexBuffer->GetStride();
+
+        Value constantBufferValue = scope.GetProperty("param3");
+        DXBuffer* constantBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(constantBufferValue));
+
+        if (!constantBuffer) {
+            THROW_EXCEPTION("Please supply a Constant Buffer!")
+        }
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
             &swapChain->m_scissorRect,
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
-            &self->m_vertexBufferView,
+            &vertexBufferView,
             descHeap->GetHeap(),
+            constantBuffer->GetBuffer(),
             error);
 
         if (!res) {
@@ -168,23 +161,9 @@ bool rendering::DXRender3DCL::Create(
     ID3D12Device* device,
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
-    ID3D12Resource* constantBuffer,
-    ID3D12Resource* vertexBuffer,
-    int vertexBufferWidth,
-    int vertexBufferStride,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
-
-    m_constantBuffer = constantBuffer;
-
-    // Create the vertex buffer.
-    {
-        // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = vertexBufferStride;
-        m_vertexBufferView.SizeInBytes = vertexBufferWidth;
-    }
 
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -291,6 +270,7 @@ bool rendering::DXRender3DCL::Populate(
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
     ID3D12DescriptorHeap* descHeap,
+    ID3D12Resource* constantBuffer,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -313,7 +293,7 @@ bool rendering::DXRender3DCL::Populate(
     ID3D12DescriptorHeap* ppHeaps[] = { descHeap };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-    m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
 
     // Indicate that the back buffer will be used as a render target.
