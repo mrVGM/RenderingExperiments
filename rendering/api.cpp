@@ -12,17 +12,14 @@
 #include "dxFence.h"
 #include "dxFenceEvent.h"
 #include "dxBuffer.h"
-#include "dxCanvasCL.h"
 #include "dxCommandQueue.h"
 #include "dxSwapChain.h"
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
-#include "dxRenderCanvasesCL.h"
 #include "dxComputeCommandQueue.h"
 #include "dxComputeCL.h"
 #include "dxTexture.h"
 #include "dxCopyCL.h"
-#include "dxUpdateTextureCL.h"
 
 #include "CL/dxWorlyTextureComputeCL.h"
 #include "CL/dxDisplayWorlyCL.h"
@@ -77,11 +74,6 @@ namespace rendering
 			return NativeObject::Create(buffer);
 		}));
 
-		m_api.SetProperty("canvasCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXCanvasCL* canvasCL = new DXCanvasCL();
-			return NativeObject::Create(canvasCL);
-		}));
-
 		m_api.SetProperty("commandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXCommandQueue* commandQuue = new DXCommandQueue();
 			return NativeObject::Create(commandQuue);
@@ -102,11 +94,6 @@ namespace rendering
 			return NativeObject::Create(computeShader);
 		}));
 
-		m_api.SetProperty("renderCanvasesCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXRenderCanvasesCL* renderCanvasesCL = new DXRenderCanvasesCL();
-			return NativeObject::Create(renderCanvasesCL);
-		}));
-
 		m_api.SetProperty("computeCommandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXComputeCommandQueue* commandQueue = new DXComputeCommandQueue();
 			return NativeObject::Create(commandQueue);
@@ -125,11 +112,6 @@ namespace rendering
 		m_api.SetProperty("copyCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXCopyCL* copyCL = new DXCopyCL();
 			return NativeObject::Create(copyCL);
-		}));
-
-		m_api.SetProperty("updateTextureCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXUpdateTextureCL* updateTextureCL = new DXUpdateTextureCL();
-			return NativeObject::Create(updateTextureCL);
 		}));
 
 		m_api.SetProperty("worly", interpreter::utils::GetEmptyObject());

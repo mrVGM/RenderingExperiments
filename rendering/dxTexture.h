@@ -2,15 +2,13 @@
 
 #include "nativeObject.h"
 
-#include "IDXResource.h"
-
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
 
 namespace rendering
 {
-	class DXTexture : public interpreter::INativeObject, public IDXResource
+	class DXTexture : public interpreter::INativeObject
 	{
 		DXGI_FORMAT m_format;
 		UINT m_width = -1;
@@ -35,8 +33,6 @@ namespace rendering
 		ID3D12Resource* GetTexture() const;
 		DXGI_FORMAT GetFormat() const;
 		
-		ID3D12Resource* GetResource() const override;
-
 		UINT GetTextureWidth() const;
 		UINT GetTextureHeight() const;
 		UINT GetTextureDepth() const;

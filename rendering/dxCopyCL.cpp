@@ -7,8 +7,6 @@
 #include "dxSwapChain.h"
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
-#include "dxCanvasCL.h"
-#include "IDXResource.h"
 
 void rendering::DXCopyCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -80,14 +78,14 @@ return Value();
         DXCopyCL* commandList = dynamic_cast<DXCopyCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value dstValue = scope.GetProperty("param0");
-        IDXResource* dstRes = dynamic_cast<IDXResource*>(NativeObject::ExtractNativeObject(dstValue));
+        DXBuffer* dstRes = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(dstValue));
 
         if (!dstRes) {
             THROW_EXCEPTION("Please supply a dst resource!")
         }
 
         Value srcValue = scope.GetProperty("param1");
-        IDXResource* srcRes = dynamic_cast<IDXResource*>(NativeObject::ExtractNativeObject(srcValue));
+        DXBuffer* srcRes = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(srcValue));
 
         if (!srcRes) {
             THROW_EXCEPTION("Please supply a src resource!")
@@ -95,8 +93,8 @@ return Value();
 
         std::string error;
         bool res = commandList->Populate(
-            dstRes->GetResource(),
-            srcRes->GetResource(),
+            dstRes->GetBuffer(),
+            srcRes->GetBuffer(),
             error);
 
         if (!res) {
