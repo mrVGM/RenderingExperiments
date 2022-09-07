@@ -51,6 +51,7 @@ namespace rendering
 		bool SetConstantBuffer(ID3D12Resource* buffer, int texSize, int srvBuffSize, std::string& errorMessage);
 		bool SetSRVBuffer(ID3D12Resource* buffer, int srvBuffSize, std::string& errorMessage);
 		int GetSRVBufferSize() const;
+		int GetSRVBufferStride() const;
 	public:
 	};
 }

@@ -3,7 +3,6 @@ struct SRVBuffElement
     float x;
     float y;
     float z;
-    float padding;
 };
 
 StructuredBuffer<SRVBuffElement> inData		: register(t0);    // SRV

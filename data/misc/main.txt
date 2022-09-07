@@ -28,6 +28,7 @@ let generalInit = func() {
 
 let offset = 0;
 let updateUVW = func() {
+	return;
 	offset = offset + 0.001;
 	let tmp = [];
 	tmp.push(offset);
