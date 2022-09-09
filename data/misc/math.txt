@@ -47,6 +47,21 @@ let dot = func(a, b) {
 	});
 };
 
+let vectorLength = func(x) {
+	let sq = dot(x, x);
+	return api.math.sqrt(sq);
+};
+
+let normalize = func(x) {
+	let l = dot(x, x);
+	if (l == 0) {
+		return x;
+	}
+
+	let l = vectorLength(x);
+	return multiply(1 / l, x);
+};
+
 let vectorProduct = func(a, b) {
 	return vector(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
 };
@@ -74,7 +89,16 @@ export.multiply = multiply;
 export.addVectors = addVectors;
 export.subtractVectors = subtractVectors;
 export.dot = dot;
+export.vectorLength = vectorLength;
+export.normalize = normalize;
 export.vectorProduct = vectorProduct;
 export.quaternion = quaternion;
 export.multiplyQuaternions = multiplyQuaternions;
 export.conjugate = conjugate;
+
+export.sqrt = api.math.sqrt;
+export.sin = api.math.sin;
+export.cos = api.math.cos;
+export.asin = api.math.asin;
+export.acos = api.math.acos;
+export.PI = api.math.PI;
