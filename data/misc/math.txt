@@ -51,6 +51,23 @@ let vectorProduct = func(a, b) {
 	return vector(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
 };
 
+let quaternion = func(a, b, c, d) {
+	return vector(a, b, c, d);
+};
+
+let multiplyQuaternions = func(x, y) {
+	let a = x[0] * y[0] - x[1] * y[1] - x[2] * y[2] - x[3] * y[3];
+	let b = x[0] * y[1] + x[1] * y[0] + x[2] * y[3] - x[3] * y[2];
+	let c = x[0] * y[2] - x[1] * y[3] + x[2] * y[0] + x[3] * y[1];
+	let d = x[0] * y[3] + x[1] * y[2] - x[2] * y[1] + x[3] * y[0];
+
+	return quaternion(a, b, c, d);
+};
+
+let conjugate = func(q) {
+	return quaternion(q[0], -q[1], -q[2], -q[3]);
+};
+
 export.vector3 = vector3;
 export.vector = vector;
 export.multiply = multiply;
@@ -58,3 +75,6 @@ export.addVectors = addVectors;
 export.subtractVectors = subtractVectors;
 export.dot = dot;
 export.vectorProduct = vectorProduct;
+export.quaternion = quaternion;
+export.multiplyQuaternions = multiplyQuaternions;
+export.conjugate = conjugate;
