@@ -83,6 +83,23 @@ let conjugate = func(q) {
 	return quaternion(q[0], -q[1], -q[2], -q[3]);
 };
 
+let rotateVector = func(x, axis, angle) {
+	let xQ = quaternion(0, x[0], x[1], x[2]);
+
+	axis = normalize(axis);
+	let rad = api.math.PI * angle / 180;
+
+	rad = rad / 2;
+
+	let cos = api.math.cos(rad);
+	let sin = api.math.sin(rad);
+
+	let q = quaternion(cos, -sin * axis[0], -sin * axis[1], -sin * axis[2]);
+
+	let res = multiplyQuaternions(conjugate(q), multiplyQuaternions(xQ, q));
+	return vector3(res[1], res[2], res[3]);
+};
+
 export.vector3 = vector3;
 export.vector = vector;
 export.multiply = multiply;
@@ -95,6 +112,7 @@ export.vectorProduct = vectorProduct;
 export.quaternion = quaternion;
 export.multiplyQuaternions = multiplyQuaternions;
 export.conjugate = conjugate;
+export.rotateVector = rotateVector;
 
 export.sqrt = api.math.sqrt;
 export.sin = api.math.sin;
