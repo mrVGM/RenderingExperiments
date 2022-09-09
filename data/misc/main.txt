@@ -1,3 +1,9 @@
+let math = require("math.txt");
+
+let cube = require("cube.txt");
+let c = cube();
+
+
 let wnd = api.window();
 wnd.create(600, 400);
 
