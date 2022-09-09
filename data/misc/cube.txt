@@ -1,0 +1,37 @@
+let math = require("math.txt");
+let utils = require("utils.txt");
+
+let generateVertices = func() {
+
+	let n = math.vector3(0,-1,0);
+	let a = math.vector3(-1,-1,-1);
+	let b = math.vector3(1,-1,-1);
+	let c = math.vector3(1,-1,1);
+	let d = math.vector3(-1,-1,1);
+
+	let uv00 = math.vector2(0, 0);
+	let uv10 = math.vector2(1, 0);
+	let uv01 = math.vector2(0, 1);
+	let uv11 = math.vector2(1, 1);
+
+	let createVert = func(p, n, uv) {
+		let res = {};
+		res.pos = p;
+		res.normal = n;
+		res.uv = uv;
+		return res;
+	};
+
+	let face = [];
+	face.push(createVert(a, n, uv00));
+	face.push(createVert(b, n, uv10));
+	face.push(createVert(c, n, uv11));
+
+	face.push(createVert(a, n, uv00));
+	face.push(createVert(c, n, uv11));
+	face.push(createVert(d, n, uv01));
+
+	return face;
+};
+
+export = generateVertices;

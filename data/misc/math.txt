@@ -1,5 +1,12 @@
 let utils = require("utils.txt");
 
+let vector2 = func(x, y) {
+	let res = [];
+	res.push(x);
+	res.push(y);
+	return res;
+};
+
 let vector3 = func(x, y, z) {
 	let res = [];
 	res.push(x);
@@ -100,6 +107,7 @@ let rotateVector = func(x, axis, angle) {
 	return vector3(res[1], res[2], res[3]);
 };
 
+export.vector2 = vector2;
 export.vector3 = vector3;
 export.vector = vector;
 export.multiply = multiply;
