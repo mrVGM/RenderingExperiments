@@ -1,0 +1,157 @@
+let toIterable = func(l) {
+	if (l.length == 0) {
+		return none;
+	}
+
+	let iter = func(index) {
+		let res = {};
+		res.data = l[index];
+		res.next = func() {
+			let i = index + 1;
+			if (i >= l.length) {
+				return none;
+			}
+
+			return iter(i);
+		};
+
+		return res;
+	};
+
+	return iter(0);
+};
+
+let toList = func(iterable) {
+	let cur = iterable;
+	let res = [];
+	while (cur != none) {
+		res.push(cur.data);
+		cur = cur.next();
+	}
+
+	return res;
+};
+
+let mapIter = func(iterable, f) {
+	if (iterable == none) {
+		return none;
+	}
+
+	let res = {};
+	res.data = f(iterable.data);
+	res.next = func() {
+		let next = iterable.next();
+		return mapIter(next, f);
+	};
+
+	return res;
+};
+
+let filterIter = func(iterable, f) {
+	if (iterable == none) {
+		return none;
+	}
+
+	let data = iterable.data;
+	if (f(data) == 0) {
+		return filterIter(iterable.next(), f);
+	}
+
+	let res = {};
+	res.data = data;
+	res.next = func() {
+		return filterIter(iterable.next(), f);
+	};
+
+	return res;
+};
+
+let zipIter = func(a, b) {
+	if (a == none) {
+		return none;
+	}
+
+	if (b == none) {
+		return none;
+	}
+
+	let res = {};
+	res.data = {};
+	res.data.fst = a.data;
+	res.data.snd = b.data;
+
+	res.next = func() {
+		return zipIter(a.next(), b.next());
+	};
+
+	return res;
+};
+
+let leftFoldIter = func(base, l, f) {
+	if (l == none) {
+		return base;
+	}
+	let newBase = f(base, l.data);
+	return leftFoldIter(newBase, l.next(), f);
+};
+
+let rightFoldIter = func(base, l, f) {
+	if (l == none) {
+		return base;
+	}
+	let fold = rightFoldIter(l.data, l.next(), f);
+	return f(base, fold);
+};
+
+export.toList = toList;
+
+export.map = func(l, f) {
+	let iter = l;
+	if (l.push != none) {
+		iter = toIterable(l);
+	}
+
+	return mapIter(iter, f);
+};
+
+export.filter = func(l, f) {
+	let iter = l;
+	if (l.push != none) {
+		iter = toIterable(l);
+	}
+
+	return filterIter(iter, f);
+};
+
+export.zip = func(a, b) {
+	let aIter = a;
+	let bIter = b;
+
+	if (a.push != none) {
+		aIter = toIterable(a);
+	}
+
+	if (b.push != none) {
+		bIter = toIterable(b);
+	}
+
+	return zipIter(aIter, bIter);
+};
+
+export.leftFold = func(base, l, f) {
+	let iter = l;
+	if (l.push != none) {
+		iter = toIterable(l);
+	}
+
+	return leftFoldIter(base, iter, f);
+};
+
+export.rightFold = func(base, l, f) {
+	let iter = l;
+	if (l.push != none) {
+		iter = toIterable(l);
+	}
+
+	return rightFoldIter(base, iter, f);
+};

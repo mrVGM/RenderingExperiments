@@ -1,0 +1,60 @@
+let utils = require("utils.txt");
+
+let vector3 = func(x, y, z) {
+	let res = [];
+	res.push(x);
+	res.push(y);
+	res.push(z);
+
+	return res;
+};
+
+let vector = func(x, y, z, w) {
+	let res = [];
+	res.push(x);
+	res.push(y);
+	res.push(z);
+	res.push(w);
+
+	return res;
+};
+
+let multiply = func(scalar, vector) {
+	let tmp = utils.map(vector, func(x) {
+		return scalar * x;
+	});
+
+	return utils.toList(tmp);
+};
+
+let addVectors = func(a, b) {
+	let tmp = utils.zip(a, b);
+	tmp = utils.map(tmp, func(x) {
+		return x.fst + x.snd;
+	});
+	return utils.toList(tmp);
+};
+
+let subtractVectors = func(a, b) {
+	let minusB = multiply(-1, b);
+	return addVectors(a, minusB);
+};
+
+let dot = func(a, b) {
+	let tmp = utils.zip(a, b);
+	return utils.leftFold(0, tmp, func(x, y) {
+		return x + y.fst * y.snd;
+	});
+};
+
+let vectorProduct = func(a, b) {
+	return vector(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
+};
+
+export.vector3 = vector3;
+export.vector = vector;
+export.multiply = multiply;
+export.addVectors = addVectors;
+export.subtractVectors = subtractVectors;
+export.dot = dot;
+export.vectorProduct = vectorProduct;
