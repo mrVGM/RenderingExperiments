@@ -23,6 +23,9 @@
 #include "CL/dxWorlyTextureComputeCL.h"
 #include "CL/dxDisplayWorlyCL.h"
 
+#include <cmath>
+#include <numbers>
+
 namespace rendering
 {
 	interpreter::Value m_api;
@@ -130,6 +133,39 @@ namespace rendering
 			return NativeObject::Create(displayWorly);
 		}));
 #pragma endregion
+
+#pragma region Math Functions
+		m_api.SetProperty("math", interpreter::utils::GetEmptyObject());
+		Value math = m_api.GetProperty("math");
+
+		math.SetProperty("sqrt", interpreter::CreateNativeFunc(1, [](Value scope) {
+			double x = scope.GetProperty("param0").GetNum();
+			return Value(sqrt(x));
+		}));
+
+		math.SetProperty("sin", interpreter::CreateNativeFunc(1, [](Value scope) {
+			double x = scope.GetProperty("param0").GetNum();
+			return Value(sin(x));
+		}));
+
+		math.SetProperty("cos", interpreter::CreateNativeFunc(1, [](Value scope) {
+			double x = scope.GetProperty("param0").GetNum();
+			return Value(cos(x));
+		}));
+
+		math.SetProperty("asin", interpreter::CreateNativeFunc(1, [](Value scope) {
+			double x = scope.GetProperty("param0").GetNum();
+			return Value(asin(x));
+		}));
+
+		math.SetProperty("acos", interpreter::CreateNativeFunc(1, [](Value scope) {
+			double x = scope.GetProperty("param0").GetNum();
+			return Value(asin(x));
+		}));
+
+		math.SetProperty("PI", Value(std::numbers::pi));
+#pragma endregion
+
 	}
 }
 
