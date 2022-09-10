@@ -256,7 +256,7 @@ namespace interpreter
 		Calculator* m_exprCalc = nullptr;
 		Calculator* m_argumentsCalc = nullptr;
 
-		std::vector<Value> m_args;
+		std::list<Value> m_args;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
@@ -267,7 +267,7 @@ namespace interpreter
 	{
 		Calculator* m_argsCalc = nullptr;
 
-		std::vector<Value> m_args;
+		std::list<Value> m_args;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
@@ -301,7 +301,7 @@ namespace interpreter
 	{
 		Calculator* m_parametersCalc = nullptr;
 
-		std::vector<std::string> m_parameters;
+		std::list<std::string> m_parameters;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;
@@ -312,7 +312,7 @@ namespace interpreter
 	{
 		Calculator* m_paramsCalc = nullptr;
 
-		std::vector<std::string> m_parameters;
+		std::list<std::string> m_parameters;
 
 		void Calculate(Calculator& calculator) override;
 		void FreeUpResouces() override;

@@ -1729,8 +1729,10 @@ void interpreter::FuncCallCalc::Calculate(Calculator& calculator)
 		Value funcScope = func->GetScopeTemplate();
 
 		Scope* scope = static_cast<Scope*>(funcScope.GetManagedValue());
-		for (int i = 0; i < argsList.m_args.size(); ++i) {
-			scope->BindValue(func->m_paramNames[i], argsList.m_args[i]);
+		std::list<std::string>::const_iterator paramNamesIter = func->m_paramNames.begin();
+		for (std::list<Value>::const_iterator i = argsList.m_args.begin(); i != argsList.m_args.end(); ++i) {
+			scope->BindValue(*paramNamesIter, *i);
+			++paramNamesIter;
 		}
 
 		calculator.m_interpreter.m_scope = funcScope;

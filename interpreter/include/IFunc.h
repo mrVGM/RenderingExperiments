@@ -2,7 +2,7 @@
 
 #include "value.h"
 
-#include <vector>
+#include <list>
 #include <string>
 
 namespace interpreter
@@ -24,7 +24,7 @@ namespace interpreter
 
 	struct IFunc : public IManagedValue
 	{
-		std::vector<std::string> m_paramNames;
+		std::list<std::string> m_paramNames;
 		
 		virtual FuncResult Execute(Scope& scope) = 0;
 		virtual Value GetScopeTemplate();
