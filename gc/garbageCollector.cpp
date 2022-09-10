@@ -77,20 +77,19 @@ void interpreter::GarbageCollector::CollectGarbage()
 {
 	std::vector<GCCommand>* m_currentCommands = nullptr;
 
-	m_batchMutex.lock();
-	m_mutex.lock();
-
-	m_currentCommands = m_submitted;
-	if (m_submitted == &m_commands1) {
-		m_submitted = &m_commands2;
+	{
+		volatile GCInstructionsBatch instructionsBatch;
+		volatile ChangeInstructions changeInstructions;
+	
+		m_currentCommands = m_submitted;
+		if (m_submitted == &m_commands1) {
+			m_submitted = &m_commands2;
+		}
+		else {
+			m_submitted = &m_commands1;
+		}
+		m_submitted->clear();
 	}
-	else {
-		m_submitted = &m_commands1;
-	}
-	m_submitted->clear();
-
-	m_mutex.unlock();
-	m_batchMutex.unlock();
 	
 	if (m_currentCommands->empty()) {
 		return;
@@ -182,26 +181,22 @@ void interpreter::GarbageCollector::CollectGarbage()
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 {
-	m_mutex.lock();
-
+	volatile ChangeInstructions changeInstructions;
+	
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCAddExplicitRef;
 	gcCommand.value1 = value;
 	m_submitted->push_back(gcCommand);
-
-	m_mutex.unlock();
 }
 
 void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 {
-	m_mutex.lock();
+	volatile ChangeInstructions changeInstructions;
 
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCRemoveExplicitRef;
 	gcCommand.value1 = value;
 	m_submitted->push_back(gcCommand);
-
-	m_mutex.unlock();
 }
 
 interpreter::GarbageCollector::~GarbageCollector()
@@ -218,28 +213,24 @@ interpreter::GarbageCollector::~GarbageCollector()
 
 void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	m_mutex.lock();
+	volatile ChangeInstructions changeInstructions;
 	
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCAddImplicitRef;
 	gcCommand.value1 = value;
 	gcCommand.value2 = referencedBy;
 	m_submitted->push_back(gcCommand);
-
-	m_mutex.unlock();
 }
 
 void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	m_mutex.lock();
+	volatile ChangeInstructions changeInstructions;
 
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCRemoveImplicitRef;
 	gcCommand.value1 = value;
 	gcCommand.value2 = referencedBy;
 	m_submitted->push_back(gcCommand);
-
-	m_mutex.unlock();
 }
 
 interpreter::GarbageCollector::GCInstructionsBatch::GCInstructionsBatch()
@@ -258,4 +249,14 @@ interpreter::IManagedValue::~IManagedValue()
 
 interpreter::IManagedValue::IManagedValue()
 {
+}
+
+interpreter::GarbageCollector::ChangeInstructions::ChangeInstructions()
+{
+	GetInstance().m_changeInstructionsMutex.lock();
+}
+
+interpreter::GarbageCollector::ChangeInstructions::~ChangeInstructions()
+{
+	GetInstance().m_changeInstructionsMutex.unlock();
 }

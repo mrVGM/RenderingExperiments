@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <mutex>
+#include <semaphore>
 
 namespace interpreter
 {
@@ -36,6 +37,12 @@ namespace interpreter
 			~ManagedValue();
 		};
 
+		struct ChangeInstructions
+		{
+			ChangeInstructions();
+			~ChangeInstructions();
+		};
+
 		static GarbageCollector* m_instance;
 		GarbageCollector();
 
@@ -45,12 +52,10 @@ namespace interpreter
 		std::vector<GCCommand> m_commands1;
 		std::vector<GCCommand> m_commands2;
 
-
 		ManagedValue& FindOrCreateValue(IManagedValue* value);
 		ManagedValue* FindValue(IManagedValue* value);
 
-
-		std::mutex m_mutex;
+		std::mutex m_changeInstructionsMutex;
 		std::mutex m_batchMutex;
 
 	public:
