@@ -7,11 +7,18 @@ namespace
 {
 	bool m_running = false;
 	std::thread* m_thread = nullptr;
+	std::vector<interpreter::GarbageCollector::ManagedValue*> m_dead;
 
 	void run()
 	{
 		while (m_running) {
+			interpreter::GarbageCollector::GetInstance().TakeControl();
 			interpreter::GarbageCollector::GetInstance().CollectGarbage();
+			interpreter::GarbageCollector::GetInstance().ReleaseControl();
+
+			for (int i = 0; i < m_dead.size(); ++i) {
+				delete m_dead[i];
+			}
 		}
 	}
 }
@@ -71,6 +78,11 @@ interpreter::GarbageCollector::ManagedValue* interpreter::GarbageCollector::Find
 	}
 
 	return nullptr;
+}
+
+bool interpreter::GarbageCollector::IsOvercharged()
+{
+	return m_submitted->size() >= 500;
 }
 
 void interpreter::GarbageCollector::CollectGarbage()
@@ -161,25 +173,27 @@ void interpreter::GarbageCollector::CollectGarbage()
 	}
 
 	std::vector<ManagedValue*> alive;
-	std::vector<ManagedValue*> dead;
+	m_dead.clear();
+
 	for (int i = 0; i < m_allValues.size(); ++i) {
 		if (m_allValues[i]->m_visited) {
 			alive.push_back(m_allValues[i]);
 		}
 		else {
-			dead.push_back(m_allValues[i]);
+			m_dead.push_back(m_allValues[i]);
 		}
 	}
 
 	m_allValues = alive;
-
-	for (int i = 0; i < dead.size(); ++i) {
-		delete dead[i];
-	}
 }
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 {
+	bool overCharged = IsOvercharged();
+
+	if (overCharged) {
+		m_controlMutex.lock();
+	}
 	m_mutex.lock();
 
 	GCCommand gcCommand;
@@ -188,10 +202,18 @@ void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 	m_submitted->push_back(gcCommand);
 
 	m_mutex.unlock();
+	if (overCharged) {
+		m_controlMutex.unlock();
+	}
 }
 
 void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 {
+	bool overCharged = IsOvercharged();
+
+	if (overCharged) {
+		m_controlMutex.lock();
+	}
 	m_mutex.lock();
 
 	GCCommand gcCommand;
@@ -200,6 +222,19 @@ void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 	m_submitted->push_back(gcCommand);
 
 	m_mutex.unlock();
+	if (overCharged) {
+		m_controlMutex.unlock();
+	}
+}
+
+void interpreter::GarbageCollector::TakeControl()
+{
+	m_controlMutex.lock();
+}
+
+void interpreter::GarbageCollector::ReleaseControl()
+{
+	m_controlMutex.unlock();
 }
 
 interpreter::GarbageCollector::~GarbageCollector()
@@ -216,6 +251,11 @@ interpreter::GarbageCollector::~GarbageCollector()
 
 void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
+	bool overCharged = IsOvercharged();
+
+	if (overCharged) {
+		m_controlMutex.lock();
+	}
 	m_mutex.lock();
 	
 	GCCommand gcCommand;
@@ -225,10 +265,18 @@ void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManage
 	m_submitted->push_back(gcCommand);
 
 	m_mutex.unlock();
+	if (overCharged) {
+		m_controlMutex.unlock();
+	}
 }
 
 void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
+	bool overCharged = IsOvercharged();
+
+	if (overCharged) {
+		m_controlMutex.lock();
+	}
 	m_mutex.lock();
 
 	GCCommand gcCommand;
@@ -238,6 +286,9 @@ void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IMan
 	m_submitted->push_back(gcCommand);
 
 	m_mutex.unlock();
+	if (overCharged) {
+		m_controlMutex.unlock();
+	}
 }
 
 interpreter::IManagedValue::~IManagedValue()

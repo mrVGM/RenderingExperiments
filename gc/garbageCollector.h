@@ -25,16 +25,7 @@ namespace interpreter
 			IManagedValue* value2 = nullptr;
 		};
 
-		struct ManagedValue
-		{
-			IManagedValue* m_managedValue = nullptr;
-			int m_explicitRefs = 0;
-			std::vector<IManagedValue*> m_implicitRefs;
-
-			bool m_visited = false;
-
-			~ManagedValue();
-		};
+		struct ManagedValue;
 
 		static GarbageCollector* m_instance;
 		GarbageCollector();
@@ -50,7 +41,21 @@ namespace interpreter
 		ManagedValue* FindValue(IManagedValue* value);
 
 		std::mutex m_mutex;
+		std::mutex m_controlMutex;
+
+		bool IsOvercharged();
 	public:
+		struct ManagedValue
+		{
+			IManagedValue* m_managedValue = nullptr;
+			int m_explicitRefs = 0;
+			std::vector<IManagedValue*> m_implicitRefs;
+
+			bool m_visited = false;
+
+			~ManagedValue();
+		};
+
 		static GarbageCollector& GetInstance();
 		static void DisposeGC();
 
@@ -61,6 +66,9 @@ namespace interpreter
 
 		void AddExplicitRef(IManagedValue* value);
 		void RemoveExplicitRef(IManagedValue* value);
+
+		void TakeControl();
+		void ReleaseControl();
 
 		~GarbageCollector();
 	};
