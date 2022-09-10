@@ -87,34 +87,13 @@ let zipIter = func(a, b) {
 	return res;
 };
 
-let leftFoldIter = func(base, l, f) {
-	if (l == none) {
-		return base;
-	}
-	let newBase = f(base, l.data);
-	return leftFoldIter(newBase, l.next(), f);
-};
-
-let rightFoldIter = func(base, l, f) {
-	if (l == none) {
-		return base;
-	}
-	let fold = rightFoldIter(l.data, l.next(), f);
-	return f(base, fold);
-};
-
-let appendIter = func(aIter, bIter) {
-	if (aIter == none) {
-		return bIter;
+let foreachIter = func(iter, f) {
+	if (iter == none) {
+		return;
 	}
 
-	let res = {};
-	res.data = aIter.data;
-	res.next = func() {
-		return appendIter(aIter.next(), bIter);
-	};
-
-	return res;
+	f(iter.data);
+	foreachIter(iter.next(), f);
 };
 
 export.toList = toList;
@@ -152,35 +131,11 @@ export.zip = func(a, b) {
 	return zipIter(aIter, bIter);
 };
 
-export.leftFold = func(base, l, f) {
+export.foreach = func(l, f) {
 	let iter = l;
 	if (l.push != none) {
 		iter = toIterable(l);
 	}
 
-	return leftFoldIter(base, iter, f);
-};
-
-export.rightFold = func(base, l, f) {
-	let iter = l;
-	if (l.push != none) {
-		iter = toIterable(l);
-	}
-
-	return rightFoldIter(base, iter, f);
-};
-
-export.append = func(a, b) {
-	let aIter = a;
-	let bIter = b;
-
-	if (a.push != none) {
-		aIter = toIterable(a);
-	}
-
-	if (b.push != none) {
-		bIter = toIterable(b);
-	}
-
-	return appendIter(aIter, bIter);
+	return foreachIter(iter, f);
 };

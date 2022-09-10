@@ -22,10 +22,21 @@ let generateVertices = func() {
 
 		res.flat = func() {
 			let tmp = [];
-			tmp = utils.append(tmp, math.vector(p[0], p[1], p[2], 1));
-			tmp = utils.append(tmp, math.vector(n[0], n[1], n[2], 1));
-			tmp = utils.append(tmp, math.vector2(uv[0], uv[1]));
-			return utils.toList(tmp);
+
+			tmp.push(p[0]);
+			tmp.push(p[1]);
+			tmp.push(p[2]);
+			tmp.push(1);
+
+			tmp.push(n[0]);
+			tmp.push(n[1]);
+			tmp.push(n[2]);
+			tmp.push(1);
+
+			tmp.push(uv[0]);
+			tmp.push(uv[1]);
+			
+			return tmp;
 		};
 
 		return res;
@@ -49,34 +60,58 @@ let generateVertices = func() {
 			);
 		});
 
-		return utils.toList(res);
+		return res;
 	};
 
-
-	let f2 = rotateFace(math.vector3(0, 0, 1), 90);
-	let f3 = rotateFace(math.vector3(0, 0, 1), 180);
-	let f4 = rotateFace(math.vector3(0, 0, 1), 270);
+	let face2 = rotateFace(math.vector3(0, 0, 1), 90);
+	let face3 = rotateFace(math.vector3(0, 0, 1), 180);
+	let face4 = rotateFace(math.vector3(0, 0, 1), 270);
 	
-	let f5 = rotateFace(math.vector3(1, 0, 0), 90);
-	let f6 = rotateFace(math.vector3(1, 0, 0), 270);
+	let face5 = rotateFace(math.vector3(1, 0, 0), 90);
+	let face6 = rotateFace(math.vector3(1, 0, 0), 270);
 
 	let verticesArray = [];
-	verticesArray = utils.append(verticesArray, face);
-	verticesArray = utils.toList(verticesArray);
-	verticesArray = utils.append(verticesArray, f2);
-	verticesArray = utils.append(verticesArray, f3);
-	verticesArray = utils.append(verticesArray, f4);
-	verticesArray = utils.append(verticesArray, f5);
-	verticesArray = utils.append(verticesArray, f6);
-
-	verticesArray = utils.map(verticesArray, func(v) {
-		return v.flat();
+	utils.foreach(face, func(v) {
+		verticesArray.push(v);
 	});
 
-	verticesArray = utils.toList(verticesArray);
+	utils.foreach(face2, func(v) {
+		verticesArray.push(v);
+	});
 
-	print(verticesArray.length);
-	return face;
+	utils.foreach(face3, func(v) {
+		verticesArray.push(v);
+	});
+
+	utils.foreach(face4, func(v) {
+		verticesArray.push(v);
+	});
+
+	utils.foreach(face5, func(v) {
+		verticesArray.push(v);
+	});
+
+	utils.foreach(face6, func(v) {
+		verticesArray.push(v);
+	});
+
+	let vertsFlat = utils.map(verticesArray, func(x) {
+		return x.flat();
+	});
+
+	let nums = [];
+
+	utils.foreach(vertsFlat, func(v) {
+		utils.foreach(v, func(n) {
+			if (n > -0.1 && n < 0.1) {
+				n = 0;
+			}
+			nums.push(n);
+		});
+	});
+
+
+	return nums;
 };
 
 export = generateVertices;

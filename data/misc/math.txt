@@ -49,9 +49,11 @@ let subtractVectors = func(a, b) {
 
 let dot = func(a, b) {
 	let tmp = utils.zip(a, b);
-	return utils.leftFold(0, tmp, func(x, y) {
-		return x + y.fst * y.snd;
+	let s = 0;
+	utils.foreach(tmp, func(x) {
+		s = s + x.fst * x.snd;
 	});
+	return s;
 };
 
 let vectorLength = func(x) {
@@ -64,7 +66,7 @@ let normalize = func(x) {
 	if (l == 0) {
 		return x;
 	}
-
+	
 	let l = vectorLength(x);
 	return multiply(1 / l, x);
 };
