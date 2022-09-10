@@ -19,6 +19,15 @@ let generateVertices = func() {
 		res.pos = p;
 		res.normal = n;
 		res.uv = uv;
+
+		res.flat = func() {
+			let tmp = [];
+			tmp = utils.append(tmp, math.vector(p[0], p[1], p[2], 1));
+			tmp = utils.append(tmp, math.vector(n[0], n[1], n[2], 1));
+			tmp = utils.append(tmp, math.vector2(uv[0], uv[1]));
+			return utils.toList(tmp);
+		};
+
 		return res;
 	};
 
@@ -31,6 +40,42 @@ let generateVertices = func() {
 	face.push(createVert(c, n, uv11));
 	face.push(createVert(d, n, uv01));
 
+	let rotateFace = func(axis, angle) {
+		let res = utils.map(face, func(v) {
+			return createVert(
+				math.rotateVector(v.pos, axis, angle),
+				math.rotateVector(v.normal, axis, angle),
+				v.uv
+			);
+		});
+
+		return utils.toList(res);
+	};
+
+
+	let f2 = rotateFace(math.vector3(0, 0, 1), 90);
+	let f3 = rotateFace(math.vector3(0, 0, 1), 180);
+	let f4 = rotateFace(math.vector3(0, 0, 1), 270);
+	
+	let f5 = rotateFace(math.vector3(1, 0, 0), 90);
+	let f6 = rotateFace(math.vector3(1, 0, 0), 270);
+
+	let verticesArray = [];
+	verticesArray = utils.append(verticesArray, face);
+	verticesArray = utils.toList(verticesArray);
+	verticesArray = utils.append(verticesArray, f2);
+	verticesArray = utils.append(verticesArray, f3);
+	verticesArray = utils.append(verticesArray, f4);
+	verticesArray = utils.append(verticesArray, f5);
+	verticesArray = utils.append(verticesArray, f6);
+
+	verticesArray = utils.map(verticesArray, func(v) {
+		return v.flat();
+	});
+
+	verticesArray = utils.toList(verticesArray);
+
+	print(verticesArray.length);
 	return face;
 };
 

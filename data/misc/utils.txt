@@ -103,6 +103,20 @@ let rightFoldIter = func(base, l, f) {
 	return f(base, fold);
 };
 
+let appendIter = func(aIter, bIter) {
+	if (aIter == none) {
+		return bIter;
+	}
+
+	let res = {};
+	res.data = aIter.data;
+	res.next = func() {
+		return appendIter(aIter.next(), bIter);
+	};
+
+	return res;
+};
+
 export.toList = toList;
 
 export.map = func(l, f) {
@@ -154,4 +168,19 @@ export.rightFold = func(base, l, f) {
 	}
 
 	return rightFoldIter(base, iter, f);
+};
+
+export.append = func(a, b) {
+	let aIter = a;
+	let bIter = b;
+
+	if (a.push != none) {
+		aIter = toIterable(a);
+	}
+
+	if (b.push != none) {
+		bIter = toIterable(b);
+	}
+
+	return appendIter(aIter, bIter);
 };
