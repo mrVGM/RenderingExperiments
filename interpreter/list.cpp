@@ -2,15 +2,6 @@
 
 #include "nativeFunc.h"
 
-void interpreter::ListValue::PushValue(Value value)
-{
-	m_list.push_back(Value());
-	Value& val = m_list.back();
-
-	val.SetImplicitRef(*this);
-	val = value;
-}
-
 interpreter::Value interpreter::ListValue::GetValueAt(int index) const
 {
 	if (index < 0) {
@@ -21,10 +12,14 @@ interpreter::Value interpreter::ListValue::GetValueAt(int index) const
 		return Value();
 	}
 
-	return m_list[index];
+	std::list<Value>::const_iterator it = m_list.begin();
+	for (int i = 0; i < index; ++i) {
+		++it;
+	}
+	return *it;
 }
 
-void interpreter::ListValue::SetValueAt(int index, Value valueWrapper)
+void interpreter::ListValue::SetValueAt(int index, Value value)
 {
 	if (index < 0) {
 		return;
@@ -34,7 +29,12 @@ void interpreter::ListValue::SetValueAt(int index, Value valueWrapper)
 		return;
 	}
 
-	m_list[index] = valueWrapper;
+	std::list<Value>::iterator it = m_list.begin();
+	for (int i = 0; i < index; ++i) {
+		++it;
+	}
+
+	*it = value;
 }
 
 interpreter::Value interpreter::ListValue::Create()
@@ -47,8 +47,12 @@ interpreter::Value interpreter::ListValue::Create()
 		Value selfValue = scope.GetProperty("self");
 		ListValue* list = static_cast<ListValue*>(selfValue.GetManagedValue());
 
+		list->m_list.push_back(Value());
+		Value& back = list->m_list.back();
+		back.SetImplicitRef(*list);
+
 		Value valueToPush = scope.GetProperty("param0");
-		list->m_list.push_back(valueToPush);
+		back = valueToPush;
 		return Value();
 	});
 

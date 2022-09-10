@@ -299,8 +299,8 @@ void interpreter::Value::ToList(std::list<Value>& list) const
 		return;
 	}
 
-	for (int i = 0; i < lv->m_list.size(); ++i) {
-		list.push_back(lv->m_list[i]);
+	for (std::list<Value>::const_iterator i = lv->m_list.begin(); i != lv->m_list.end(); ++i) {
+		list.push_back(*i);
 	}
 }
 
