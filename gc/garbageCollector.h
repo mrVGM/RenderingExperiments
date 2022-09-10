@@ -37,10 +37,36 @@ namespace interpreter
 			~ManagedValue();
 		};
 
-		struct ChangeInstructions
+		class GCLock
 		{
-			ChangeInstructions();
-			~ChangeInstructions();
+			std::mutex m_controlMutex;
+			std::mutex m_changeInstructionsMutex;
+			std::mutex m_batchMutex;
+
+			std::mutex m_exclusiveModeMutex;
+
+			bool m_batchOperation = false;
+			bool m_controlLocked = false;
+		public:
+			struct GCControlLockObject
+			{
+				GCControlLockObject();
+				~GCControlLockObject();
+			};
+
+			void AppInstructionsLock();
+			void AppInstructionsRelease();
+			void AppBatchLock();
+			void AppBatchRelease();
+			void AppControlLock();
+			void AppControlRelease();
+
+			void GCControlLock();
+			void GCControlRelease();
+			void GCInstructionsLock();
+			void GCInstructionsRelease();
+			void GCBatchLock();
+			void GCBatchRelease();
 		};
 
 		static GarbageCollector* m_instance;
@@ -55,8 +81,7 @@ namespace interpreter
 		ManagedValue& FindOrCreateValue(IManagedValue* value);
 		ManagedValue* FindValue(IManagedValue* value);
 
-		std::mutex m_changeInstructionsMutex;
-		std::mutex m_batchMutex;
+		GCLock m_gcLock;
 
 	public:
 
