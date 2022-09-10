@@ -13,9 +13,9 @@
 #include <map>
 #include <stack>
 #include <chrono>
-#include <vector>
 #include <mutex>
 #include <queue>
+#include <list>
 
 namespace interpreter
 {
@@ -50,11 +50,11 @@ namespace interpreter
 
 		std::mutex m_callbackMutex;
 		std::queue<Callback> m_callbacks;
-		std::vector<DefferedCall> m_deferredCalls;
+		std::list<DefferedCall> m_deferredCalls;
 		scripting::ISymbol* m_repl = nullptr;
 
 		std::map<std::string, ParsedCode> m_loadedCodeFiles;
-		std::vector<ParsedCode> m_loadedInstructions;
+		std::list<ParsedCode> m_loadedInstructions;
 		scripting::CodeSource m_deferredCallCode;
 		scripting::ISymbol* m_deferredCallCodeParsed = nullptr;
 		scripting::CodeSource m_callbackCallCode;
