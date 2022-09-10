@@ -75,24 +75,21 @@ interpreter::GarbageCollector::ManagedValue* interpreter::GarbageCollector::Find
 
 void interpreter::GarbageCollector::CollectGarbage()
 {
-	volatile GarbageCollector::GCLock::GCControlLockObject controlLockObject;
-
 	std::vector<GCCommand>* m_currentCommands = nullptr;
 
-	GetInstance().m_gcLock.GCBatchLock();
-	GetInstance().m_gcLock.GCInstructionsLock();
+	{
+		volatile GCInstructionsBatch instructionsBatch;
+		volatile ChangeInstructions changeInstructions;
 	
-	m_currentCommands = m_submitted;
-	if (m_submitted == &m_commands1) {
-		m_submitted = &m_commands2;
+		m_currentCommands = m_submitted;
+		if (m_submitted == &m_commands1) {
+			m_submitted = &m_commands2;
+		}
+		else {
+			m_submitted = &m_commands1;
+		}
+		m_submitted->clear();
 	}
-	else {
-		m_submitted = &m_commands1;
-	}
-	m_submitted->clear();
-	
-	GetInstance().m_gcLock.GCInstructionsRelease();
-	GetInstance().m_gcLock.GCBatchRelease();
 	
 	if (m_currentCommands->empty()) {
 		return;
@@ -184,26 +181,22 @@ void interpreter::GarbageCollector::CollectGarbage()
 
 void interpreter::GarbageCollector::AddExplicitRef(IManagedValue* value)
 {
-	GetInstance().m_gcLock.AppInstructionsLock();
+	volatile ChangeInstructions changeInstructions;
 	
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCAddExplicitRef;
 	gcCommand.value1 = value;
 	m_submitted->push_back(gcCommand);
-	
-	GetInstance().m_gcLock.AppInstructionsRelease();
 }
 
 void interpreter::GarbageCollector::RemoveExplicitRef(IManagedValue* value)
 {
-	GetInstance().m_gcLock.AppInstructionsLock();
+	volatile ChangeInstructions changeInstructions;
 
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCRemoveExplicitRef;
 	gcCommand.value1 = value;
 	m_submitted->push_back(gcCommand);
-
-	GetInstance().m_gcLock.AppInstructionsRelease();
 }
 
 interpreter::GarbageCollector::~GarbageCollector()
@@ -220,38 +213,34 @@ interpreter::GarbageCollector::~GarbageCollector()
 
 void interpreter::GarbageCollector::AddImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	GetInstance().m_gcLock.AppInstructionsLock();
+	volatile ChangeInstructions changeInstructions;
 	
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCAddImplicitRef;
 	gcCommand.value1 = value;
 	gcCommand.value2 = referencedBy;
 	m_submitted->push_back(gcCommand);
-
-	GetInstance().m_gcLock.AppInstructionsRelease();
 }
 
 void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IManagedValue* referencedBy)
 {
-	GetInstance().m_gcLock.AppInstructionsLock();
+	volatile ChangeInstructions changeInstructions;
 
 	GCCommand gcCommand;
 	gcCommand.m_type = GCCommandType::GCRemoveImplicitRef;
 	gcCommand.value1 = value;
 	gcCommand.value2 = referencedBy;
 	m_submitted->push_back(gcCommand);
-
-	GetInstance().m_gcLock.AppInstructionsRelease();
 }
 
 interpreter::GarbageCollector::GCInstructionsBatch::GCInstructionsBatch()
 {
-	GetInstance().m_gcLock.AppBatchLock();
+	GetInstance().m_batchMutex.lock();
 }
 
 interpreter::GarbageCollector::GCInstructionsBatch::~GCInstructionsBatch()
 {
-	GetInstance().m_gcLock.AppBatchRelease();
+	GetInstance().m_batchMutex.unlock();
 }
 
 interpreter::IManagedValue::~IManagedValue()
@@ -262,100 +251,12 @@ interpreter::IManagedValue::IManagedValue()
 {
 }
 
-void interpreter::GarbageCollector::GCLock::AppInstructionsLock()
+interpreter::GarbageCollector::ChangeInstructions::ChangeInstructions()
 {
-	if (!m_batchOperation) {
-		AppControlLock();
-	}
-
-	m_changeInstructionsMutex.lock();
+	GetInstance().m_changeInstructionsMutex.lock();
 }
 
-void interpreter::GarbageCollector::GCLock::AppInstructionsRelease()
+interpreter::GarbageCollector::ChangeInstructions::~ChangeInstructions()
 {
-	if (!m_batchOperation) {
-		AppControlRelease();
-	}
-
-	m_changeInstructionsMutex.unlock();
-}
-
-void interpreter::GarbageCollector::GCLock::AppBatchLock()
-{
-	m_batchOperation = true;
-
-	AppControlLock();
-	m_batchMutex.lock();
-}
-
-void interpreter::GarbageCollector::GCLock::AppBatchRelease()
-{
-	m_batchMutex.unlock();
-	AppControlRelease();
-
-	m_batchOperation = false;
-}
-
-void interpreter::GarbageCollector::GCLock::AppControlLock()
-{
-	GarbageCollector& gc = GarbageCollector::GetInstance();
-
-	if (gc.m_submitted->size() < 500) {
-		return;
-	}
-
-	gc.m_gcLock.m_controlMutex.lock();
-	gc.m_gcLock.m_controlLocked = true;
-}
-
-void interpreter::GarbageCollector::GCLock::AppControlRelease()
-{
-	GarbageCollector& gc = GarbageCollector::GetInstance();
-	if (!gc.m_gcLock.m_controlLocked) {
-		return;
-	}
-	gc.m_gcLock.m_controlMutex.unlock();
-	gc.m_gcLock.m_controlLocked = false;
-}
-
-void interpreter::GarbageCollector::GCLock::GCControlLock()
-{
-	m_controlMutex.lock();
-}
-
-void interpreter::GarbageCollector::GCLock::GCControlRelease()
-{
-	m_controlMutex.unlock();
-}
-
-void interpreter::GarbageCollector::GCLock::GCInstructionsLock()
-{
-	m_changeInstructionsMutex.lock();
-}
-
-void interpreter::GarbageCollector::GCLock::GCInstructionsRelease()
-{
-	m_changeInstructionsMutex.unlock();
-}
-
-void interpreter::GarbageCollector::GCLock::GCBatchLock()
-{
-	m_batchMutex.lock();
-}
-
-void interpreter::GarbageCollector::GCLock::GCBatchRelease()
-{
-	m_batchMutex.unlock();
-}
-
-interpreter::GarbageCollector::GCLock::GCControlLockObject::GCControlLockObject()
-{
-	GarbageCollector& gc = GetInstance();
-	gc.m_gcLock.m_controlMutex.lock();
-}
-
-interpreter::GarbageCollector::GCLock::GCControlLockObject::~GCControlLockObject()
-{
-	GarbageCollector& gc = GetInstance();
-	gc.m_gcLock.m_controlMutex.unlock();
+	GetInstance().m_changeInstructionsMutex.unlock();
 }
