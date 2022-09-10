@@ -14,7 +14,7 @@ if (FAILED(hRes)) {\
 
 bool rendering::DXDescriptorHeap::Create(
     ID3D12Device* device,
-    const std::vector<interpreter::Value>& buffers,
+    const std::list<interpreter::Value>& buffers,
     std::string& errorMessage)
 {
     using namespace interpreter;
@@ -35,8 +35,8 @@ bool rendering::DXDescriptorHeap::Create(
 errorMessage = message;\
 return false;
 
-    for (int i = 0; i < buffers.size(); ++i) {
-        const Value& cur = buffers[i];
+    for (std::list<Value>::const_iterator i = buffers.begin(); i != buffers.end(); ++i) {
+        const Value& cur = *i;
 
         if (cur.GetType() != ScriptingValueType::Object) {
             EXCEPTION("Invalid Descriptor!")
@@ -179,7 +179,7 @@ return Value();
         }
 
         Value bufferListValue = scope.GetProperty("param1");
-        std::vector<Value> bufferList;
+        std::list<Value> bufferList;
         bufferListValue.ToList(bufferList);
 
         if (bufferList.size() == 0) {
