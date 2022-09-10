@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <map>
+
+#include <list>
 
 namespace interpreter
 {
@@ -43,7 +44,7 @@ namespace interpreter
 		~Value();
 
 		std::string ToString() const;
-		void ToList(std::vector<Value>& list) const;
+		void ToList(std::list<Value>& list) const;
 
 		bool IsManaged() const;
 		bool IsNone() const;

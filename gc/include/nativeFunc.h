@@ -2,7 +2,6 @@
 
 #include "value.h"
 
-#include <vector>
 #include <functional>
 
 #include <string>

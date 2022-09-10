@@ -4,7 +4,6 @@
 #include "value.h"
 
 #include <stack>
-#include <vector>
 
 namespace interpreter
 {

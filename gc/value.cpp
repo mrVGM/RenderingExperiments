@@ -287,7 +287,7 @@ std::string interpreter::Value::ToString() const
 	return ss.str();
 }
 
-void interpreter::Value::ToList(std::vector<Value>& list) const
+void interpreter::Value::ToList(std::list<Value>& list) const
 {
 	if (GetType() != ScriptingValueType::Object) {
 		list.clear();
@@ -299,7 +299,9 @@ void interpreter::Value::ToList(std::vector<Value>& list) const
 		return;
 	}
 
-	list = lv->m_list;
+	for (std::list<Value>::const_iterator i = lv->m_list.begin(); i != lv->m_list.end(); ++i) {
+		list.push_back(*i);
+	}
 }
 
 bool interpreter::Value::IsManaged() const

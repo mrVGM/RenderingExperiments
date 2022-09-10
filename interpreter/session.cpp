@@ -219,7 +219,7 @@ void interpreter::Session::CalculationStep()
 
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-		for (std::vector<DefferedCall>::const_iterator it = m_deferredCalls.begin(); it != m_deferredCalls.end(); ++it) {
+		for (std::list<DefferedCall>::const_iterator it = m_deferredCalls.begin(); it != m_deferredCalls.end(); ++it) {
 			const DefferedCall& dc = *it;
 			if (dc.m_scheduled < now) {
 				Value scope = Scope::Create();
@@ -352,7 +352,7 @@ interpreter::Session::~Session()
 		delete it->second.m_codeSource;
 	}
 
-	for (std::vector<ParsedCode>::iterator it = m_loadedInstructions.begin(); it != m_loadedInstructions.end(); ++it) {
+	for (std::list<ParsedCode>::iterator it = m_loadedInstructions.begin(); it != m_loadedInstructions.end(); ++it) {
 		delete it->m_codeSource;
 	}
 }

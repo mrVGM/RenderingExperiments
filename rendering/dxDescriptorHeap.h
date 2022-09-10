@@ -4,7 +4,7 @@
 
 #include <d3d12.h>
 #include <wrl.h>
-#include <vector>
+#include <list>
 
 namespace rendering
 {
@@ -14,7 +14,7 @@ namespace rendering
 
 		bool Create(
 			ID3D12Device* device,
-			const std::vector<interpreter::Value>& buffers,
+			const std::list<interpreter::Value>& buffers,
 			std::string& errorMessage);
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;

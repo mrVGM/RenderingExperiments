@@ -5,6 +5,8 @@
 #include "dxDevice.h"
 #include "dxHeap.h"
 
+#include <list>
+
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
     errorMessage = error;\
@@ -104,23 +106,25 @@ return Value();
 		DXBuffer* buffer = static_cast<DXBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
 		Value data = scope.GetProperty("param0");
-		std::vector<Value> list;
+		std::list<Value> list;
 		data.ToList(list);
+
 		if (list.size() == 0) {
 			THROW_EXCEPTION("Please supply buffer data!")
 		}
 
-		for (int i = 0; i < list.size(); ++i) {
-			const Value& cur = list[i];
+		for (std::list<Value>::iterator i = list.begin(); i != list.end(); ++i) {
+			const Value& cur = *i;
 			if (cur.GetType() != ScriptingValueType::Number) {
 				THROW_EXCEPTION("Please supply list of numbers!")
 			}
 		}
 
 		float* numbers = new float[list.size()];
-		for (int i = 0; i < list.size(); ++i) {
-			const Value& cur = list[i];
-			numbers[i] = static_cast<float>(cur.GetNum());
+		int index = 0;
+		for (std::list<Value>::iterator i = list.begin(); i != list.end(); ++i) {
+			const Value& cur = *i;
+			numbers[index++] = static_cast<float>(cur.GetNum());
 		}
 
 		std::string error;

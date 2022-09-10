@@ -2,20 +2,19 @@
 
 #include "value.h"
 
-#include <vector>
+#include <list>
 
 namespace interpreter
 {
 	struct ListValue : public IManagedValue
 	{
-		std::vector<Value> m_list;
+		std::list<Value> m_list;
 
 		void SetProperty(std::string name, Value value) override;
 		Value GetProperty(std::string name) const override;
 
-		void PushValue(Value value);
 		Value GetValueAt(int index) const;
-		void SetValueAt(int index, Value valueWrapper);
+		void SetValueAt(int index, Value value);
 
 		static Value Create();
 
