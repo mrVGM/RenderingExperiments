@@ -49,18 +49,8 @@ namespace interpreter
 		ManagedValue& FindOrCreateValue(IManagedValue* value);
 		ManagedValue* FindValue(IManagedValue* value);
 
-
 		std::mutex m_mutex;
-		std::mutex m_batchMutex;
-
 	public:
-
-		struct GCInstructionsBatch
-		{
-			GCInstructionsBatch();
-			~GCInstructionsBatch();
-		};
-
 		static GarbageCollector& GetInstance();
 		static void DisposeGC();
 

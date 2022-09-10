@@ -77,7 +77,6 @@ void interpreter::GarbageCollector::CollectGarbage()
 {
 	std::vector<GCCommand>* m_currentCommands = nullptr;
 
-	m_batchMutex.lock();
 	m_mutex.lock();
 
 	m_currentCommands = m_submitted;
@@ -90,7 +89,6 @@ void interpreter::GarbageCollector::CollectGarbage()
 	m_submitted->clear();
 
 	m_mutex.unlock();
-	m_batchMutex.unlock();
 	
 	if (m_currentCommands->empty()) {
 		return;
@@ -240,16 +238,6 @@ void interpreter::GarbageCollector::RemoveImplicitRef(IManagedValue* value, IMan
 	m_submitted->push_back(gcCommand);
 
 	m_mutex.unlock();
-}
-
-interpreter::GarbageCollector::GCInstructionsBatch::GCInstructionsBatch()
-{
-	GetInstance().m_batchMutex.lock();
-}
-
-interpreter::GarbageCollector::GCInstructionsBatch::~GCInstructionsBatch()
-{
-	GetInstance().m_batchMutex.unlock();
 }
 
 interpreter::IManagedValue::~IManagedValue()

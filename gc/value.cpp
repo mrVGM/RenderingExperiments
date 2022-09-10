@@ -23,20 +23,15 @@ interpreter::Value::Value(std::string str)
 
 void interpreter::Value::Copy(const Value& other)
 {
-	volatile GarbageCollector::GCInstructionsBatch batch;
 	GarbageCollector& gc = GarbageCollector::GetInstance();
-	
+
+	IManagedValue* myManagedValue = nullptr;
 	if (m_type == ScriptingValueType::Object) {
 		if (other.m_type == ScriptingValueType::Object && m_value == other.m_value) {
 			return;
 		}
 
-		if (m_explicitRef) {
-			gc.RemoveExplicitRef(m_value);
-		}
-		if (m_outerObject) {
-			gc.RemoveImplicitRef(m_value, m_outerObject);
-		}
+		myManagedValue = m_value;	
 	}
 
 	if (other.m_type == ScriptingValueType::Object) {
@@ -46,6 +41,15 @@ void interpreter::Value::Copy(const Value& other)
 		}
 		if (m_outerObject) {
 			gc.AddImplicitRef(m_value, m_outerObject);
+		}
+	}
+
+	if (myManagedValue) {
+		if (m_explicitRef) {
+			gc.RemoveExplicitRef(myManagedValue);
+		}
+		if (m_outerObject) {
+			gc.RemoveImplicitRef(myManagedValue, m_outerObject);
 		}
 	}
 
