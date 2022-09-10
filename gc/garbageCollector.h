@@ -9,6 +9,7 @@ namespace interpreter
 {
 	class GarbageCollector 
 	{
+		static const int MAX_INSTRUCTIONS = 500;
 		enum GCCommandType
 		{
 			None,

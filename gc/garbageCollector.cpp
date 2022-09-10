@@ -82,7 +82,7 @@ interpreter::GarbageCollector::ManagedValue* interpreter::GarbageCollector::Find
 
 bool interpreter::GarbageCollector::IsOvercharged()
 {
-	return m_submitted->size() >= 500;
+	return m_submitted->size() > MAX_INSTRUCTIONS;
 }
 
 void interpreter::GarbageCollector::CollectGarbage()
