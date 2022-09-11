@@ -8,4 +8,5 @@ namespace rendering::threadPool
 		virtual void Ready() = 0;
 	};
 	void StartRoutine(Runnable* runnable);
+	void ClosePool();
 }

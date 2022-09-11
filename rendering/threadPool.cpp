@@ -13,6 +13,13 @@ namespace
 		std::binary_semaphore m_semaphore{1};
 		rendering::threadPool::Runnable* runnable = nullptr;
 		std::thread* m_thread = nullptr;
+
+		~Thread()
+		{
+			if (m_thread) {
+				delete m_thread;
+			}
+		}
 	};
 
 	std::mutex m_poolMutex;
@@ -75,4 +82,16 @@ void rendering::threadPool::StartRoutine(Runnable* runnable)
 
 	thread->runnable = runnable;
 	thread->m_semaphore.release();
+}
+
+void rendering::threadPool::ClosePool()
+{
+	m_poolMutex.lock();
+
+	for (std::list<Thread*>::iterator it = m_pool.begin(); it != m_pool.end(); ++it) {
+		delete *it;
+	}
+	m_pool.clear();
+
+	m_poolMutex.unlock();
 }

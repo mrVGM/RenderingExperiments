@@ -12,7 +12,7 @@
 
 namespace
 {
-    struct CallEvent : public rendering::threadPool::Runnable
+    struct FenceEventWait : public rendering::threadPool::Runnable
     {
         interpreter::Value m_fenceEvent;
         interpreter::Value m_callback;
@@ -26,35 +26,17 @@ namespace
         }
         void Ready() override;
     };
-    std::list<CallEvent> m_callEventsCreated;
+    std::list<FenceEventWait> m_callEventsCreated;
 
-    void CallEvent::Ready()
+    void FenceEventWait::Ready()
     {
-        for (std::list<CallEvent>::iterator it = m_callEventsCreated.begin(); it != m_callEventsCreated.end(); ++it) {
-            CallEvent& cur = *it;
+        for (std::list<FenceEventWait>::iterator it = m_callEventsCreated.begin(); it != m_callEventsCreated.end(); ++it) {
+            FenceEventWait& cur = *it;
             if (&cur == this) {
                 m_callEventsCreated.erase(it);
                 break;
             }
         }
-    }
-
-
-    std::binary_semaphore m_semaphore{1};
-    rendering::DXFenceEvent* m_fenceEventCache = nullptr;
-    interpreter::Value m_cb;
-
-    void waitThread()
-    {
-        rendering::DXFenceEvent* fenceEvent = m_fenceEventCache;
-        m_fenceEventCache = nullptr;
-        interpreter::Value callback = m_cb;
-        m_cb = interpreter::Value();
-
-        m_semaphore.release();
-
-        fenceEvent->WaitBlocking(callback);
-        m_cb = interpreter::Value();
     }
 }
 
@@ -111,21 +93,13 @@ return Value();
             THROW_EXCEPTION(error)
         }
 
-#if true
-        m_callEventsCreated.push_back(CallEvent());
-        CallEvent& ce = m_callEventsCreated.back();
+        m_callEventsCreated.push_back(FenceEventWait());
+        FenceEventWait& ce = m_callEventsCreated.back();
         ce.m_fenceEvent = self;
         ce.m_callback = func;
 
         threadPool::StartRoutine(&ce);
 
-#else
-        m_semaphore.acquire();
-        m_fenceEventCache = fenceEvent;
-        m_cb = func;
-
-        fenceEvent->m_waitThread = new std::thread(waitThread);
-#endif
         return Value();
     });
 
