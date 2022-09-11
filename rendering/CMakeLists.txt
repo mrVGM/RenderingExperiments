@@ -35,17 +35,16 @@ add_library (Rendering
 	"dxComputeShader.cpp"
 	"dxComputeCommandQueue.h"
 	"dxComputeCommandQueue.cpp"
-	
-	
 	"dxTexture.h"
 	"dxTexture.cpp"
 	"dxCopyCL.h"
 	"dxCopyCL.cpp"
-	
 	"CL/dxWorlyTextureComputeCL.h"
 	"CL/dxWorlyTextureComputeCL.cpp"
 	"CL/dxDisplayWorlyCL.h"
 	"CL/dxDisplayWorlyCL.cpp"
+	"threadPool.h"
+	"threadPool.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

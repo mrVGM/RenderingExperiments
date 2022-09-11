@@ -5,10 +5,41 @@
 #include "utils.h"
 #include "value.h"
 
+#include "threadPool.h"
+
 #include <semaphore>
+#include <list>
 
 namespace
 {
+    struct CallEvent : public rendering::threadPool::Runnable
+    {
+        interpreter::Value m_fenceEvent;
+        interpreter::Value m_callback;
+
+        void Run() override
+        {
+            rendering::DXFenceEvent* fe =
+                static_cast<rendering::DXFenceEvent*>(interpreter::NativeObject::ExtractNativeObject(m_fenceEvent));
+
+            fe->WaitBlocking(m_callback);
+        }
+        void Ready() override;
+    };
+    std::list<CallEvent> m_callEventsCreated;
+
+    void CallEvent::Ready()
+    {
+        for (std::list<CallEvent>::iterator it = m_callEventsCreated.begin(); it != m_callEventsCreated.end(); ++it) {
+            CallEvent& cur = *it;
+            if (&cur == this) {
+                m_callEventsCreated.erase(it);
+                break;
+            }
+        }
+    }
+
+
     std::binary_semaphore m_semaphore{1};
     rendering::DXFenceEvent* m_fenceEventCache = nullptr;
     interpreter::Value m_cb;
@@ -80,12 +111,21 @@ return Value();
             THROW_EXCEPTION(error)
         }
 
+#if true
+        m_callEventsCreated.push_back(CallEvent());
+        CallEvent& ce = m_callEventsCreated.back();
+        ce.m_fenceEvent = self;
+        ce.m_callback = func;
+
+        threadPool::StartRoutine(&ce);
+
+#else
         m_semaphore.acquire();
         m_fenceEventCache = fenceEvent;
         m_cb = func;
 
         fenceEvent->m_waitThread = new std::thread(waitThread);
-
+#endif
         return Value();
     });
 
