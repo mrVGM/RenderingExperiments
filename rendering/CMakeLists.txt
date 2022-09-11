@@ -43,6 +43,8 @@ add_library (Rendering
 	"CL/dxWorlyTextureComputeCL.cpp"
 	"CL/dxDisplayWorlyCL.h"
 	"CL/dxDisplayWorlyCL.cpp"
+	"threadPool.h"
+	"threadPool.cpp"
 	"CL/dxRender3DCL.cpp"
 	"CL/dxRender3DCL.h"
 )
