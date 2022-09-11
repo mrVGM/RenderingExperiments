@@ -1,14 +1,6 @@
 let math = require("math.txt");
 let utils = require("utils.txt");
 
-let cube = require("cube.txt");
-let c = cube();
-
-utils.foreach(c, func(x) {
-	print(x);
-});
-
-
 let wnd = api.window();
 wnd.create(600, 400);
 
@@ -98,6 +90,13 @@ let worlyInit = func() {
 
 try {
 	generalInit();
+
+	
+	let cube = require("cube.txt");
+	cube(device, func(x) {
+		print(x);
+	});
+
 	worlyInit();
 	requestRenderer();
 } catch(e) {

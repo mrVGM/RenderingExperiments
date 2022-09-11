@@ -1,6 +1,8 @@
 let math = require("math.txt");
 let utils = require("utils.txt");
 
+let vertexData = none;
+
 let generateVertices = func() {
 
 	let n = math.vector3(0,-1,0);
@@ -114,4 +116,96 @@ let generateVertices = func() {
 	return nums;
 };
 
-export = generateVertices;
+let getVertexData = func() {
+	if (vertexData == none) {
+		vertexData = generateVertices();
+	}
+	return vertexData;
+};
+
+let heap = api.heap();
+let uploadHeap = api.heap();
+
+let buffer = api.buffer();
+let uploadBuffer = api.buffer();
+
+let createHeap = func(device, type, onReady) {
+	let data = getVertexData();
+
+	let width = 4 * data.length;
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		onReady(h);
+	});
+
+	let h = api.heap();
+	h.create(device, width, type);
+	h.makeResident(fence, 1);
+};
+
+let copy = func(device, onReady) {
+	let commandQueue = api.copyCommandQueue(device);
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		uploadHeap = none;
+		uploadBuffer = none;
+		onReady();
+	});
+
+	let copyCL = api.copyCL();
+	copyCL.create(device);
+	copyCL.populate(buffer, uploadBuffer);
+	copyCL.execute(commandQueue, fence, 1);
+};
+
+let loadCubeVertexBuffer = func(device, onReady) {
+	let waiting = 2;
+
+	let data = getVertexData();
+	let size = 4 * data.length;
+	let stride = 40;
+
+	let callReady = func() {
+		copy(device, func() {
+			onReady(buffer);
+		});
+	};
+
+	createHeap(device, "UPLOAD", func(h) {
+		uploadHeap = h;
+		uploadBuffer.init(size);
+		uploadBuffer.setStride(stride);
+		uploadBuffer.place(device, uploadHeap, 0, 0);
+		uploadBuffer.copyData(data);
+
+		waiting = waiting - 1;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+	createHeap(device, "DEFAULT", func(h) {
+		heap = h;
+		buffer.init(size);
+		buffer.setStride(stride);
+		buffer.place(device, heap, 0, 0);
+
+		waiting = waiting - 1;
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+};
+
+export = loadCubeVertexBuffer;

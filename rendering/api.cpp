@@ -17,6 +17,7 @@
 #include "dxDescriptorHeap.h"
 #include "dxComputeShader.h"
 #include "dxComputeCommandQueue.h"
+#include "dxCopyCommandQueue.h"
 #include "dxTexture.h"
 #include "dxCopyCL.h"
 
@@ -59,6 +60,11 @@ namespace rendering
 
 		m_api.SetProperty("computeCommandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXComputeCommandQueue* commandQueue = new DXComputeCommandQueue();
+			return NativeObject::Create(commandQueue);
+		}));
+
+		m_api.SetProperty("copyCommandQueue", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXCopyCommandQueue* commandQueue = new DXCopyCommandQueue();
 			return NativeObject::Create(commandQueue);
 		}));
 #pragma endregion
