@@ -103,10 +103,11 @@ let startRender3D = func(vertexBuff) {
 	});
 };
 
+let cube = require("cube.txt");
+
 try {
 	generalInit();
 
-	let cube = require("cube.txt");
 	cube(device, func(x) {
 		startRender3D(x);
 	});
