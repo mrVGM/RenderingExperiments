@@ -1,7 +1,7 @@
-cbuffer UVOffset : register(b0)
+cbuffer MVCMatrix : register(b0)
 {
-    float offset;
-    float m_padding[63];
+    float4x4 m_matrix;
+    float m_padding[48];
 };
 
 struct PSInput
@@ -14,7 +14,7 @@ PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL, float2 uv : U
 {
     PSInput result;
 
-    result.position = position;
+    result.position = mul(m_matrix, position);
     result.uv = uv;
 
     return result;

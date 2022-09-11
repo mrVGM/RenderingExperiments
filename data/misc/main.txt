@@ -39,11 +39,6 @@ let updateUVW = func() {
 	worlyRenderer.constBuff.copyData(tmp);
 };
 
-let updateCam = func() {
-	print("Camera Update!");
-	return;
-};
-
 let tryStartRender = func() {
 	if (worlyData == none) {
 		return;
@@ -94,6 +89,34 @@ let worlyInit = func() {
 };
 
 let rend3D = none;
+
+let updateCam = func() {
+	print("Camera Update!");
+
+	let data = [];
+
+	data.push(1);
+	data.push(0);
+	data.push(0);
+	data.push(0);
+
+	data.push(0);
+	data.push(1);
+	data.push(0);
+	data.push(0);
+
+	data.push(0);
+	data.push(0);
+	data.push(1);
+	data.push(-100);
+
+	data.push(0);
+	data.push(0);
+	data.push(1);
+	data.push(0);
+
+	rend3D.constBuff.copyData(data);
+};
 
 let startRender3D = func(vertexBuff) {
 	let render3DCL = require("displayCube.txt");
