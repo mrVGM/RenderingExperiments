@@ -24,6 +24,8 @@
 #include "CL/dxWorlyTextureComputeCL.h"
 #include "CL/dxDisplayWorlyCL.h"
 
+#include "CL/dxDisplay3DCL.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -172,6 +174,10 @@ namespace rendering
 		math.SetProperty("PI", Value(std::numbers::pi));
 #pragma endregion
 
+		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXDisplay3DCL* display3D = new DXDisplay3DCL();
+			return NativeObject::Create(display3D);
+		}));
 	}
 }
 

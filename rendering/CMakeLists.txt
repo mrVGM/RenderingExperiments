@@ -47,7 +47,7 @@ add_library (Rendering
 	"threadPool.cpp"
 	"CL/dxRender3DCL.cpp"
 	"CL/dxRender3DCL.h"
- "dxCopyCommandQueue.h" "dxCopyCommandQueue.cpp")
+ "dxCopyCommandQueue.h" "dxCopyCommandQueue.cpp" "CL/dxDisplay3DCL.h" "CL/dxDisplay3DCL.cpp")
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

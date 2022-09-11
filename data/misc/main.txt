@@ -88,17 +88,29 @@ let worlyInit = func() {
 	});
 };
 
+let rend3D = none;
+
+let startRender3d = func() {
+	let render3DCL = require("displayCube.txt");
+	render3DCL(device, func(rend) {
+		rend3D = rend;
+		print("Rend!");
+	});
+};
+
 try {
 	generalInit();
 
-	
 	let cube = require("cube.txt");
 	cube(device, func(x) {
 		print(x);
 	});
 
-	worlyInit();
-	requestRenderer();
+	#worlyInit();
+	#requestRenderer();
+
+	startRender3d();
+
 } catch(e) {
 	print(e);
 }
