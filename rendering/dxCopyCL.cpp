@@ -8,6 +8,8 @@
 #include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
 
+#include "dxCopyCommandQueue.h"
+
 void rendering::DXCopyCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
@@ -42,7 +44,7 @@ return Value();
         DXCopyCL* commandList = dynamic_cast<DXCopyCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
-        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+        DXCopyCommandQueue* commandQueue = dynamic_cast<DXCopyCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
         if (!commandQueue) {
             THROW_EXCEPTION("Please supply a Command Queue!")
         }

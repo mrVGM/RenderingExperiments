@@ -26,7 +26,7 @@ let requestRenderer = func(device, onReady) {
 	inUse = 1;
 
 	let compileShaders = func() {
-		let shaderCode = readFile("shaders.hlsl");
+		let shaderCode = readFile("cube.hlsl");
 
 		let vertexShader = api.vertexShader();
 		vertexShader.compile(shaderCode);
@@ -46,17 +46,7 @@ let requestRenderer = func(device, onReady) {
 		let shaders = compileShaders();
 
 		let display3DCL = api.display3DCL();
-		display3DCL.create(device, shaders.vs, shaders.ps, constBuff, vertexBuff);
-
-		let descriptors = [];
-		let texDesc = {};
-		texDesc.type = "srv_tex";
-		texDesc.texture = worlyData.getUAVTex();
-
-		descriptors.push(texDesc);
-
-		let descHeap = api.descriptorHeap();
-		descHeap.create(device, descriptors);
+		display3DCL.create(device, shaders.vs, shaders.ps, constBuff);
 
 		let frame = 0;
 
@@ -82,8 +72,8 @@ let requestRenderer = func(device, onReady) {
 				});
 
 				swapChain.updateCurrentFrameIndex();
-				displayWorlyCL.populate(swapChain, descHeap);
-				displayWorlyCL.execute(commandQueue, fence, frame);
+				display3DCL.populate(swapChain, vertexBuff);
+				display3DCL.execute(commandQueue, fence, frame);
 			};
 
 			try {

@@ -39,6 +39,11 @@ let updateUVW = func() {
 	worlyRenderer.constBuff.copyData(tmp);
 };
 
+let updateCam = func() {
+	print("Camera Update!");
+	return;
+};
+
 let tryStartRender = func() {
 	if (worlyData == none) {
 		return;
@@ -90,11 +95,11 @@ let worlyInit = func() {
 
 let rend3D = none;
 
-let startRender3d = func() {
+let startRender3D = func(vertexBuff) {
 	let render3DCL = require("displayCube.txt");
 	render3DCL(device, func(rend) {
 		rend3D = rend;
-		print("Rend!");
+		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, updateCam);
 	});
 };
 
@@ -103,14 +108,11 @@ try {
 
 	let cube = require("cube.txt");
 	cube(device, func(x) {
-		print(x);
+		startRender3D(x);
 	});
 
 	#worlyInit();
 	#requestRenderer();
-
-	startRender3d();
-
 } catch(e) {
 	print(e);
 }

@@ -20,7 +20,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 5, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -52,22 +52,12 @@ return Value();
             THROW_EXCEPTION("Please supply a Constant Buffer!")
         }
 
-        Value vertexBufferValue = scope.GetProperty("param4");
-        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
-
-        if (!vertexBuffer) {
-            THROW_EXCEPTION("Please supply a Vertex Buffer!")
-        }
-
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
             vertexShader->GetCompiledShader(),
             pixelShader->GetCompiledShader(),
             constantBuffer->GetBuffer(),
-            vertexBuffer->GetBuffer(),
-            vertexBuffer->GetBufferWidth(),
-            vertexBuffer->GetStride(),
             error);
 
         if (!res) {
@@ -89,11 +79,11 @@ return Value();
             THROW_EXCEPTION("Please supply a swap chain!")
         }
 
-        Value descHeapValue = scope.GetProperty("param1");
-        DXDescriptorHeap* descHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(descHeapValue));
+        Value vertexBufferValue = scope.GetProperty("param1");
+        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
 
-        if (!descHeap) {
-            THROW_EXCEPTION("Please supply a descriptor heap!")
+        if (!vertexBuffer) {
+            THROW_EXCEPTION("Please supply a vertex buffer!")
         }
 
         std::string error;
@@ -102,8 +92,9 @@ return Value();
             &swapChain->m_scissorRect,
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
-            &self->m_vertexBufferView,
-            descHeap->GetHeap(),
+            vertexBuffer->GetBuffer(),
+            vertexBuffer->GetBufferWidth(),
+            vertexBuffer->GetStride(),
             error);
 
         if (!res) {
@@ -160,22 +151,11 @@ bool rendering::DXDisplay3DCL::Create(
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
     ID3D12Resource* constantBuffer,
-    ID3D12Resource* vertexBuffer,
-    int vertexBufferWidth,
-    int vertexBufferStride,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
     m_constantBuffer = constantBuffer;
-
-    // Create the vertex buffer.
-    {
-        // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = vertexBufferStride;
-        m_vertexBufferView.SizeInBytes = vertexBufferWidth;
-    }
 
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -187,21 +167,6 @@ bool rendering::DXDisplay3DCL::Create(
             featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
 
-        D3D12_STATIC_SAMPLER_DESC sampler = {};
-        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        sampler.MipLODBias = 0;
-        sampler.MaxAnisotropy = 0;
-        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-        sampler.MinLOD = 0.0f;
-        sampler.MaxLOD = D3D12_FLOAT32_MAX;
-        sampler.ShaderRegister = 0;
-        sampler.RegisterSpace = 0;
-        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
         // Allow input layout and deny uneccessary access to certain pipeline stages.
         D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -209,14 +174,11 @@ bool rendering::DXDisplay3DCL::Create(
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
-        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
         rootParameters[0].InitAsConstantBufferView(0, 0);
-        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(2, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(1, rootParameters, 0, nullptr, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -235,8 +197,9 @@ bool rendering::DXDisplay3DCL::Create(
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
-            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         };
 
         // Describe and create the graphics pipeline state object (PSO).
@@ -279,8 +242,9 @@ bool rendering::DXDisplay3DCL::Populate(
     CD3DX12_RECT* scissorRect,
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
-    const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
-    ID3D12DescriptorHeap* descHeap,
+    ID3D12Resource* vertexBuffer,
+    int vertexBufferSize,
+    int vertexBufferStride,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -299,12 +263,7 @@ bool rendering::DXDisplay3DCL::Populate(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-
-    ID3D12DescriptorHeap* ppHeaps[] = { descHeap };
-    m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
-    m_commandList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
 
     // Indicate that the back buffer will be used as a render target.
     {
@@ -319,12 +278,17 @@ bool rendering::DXDisplay3DCL::Populate(
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 
-
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+    vertexBufferView.StrideInBytes = vertexBufferStride;
+    vertexBufferView.SizeInBytes = vertexBufferSize;
+
+    int numVertices = vertexBufferSize / vertexBufferStride;
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
-    m_commandList->DrawInstanced(6, 1, 0, 0);
+    m_commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+    m_commandList->DrawInstanced(numVertices, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     {

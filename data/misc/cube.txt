@@ -149,7 +149,9 @@ let createHeap = func(device, type, onReady) {
 };
 
 let copy = func(device, onReady) {
-	let commandQueue = api.copyCommandQueue(device);
+
+	let commandQueue = api.copyCommandQueue();
+	commandQueue.create(device);
 
 	let fence = api.fence();
 	fence.create(device);
