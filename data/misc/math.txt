@@ -26,6 +26,70 @@ let vector = func(x, y, z, w) {
 	return res;
 };
 
+let matrix = func(r1, r2, r3, r4) {
+	let getData = func() {
+		let data = [];
+		utils.foreach(r1, func(x) {
+			data.push(x);
+		});
+
+		utils.foreach(r2, func(x) {
+			data.push(x);
+		});
+
+		utils.foreach(r3, func(x) {
+			data.push(x);
+		});
+
+		utils.foreach(r4, func(x) {
+			data.push(x);
+		});
+
+		return data;
+	};
+
+	let getRows = func() {
+		let rows = [];
+
+		rows.push(r1);
+		rows.push(r2);
+		rows.push(r3);
+		rows.push(r4);
+
+		return rows;
+	};
+
+	let getColumns = func() {
+		let columns = [];
+
+		columns.push(vector(r1[0], r2[0], r3[0], r4[0]));
+		columns.push(vector(r1[1], r2[1], r3[1], r4[1]));
+		columns.push(vector(r1[2], r2[2], r3[2], r4[2]));
+		columns.push(vector(r1[3], r2[3], r3[3], r4[3]));
+
+		return columns;
+	};
+
+	let res = {};
+	res.getData = getData;
+	res.getRows = getRows;
+	res.getColumns = getColumns;
+
+	return res;
+};
+
+let multiplyMatrices = func(m1, m2) {
+	let rows = m1.getRows();
+	let columns = m2.getColumns();
+
+	let r1 = vector(dot(rows[0], columns[0]), dot(rows[0], columns[1]), dot(rows[0], columns[2]), dot(rows[0], columns[3]));
+	let r2 = vector(dot(rows[1], columns[0]), dot(rows[1], columns[1]), dot(rows[1], columns[2]), dot(rows[1], columns[3]));
+	let r3 = vector(dot(rows[2], columns[0]), dot(rows[2], columns[1]), dot(rows[2], columns[2]), dot(rows[2], columns[3]));
+	let r4 = vector(dot(rows[3], columns[0]), dot(rows[3], columns[1]), dot(rows[3], columns[2]), dot(rows[3], columns[3]));
+
+	return matrix(r1, r2, r3, r4);
+};
+
 let multiply = func(scalar, vector) {
 	let tmp = utils.map(vector, func(x) {
 		return scalar * x;
@@ -71,8 +135,8 @@ let normalize = func(x) {
 	return multiply(1 / l, x);
 };
 
-let vectorProduct = func(a, b) {
-	return vector(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
+let cross = func(a, b) {
+	return vector3(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
 };
 
 let quaternion = func(a, b, c, d) {
@@ -118,7 +182,7 @@ export.subtractVectors = subtractVectors;
 export.dot = dot;
 export.vectorLength = vectorLength;
 export.normalize = normalize;
-export.vectorProduct = vectorProduct;
+export.cross = cross;
 export.quaternion = quaternion;
 export.multiplyQuaternions = multiplyQuaternions;
 export.conjugate = conjugate;
@@ -130,3 +194,6 @@ export.cos = api.math.cos;
 export.asin = api.math.asin;
 export.acos = api.math.acos;
 export.PI = api.math.PI;
+
+export.matrix = matrix;
+export.multiplyMatrices = multiplyMatrices;

@@ -90,39 +90,68 @@ let worlyInit = func() {
 
 let rend3D = none;
 
+let aspect = wnd.width() / wnd.height();
+let fov = 60;
+let halfFov = fov / 2;
+let fowRad = math.PI * halfFov / 180;
+
+let prH = math.sin(fowRad) / math.cos(fowRad);
+let prW = aspect * prH;
+
+let camPos = math.vector3(0, 0, -2);
+let targetPos = math.vector3(0, 0, 0);
+
 let updateCam = func() {
-	print("Camera Update!");
+	let up = math.vector3(0, 1, 0);
+	let fwd = math.subtractVectors(targetPos, camPos);
+	fwd = math.normalize(fwd);
 
-	let data = [];
+	let right = math.cross(up, fwd);
+	right = math.normalize(right);
 
-	data.push(1);
-	data.push(0);
-	data.push(0);
-	data.push(0);
+	up = math.cross(fwd, right);
 
-	data.push(0);
-	data.push(1);
-	data.push(0);
-	data.push(0);
+	let proj = math.matrix(
+		math.vector(1 / prW, 0, 0, 0),
+		math.vector(0, 1 / prH, 0, 0),
+		math.vector(0, 0, 1, 0),
+		math.vector(0, 0, 1, 0)
+	);
 
-	data.push(0);
-	data.push(0);
-	data.push(1);
-	data.push(-100);
+	let view = math.matrix(
+		math.vector(right[0], right[1], right[2], 0),
+		math.vector(up[0], up[1], up[2], 0),
+		math.vector(fwd[0], fwd[1], fwd[2], 0),
+		math.vector(0, 0, 0, 1)
+	);
 
-	data.push(0);
-	data.push(0);
-	data.push(1);
-	data.push(0);
+	let model = math.matrix(
+		math.vector(1, 0, 0, -camPos[0]),
+		math.vector(0, 1, 0, -camPos[1]),
+		math.vector(0, 0, 1, -camPos[2]),
+		math.vector(0, 0, 0, 1)
+	);
+
+	let mvp = math.multiplyMatrices(math.multiplyMatrices(proj, view), model);
+
+	let data = mvp.getData();
 
 	rend3D.constBuff.copyData(data);
+};
+
+let updateCamSafe = func() {
+	try {
+		updateCam();
+	} catch(e) {
+		print(e);
+	}
 };
 
 let startRender3D = func(vertexBuff) {
 	let render3DCL = require("displayCube.txt");
 	render3DCL(device, func(rend) {
 		rend3D = rend;
-		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, updateCam);
+		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, updateCamSafe);
 	});
 };
 

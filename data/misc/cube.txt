@@ -4,6 +4,41 @@ let utils = require("utils.txt");
 let vertexData = none;
 
 let generateVertices = func() {
+	let tri = [];
+	tri.push(-1);
+	tri.push(-1);
+	tri.push(0);
+	tri.push(1);
+	tri.push(0);
+	tri.push(0);
+	tri.push(-1);
+	tri.push(1);
+	tri.push(0);
+	tri.push(0);
+
+	tri.push(-1);
+	tri.push(1);
+	tri.push(0);
+	tri.push(1);
+	tri.push(0);
+	tri.push(0);
+	tri.push(-1);
+	tri.push(1);
+	tri.push(0);
+	tri.push(0);
+
+	tri.push(1);
+	tri.push(1);
+	tri.push(0);
+	tri.push(1);
+	tri.push(0);
+	tri.push(0);
+	tri.push(-1);
+	tri.push(1);
+	tri.push(0);
+	tri.push(0);
+
+	return tri;
 
 	let n = math.vector3(0,-1,0);
 	let a = math.vector3(-1,-1,-1);
@@ -46,12 +81,12 @@ let generateVertices = func() {
 
 	let face = [];
 	face.push(createVert(a, n, uv00));
-	face.push(createVert(b, n, uv10));
+	face.push(createVert(d, n, uv10));
 	face.push(createVert(c, n, uv11));
 
 	face.push(createVert(a, n, uv00));
 	face.push(createVert(c, n, uv11));
-	face.push(createVert(d, n, uv01));
+	face.push(createVert(b, n, uv01));
 
 	let rotateFace = func(axis, angle) {
 		let res = utils.map(face, func(v) {
