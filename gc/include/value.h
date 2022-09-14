@@ -45,6 +45,7 @@ namespace interpreter
 
 		std::string ToString() const;
 		void ToList(std::list<Value>& list) const;
+		static Value FromList(const std::list<Value>& list);
 
 		bool IsManaged() const;
 		bool IsNone() const;

@@ -304,6 +304,20 @@ void interpreter::Value::ToList(std::list<Value>& list) const
 	}
 }
 
+interpreter::Value interpreter::Value::FromList(const std::list<interpreter::Value>& list)
+{
+	Value l = ListValue::Create();
+	ListValue* lv = static_cast<ListValue*>(l.GetManagedValue());
+
+	for (std::list<Value>::const_iterator it = list.begin(); it != list.end(); ++it) {
+		const Value& cur = *it;
+
+		lv->m_list.push_back(cur);
+	}
+
+	return l;
+}
+
 bool interpreter::Value::IsManaged() const
 {
 	return GetType() == ScriptingValueType::Object;

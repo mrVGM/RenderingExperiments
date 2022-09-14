@@ -26,6 +26,8 @@
 
 #include "CL/dxDisplay3DCL.h"
 
+#include "aux/dxCamera.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -177,6 +179,14 @@ namespace rendering
 		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXDisplay3DCL* display3D = new DXDisplay3DCL();
 			return NativeObject::Create(display3D);
+		}));
+
+		m_api.SetProperty("aux", interpreter::utils::GetEmptyObject());
+		Value aux = m_api.GetProperty("aux");
+
+		aux.SetProperty("camera", CreateNativeFunc(0, [](Value scope) {
+			DXCamera* camera = new DXCamera();
+			return NativeObject::Create(camera);
 		}));
 	}
 }
