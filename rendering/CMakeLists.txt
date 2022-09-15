@@ -53,7 +53,9 @@ add_library (Rendering
 	"CL/dxDisplay3DCL.cpp"
 	"aux/dxCamera.h"
 	"aux/dxCamera.cpp"
- "primitives/cube.h" "primitives/dxCamera.cpp")
+	"primitives/cube.h"
+	"primitives/cube.cpp"
+)
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
