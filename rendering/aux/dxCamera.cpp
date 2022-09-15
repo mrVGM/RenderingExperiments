@@ -132,7 +132,7 @@ return Value();
 		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
 
 		std::list<Value> matrixCoefs;
-		DirectX::XMMATRIX mvp = self->GetMVPMatrix();
+		DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(self->GetMVPMatrix());
 
 		for (int r = 0; r < 4; ++r) {
 			float x = DirectX::XMVectorGetX(mvp.r[r]);
