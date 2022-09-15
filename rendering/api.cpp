@@ -28,6 +28,8 @@
 
 #include "aux/dxCamera.h"
 
+#include "primitives/cube.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -174,6 +176,16 @@ namespace rendering
 		}));
 
 		math.SetProperty("PI", Value(std::numbers::pi));
+#pragma endregion
+
+#pragma region Primitives
+		m_api.SetProperty("primitives", interpreter::utils::GetEmptyObject());
+		Value primitives = m_api.GetProperty("primitives");
+
+		primitives.SetProperty("cube", interpreter::CreateNativeFunc(0, [](Value scope) {
+			rendering::primitives::Cube* cube = new rendering::primitives::Cube();
+			return NativeObject::Create(cube);
+		}));
 #pragma endregion
 
 		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
