@@ -126,7 +126,7 @@ let loadCubeVertexBuffer = func(device, onReady) {
 		indexUploadBuffer.init(indexSize);
 		indexUploadBuffer.setStride(4);
 		indexUploadBuffer.place(device, indexUploadHeap, 0, 0);
-		indexUploadBuffer.copyData(indexData);
+		indexUploadBuffer.copyIntData(indexData);
 
 		waiting = waiting - 1;
 

@@ -62,7 +62,7 @@ return Value();
 
 		std::list<Value> tmp;
 
-		for (std::list<float>::const_iterator it = m_vertices.begin(); it != m_vertices.end(); ++it) {
+		for (std::list<int>::const_iterator it = m_indices.begin(); it != m_indices.end(); ++it) {
 			tmp.push_back(Value(*it));
 		}
 

@@ -68,7 +68,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -86,6 +86,13 @@ return Value();
             THROW_EXCEPTION("Please supply a vertex buffer!")
         }
 
+        Value indexBufferValue = scope.GetProperty("param2");
+        DXBuffer* indexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(indexBufferValue));
+
+        if (!indexBuffer) {
+            THROW_EXCEPTION("Please supply an index buffer!")
+        }
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
@@ -95,6 +102,8 @@ return Value();
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             vertexBuffer->GetStride(),
+            indexBuffer->GetBuffer(),
+            indexBuffer->GetBufferWidth(),
             error);
 
         if (!res) {
@@ -245,6 +254,8 @@ bool rendering::DXDisplay3DCL::Populate(
     ID3D12Resource* vertexBuffer,
     int vertexBufferSize,
     int vertexBufferStride,
+    ID3D12Resource* indexBuffer,
+    int indexBufferSize,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -285,10 +296,17 @@ bool rendering::DXDisplay3DCL::Populate(
     vertexBufferView.StrideInBytes = vertexBufferStride;
     vertexBufferView.SizeInBytes = vertexBufferSize;
 
-    int numVertices = vertexBufferSize / vertexBufferStride;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+    indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+    indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+    indexBufferView.SizeInBytes = indexBufferSize;
+
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-    m_commandList->DrawInstanced(numVertices, 1, 0, 0);
+    m_commandList->IASetIndexBuffer(&indexBufferView);
+
+    int numIndices = indexBufferSize / 4;
+    m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     {

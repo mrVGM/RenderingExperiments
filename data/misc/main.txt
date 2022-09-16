@@ -121,11 +121,11 @@ let updateCamSafe = func() {
 	}
 };
 
-let startRender3D = func(vertexBuff) {
+let startRender3D = func(vertexBuff, indexBuff) {
 	let render3DCL = require("displayCube.txt");
 	render3DCL(device, func(rend) {
 		rend3D = rend;
-		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, updateCamSafe);
+		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, indexBuff, updateCamSafe);
 	});
 };
 
@@ -136,7 +136,7 @@ try {
 
 	cube(device, func(buffer, indexBuffer) {
 		print(indexBuffer);
-		startRender3D(buffer);
+		startRender3D(buffer, indexBuffer);
 	});
 
 	#worlyInit();
