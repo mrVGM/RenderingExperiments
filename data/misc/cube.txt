@@ -2,29 +2,39 @@ let math = require("math.txt");
 let utils = require("utils.txt");
 
 let vertexData = none;
+let indexData = none;
 
 let generateVertices = func() {
 	let cube = api.primitives.cube();
-	let nums = cube.getVertices();
-	return nums;
+	vertexData = cube.getVertices();
+	indexData = cube.getIndices();
 };
 
 let getVertexData = func() {
 	if (vertexData == none) {
-		vertexData = generateVertices();
+		generateVertices();
 	}
 	return vertexData;
 };
 
+let getIndexData = func() {
+	if (indexData == none) {
+		generateIndices();
+	}
+	return indexData;
+};
+
 let heap = api.heap();
+let indexHeap = api.heap();
 let uploadHeap = api.heap();
+let indexUploadHeap = api.heap();
 
 let buffer = api.buffer();
 let uploadBuffer = api.buffer();
+let indexBuffer = api.buffer();
+let indexUploadBuffer = api.buffer();
 
-let createHeap = func(device, type, onReady) {
-	let data = getVertexData();
-
+let createHeap = func(device, type, data, onReady) {
 	let width = 4 * data.length;
 
 	let fence = api.fence();
@@ -51,7 +61,7 @@ let copy = func(device, onReady) {
 
 	let fe = api.fenceEvent();
 	fe.create();
-	fe.wait(fence, 1, func(arg) {
+	fe.wait(fence, 2, func(arg) {
 		uploadHeap = none;
 		uploadBuffer = none;
 		onReady();
@@ -61,22 +71,30 @@ let copy = func(device, onReady) {
 	copyCL.create(device);
 	copyCL.populate(buffer, uploadBuffer);
 	copyCL.execute(commandQueue, fence, 1);
+
+	let copyCL2 = api.copyCL();
+	copyCL2.create(device);
+	copyCL2.populate(indexBuffer, indexUploadBuffer);
+	copyCL2.execute(commandQueue, fence, 2);
 };
 
 let loadCubeVertexBuffer = func(device, onReady) {
-	let waiting = 2;
+	let waiting = 4;
 
 	let data = getVertexData();
 	let size = 4 * data.length;
 	let stride = 40;
 
+	let indexData = getIndexData();
+	let indexSize = 4 * indexData.length;
+
 	let callReady = func() {
 		copy(device, func() {
-			onReady(buffer);
+			onReady(buffer, indexBuffer);
 		});
 	};
 
-	createHeap(device, "UPLOAD", func(h) {
+	createHeap(device, "UPLOAD", vertexData, func(h) {
 		uploadHeap = h;
 		uploadBuffer.init(size);
 		uploadBuffer.setStride(stride);
@@ -90,11 +108,38 @@ let loadCubeVertexBuffer = func(device, onReady) {
 		}
 	});
 
-	createHeap(device, "DEFAULT", func(h) {
+	createHeap(device, "DEFAULT", vertexData, func(h) {
 		heap = h;
 		buffer.init(size);
 		buffer.setStride(stride);
 		buffer.place(device, heap, 0, 0);
+
+		waiting = waiting - 1;
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+
+	createHeap(device, "UPLOAD", indexData, func(h) {
+		indexUploadHeap = h;
+		indexUploadBuffer.init(indexSize);
+		indexUploadBuffer.setStride(4);
+		indexUploadBuffer.place(device, indexUploadHeap, 0, 0);
+		indexUploadBuffer.copyData(indexData);
+
+		waiting = waiting - 1;
+
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+	createHeap(device, "DEFAULT", indexData, func(h) {
+		indexHeap = h;
+		indexBuffer.init(indexSize);
+		indexBuffer.setStride(4);
+		indexBuffer.place(device, indexHeap, 0, 0);
 
 		waiting = waiting - 1;
 		if (waiting == 0) {

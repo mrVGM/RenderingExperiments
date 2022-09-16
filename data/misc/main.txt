@@ -97,8 +97,6 @@ let offset = 0;
 let updateCam = func() {
 	offset = offset + 0.01;
 
-	print(offset);
-
 	let pos = math.vector3(0, -offset, -5);
 	let target = math.vector3(0, 0, 0);
 
@@ -136,8 +134,9 @@ let cube = require("cube.txt");
 try {
 	generalInit();
 
-	cube(device, func(x) {
-		startRender3D(x);
+	cube(device, func(buffer, indexBuffer) {
+		print(indexBuffer);
+		startRender3D(buffer);
 	});
 
 	#worlyInit();

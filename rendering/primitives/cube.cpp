@@ -7,6 +7,7 @@
 namespace
 {
 	static std::list<float> m_vertices;
+	static std::list<int> m_indices;
 
 	void PushVector(const DirectX::XMVECTOR& vector)
 	{
@@ -50,6 +51,25 @@ return Value();
 		return res;
 	});
 
+	Value& getIndices = GetOrCreateProperty(nativeObject, "getIndices");
+	getIndices = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		Cube* self = static_cast<Cube*>(NativeObject::ExtractNativeObject(selfValue));
+
+		if (m_indices.size() == 0) {
+			self->GenerateVertices();
+		}
+
+		std::list<Value> tmp;
+
+		for (std::list<float>::const_iterator it = m_vertices.begin(); it != m_vertices.end(); ++it) {
+			tmp.push_back(Value(*it));
+		}
+
+		Value res = Value::FromList(tmp);
+		return res;
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -62,6 +82,8 @@ if (FAILED(hRes)) {\
 void rendering::primitives::Cube::GenerateVertices() const
 {
 	typedef DirectX::XMVECTOR vec;
+
+	int baseIndex = 0;
 	{
 		vec a = DirectX::XMVectorSet(-1, -1, -1, 1);
 		vec b = DirectX::XMVectorSet(1, -1, -1, 1);
@@ -73,25 +95,24 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 0);
 
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
 
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(a);
-		PushVector(n);
-		PushUV(0, 0);
-
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(b);
-		PushVector(n);
-		PushUV(1, 0);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 3);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 1);
 	}
 
 	{
@@ -105,25 +126,26 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 0);
 
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
 
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
+		baseIndex += 4;
 
-		PushVector(a);
-		PushVector(n);
-		PushUV(0, 0);
-
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(b);
-		PushVector(n);
-		PushUV(1, 0);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 3);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 1);
 	}
 
 
@@ -138,25 +160,24 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 0);
 
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
 
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(a);
-		PushVector(n);
-		PushUV(0, 0);
-
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(b);
-		PushVector(n);
-		PushUV(1, 0);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 3);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 1);
 	}
 
 	{
@@ -170,25 +191,24 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 0);
 
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
 
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(a);
-		PushVector(n);
-		PushUV(0, 0);
-
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(b);
-		PushVector(n);
-		PushUV(1, 0);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 3);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 1);
 	}
 
 	{
@@ -202,25 +222,24 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 0);
 
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
 
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(a);
-		PushVector(n);
-		PushUV(0, 0);
-
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(b);
-		PushVector(n);
-		PushUV(1, 0);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 3);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 1);
 	}
 
 	{
@@ -234,25 +253,24 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 0);
 
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
 
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(a);
-		PushVector(n);
-		PushUV(0, 0);
-
-		PushVector(c);
-		PushVector(n);
-		PushUV(1, 1);
-
-		PushVector(b);
-		PushVector(n);
-		PushUV(1, 0);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 3);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 0);
+		m_indices.push_back(baseIndex + 2);
+		m_indices.push_back(baseIndex + 1);
 	}
 }
 
