@@ -172,6 +172,8 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 1);
 
+		baseIndex += 4;
+
 		m_indices.push_back(baseIndex + 0);
 		m_indices.push_back(baseIndex + 3);
 		m_indices.push_back(baseIndex + 2);
@@ -202,6 +204,8 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
+
+		baseIndex += 4;
 
 		m_indices.push_back(baseIndex + 0);
 		m_indices.push_back(baseIndex + 3);
@@ -234,6 +238,8 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(n);
 		PushUV(0, 1);
 
+		baseIndex += 4;
+
 		m_indices.push_back(baseIndex + 0);
 		m_indices.push_back(baseIndex + 3);
 		m_indices.push_back(baseIndex + 2);
@@ -264,6 +270,8 @@ void rendering::primitives::Cube::GenerateVertices() const
 		PushVector(d);
 		PushVector(n);
 		PushUV(0, 1);
+
+		baseIndex += 4;
 
 		m_indices.push_back(baseIndex + 0);
 		m_indices.push_back(baseIndex + 3);

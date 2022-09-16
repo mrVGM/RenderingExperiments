@@ -97,7 +97,7 @@ let offset = 0;
 let updateCam = func() {
 	offset = offset + 0.01;
 
-	let pos = math.vector3(0, -offset, -5);
+	let pos = math.vector3(5 * math.cos(offset), 0, 5 * math.sin(offset));
 	let target = math.vector3(0, 0, 0);
 
 	let aspect = wnd.width() / wnd.height();
