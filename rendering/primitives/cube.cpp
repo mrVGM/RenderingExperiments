@@ -2,10 +2,25 @@
 
 #include "nativeFunc.h"
 
+#include <DirectXMath.h>
 
 namespace
 {
 	static std::list<float> m_vertices;
+
+	void PushVector(const DirectX::XMVECTOR& vector)
+	{
+		m_vertices.push_back(DirectX::XMVectorGetX(vector));
+		m_vertices.push_back(DirectX::XMVectorGetY(vector));
+		m_vertices.push_back(DirectX::XMVectorGetZ(vector));
+		m_vertices.push_back(DirectX::XMVectorGetW(vector));
+	}
+
+	void PushUV(float u, float v)
+	{
+		m_vertices.push_back(u);
+		m_vertices.push_back(v);
+	}
 }
 
 void rendering::primitives::Cube::InitProperties(interpreter::NativeObject& nativeObject)
@@ -46,7 +61,199 @@ if (FAILED(hRes)) {\
 
 void rendering::primitives::Cube::GenerateVertices() const
 {
+	typedef DirectX::XMVECTOR vec;
+	{
+		vec a = DirectX::XMVectorSet(-1, -1, -1, 1);
+		vec b = DirectX::XMVectorSet(1, -1, -1, 1);
+		vec c = DirectX::XMVectorSet(1, 1, -1, 1);
+		vec d = DirectX::XMVectorSet(-1, 1, -1, 1);
+		vec n = DirectX::XMVectorSet(0, 0, -1, 1);
 
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(d);
+		PushVector(n);
+		PushUV(0, 1);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+	}
+
+	{
+		vec a = DirectX::XMVectorSet(1, -1, -1, 1);
+		vec b = DirectX::XMVectorSet(1, -1, 1, 1);
+		vec c = DirectX::XMVectorSet(1, 1, 1, 1);
+		vec d = DirectX::XMVectorSet(1, 1, -1, 1);
+		vec n = DirectX::XMVectorSet(1, 0, 0, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(d);
+		PushVector(n);
+		PushUV(0, 1);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+	}
+
+
+	{
+		vec a = DirectX::XMVectorSet(1, -1, 1, 1);
+		vec b = DirectX::XMVectorSet(-1, -1, 1, 1);
+		vec c = DirectX::XMVectorSet(-1, 1, 1, 1);
+		vec d = DirectX::XMVectorSet(1, 1, 1, 1);
+		vec n = DirectX::XMVectorSet(0, 0, 1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(d);
+		PushVector(n);
+		PushUV(0, 1);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+	}
+
+	{
+		vec a = DirectX::XMVectorSet(-1, -1, 1, 1);
+		vec b = DirectX::XMVectorSet(-1, -1, -1, 1);
+		vec c = DirectX::XMVectorSet(-1, 1, -1, 1);
+		vec d = DirectX::XMVectorSet(-1, 1, 1, 1);
+		vec n = DirectX::XMVectorSet(-1, 0, 0, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(d);
+		PushVector(n);
+		PushUV(0, 1);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+	}
+
+	{
+		vec a = DirectX::XMVectorSet(-1, 1, -1, 1);
+		vec b = DirectX::XMVectorSet(1, 1, -1, 1);
+		vec c = DirectX::XMVectorSet(1, 1, 1, 1);
+		vec d = DirectX::XMVectorSet(-1, 1, 1, 1);
+		vec n = DirectX::XMVectorSet(0, 1, 0, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(d);
+		PushVector(n);
+		PushUV(0, 1);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+	}
+
+	{
+		vec a = DirectX::XMVectorSet(-1, -1, 1, 1);
+		vec b = DirectX::XMVectorSet(1, -1, 1, 1);
+		vec c = DirectX::XMVectorSet(1, -1, -1, 1);
+		vec d = DirectX::XMVectorSet(-1, -1, -1, 1);
+		vec n = DirectX::XMVectorSet(0, -1, 0, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(d);
+		PushVector(n);
+		PushUV(0, 1);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(a);
+		PushVector(n);
+		PushUV(0, 0);
+
+		PushVector(c);
+		PushVector(n);
+		PushUV(1, 1);
+
+		PushVector(b);
+		PushVector(n);
+		PushUV(1, 0);
+	}
 }
 
 #undef THROW_ERROR

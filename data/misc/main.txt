@@ -95,12 +95,12 @@ let cam = api.aux.camera();
 let offset = 0;
 
 let updateCam = func() {
-	offset = offset + 0.001;
+	offset = offset + 0.01;
 
 	print(offset);
 
-	let pos = math.vector3(0, 0, -2);
-	let target = math.vector3(0, offset, 0);
+	let pos = math.vector3(0, -offset, -5);
+	let target = math.vector3(0, 0, 0);
 
 	let aspect = wnd.width() / wnd.height();
 	cam.setPosition(pos);
