@@ -138,6 +138,44 @@ return Value();
 		return Value();
 	});
 
+	Value& copyIntData = GetOrCreateProperty(nativeObject, "copyIntData");
+	copyIntData = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXBuffer* buffer = static_cast<DXBuffer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value data = scope.GetProperty("param0");
+		std::list<Value> list;
+		data.ToList(list);
+
+		if (list.size() == 0) {
+			THROW_EXCEPTION("Please supply buffer data!")
+		}
+
+		for (std::list<Value>::iterator i = list.begin(); i != list.end(); ++i) {
+			const Value& cur = *i;
+			if (cur.GetType() != ScriptingValueType::Number) {
+				THROW_EXCEPTION("Please supply list of numbers!")
+			}
+		}
+
+		int* numbers = new int[list.size()];
+		int index = 0;
+		for (std::list<Value>::iterator i = list.begin(); i != list.end(); ++i) {
+			const Value& cur = *i;
+			numbers[index++] = static_cast<int>(cur.GetNum());
+		}
+
+		std::string error;
+		bool res = buffer->CopyData(numbers, list.size() * sizeof(int), error);
+		delete[] numbers;
+
+		if (!res) {
+			THROW_EXCEPTION(error);
+		}
+
+		return Value();
+	});
+
 	Value& setStride = GetOrCreateProperty(nativeObject, "setStride");
 	setStride = CreateNativeMethod(nativeObject, 1, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
