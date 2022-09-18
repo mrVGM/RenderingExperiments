@@ -146,6 +146,17 @@ try {
 	instanceData.push(1);
 	instanceData.push(1);
 
+	instanceData.push(0);
+	instanceData.push(-1);
+	instanceData.push(0);
+	instanceData.push(math.cos(math.PI / 8));
+	instanceData.push(-math.sin(math.PI / 8));
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(1);
+	instanceData.push(1);
+
 	cube(device, instanceData, func(buffer, indexBuffer, instanceBuffer) {
 		startRender3D(buffer, indexBuffer, instanceBuffer);
 	});

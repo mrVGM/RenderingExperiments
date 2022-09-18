@@ -330,7 +330,13 @@ bool rendering::DXDisplay3DCL::Populate(
     m_commandList->IASetIndexBuffer(&indexBufferView);
 
     int numIndices = indexBufferSize / 4;
-    m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, 0);
+
+    int numInstances = instanceBufferSize / instanceBufferStride;
+
+    // TODO: Check why instance count 2 doesn't work?
+    for (int i = 0; i < numInstances; ++i) {
+        m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
+    }
 
     // Indicate that the back buffer will now be used to present.
     {
