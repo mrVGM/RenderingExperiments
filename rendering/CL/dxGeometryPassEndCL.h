@@ -35,6 +35,7 @@ namespace rendering
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
 			ID3D12Resource* renderTarget,
 			const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+			ID3D12Resource* diffuseTex,
 			std::string& errorMessage);
 
 		bool Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);

@@ -10,6 +10,7 @@
 #include "dxDescriptorHeap.h"
 #include "dxCommandQueue.h"
 #include "dxFence.h"
+#include "dxTexture.h"
 
 void rendering::DXGeometryPassEndCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -70,7 +71,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXGeometryPassEndCL* self = static_cast<DXGeometryPassEndCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -81,6 +82,13 @@ return Value();
             THROW_EXCEPTION("Please supply a swap chain!")
         }
 
+        Value diffuseTexValue = scope.GetProperty("param0");
+        DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
+
+        if (!diffuseTex) {
+            THROW_EXCEPTION("Please supply a diffuse texture!")
+        }
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
@@ -88,6 +96,7 @@ return Value();
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
             &self->m_vertexBufferView,
+            diffuseTex->GetTexture(),
             error);
 
         if (!res) {
@@ -258,6 +267,7 @@ bool rendering::DXGeometryPassEndCL::Populate(
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+    ID3D12Resource* diffuseTex,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -276,11 +286,17 @@ bool rendering::DXGeometryPassEndCL::Populate(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetGraphicsRootShaderResourceView(0, m_vertexBufferView.BufferLocation);
+    m_commandList->SetGraphicsRootShaderResourceView(0, diffuseTex->GetGPUVirtualAddress());
 
     // Indicate that the back buffer will be used as a render target.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+
+    // Diffuse Texture is now SRV
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         m_commandList->ResourceBarrier(1, &barrier);
     }
 
