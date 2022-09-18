@@ -68,7 +68,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -93,6 +93,13 @@ return Value();
             THROW_EXCEPTION("Please supply an index buffer!")
         }
 
+        Value instanceBufferValue = scope.GetProperty("param3");
+        DXBuffer* instanceBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(instanceBufferValue));
+
+        if (!instanceBuffer) {
+            THROW_EXCEPTION("Please supply an instance buffer!")
+        }
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
@@ -104,6 +111,9 @@ return Value();
             vertexBuffer->GetStride(),
             indexBuffer->GetBuffer(),
             indexBuffer->GetBufferWidth(),
+            instanceBuffer->GetBuffer(),
+            instanceBuffer->GetBufferWidth(),
+            instanceBuffer->GetStride(),
             error);
 
         if (!res) {
@@ -209,6 +219,10 @@ bool rendering::DXDisplay3DCL::Create(
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+            { "OBJECT_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 0 },
+            { "OBJECT_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 12, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 0 },
+            { "OBJECT_SCALE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 28, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 0 },
         };
 
         // Describe and create the graphics pipeline state object (PSO).
@@ -256,6 +270,9 @@ bool rendering::DXDisplay3DCL::Populate(
     int vertexBufferStride,
     ID3D12Resource* indexBuffer,
     int indexBufferSize,
+    ID3D12Resource* instanceBuffer,
+    int instanceBufferSize,
+    int instanceBufferStride,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -291,10 +308,16 @@ bool rendering::DXDisplay3DCL::Populate(
 
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    vertexBufferView.StrideInBytes = vertexBufferStride;
-    vertexBufferView.SizeInBytes = vertexBufferSize;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2];
+    D3D12_VERTEX_BUFFER_VIEW& realVertexBufferView = vertexBufferViews[0];
+    realVertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+    realVertexBufferView.StrideInBytes = vertexBufferStride;
+    realVertexBufferView.SizeInBytes = vertexBufferSize;
+
+    D3D12_VERTEX_BUFFER_VIEW& instanceBufferView = vertexBufferViews[1];
+    instanceBufferView.BufferLocation = instanceBuffer->GetGPUVirtualAddress();
+    instanceBufferView.StrideInBytes = instanceBufferStride;
+    instanceBufferView.SizeInBytes = instanceBufferSize;
 
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
     indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
@@ -302,7 +325,8 @@ bool rendering::DXDisplay3DCL::Populate(
     indexBufferView.SizeInBytes = indexBufferSize;
 
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+    m_commandList->IASetVertexBuffers(0, 2, vertexBufferViews);
     m_commandList->IASetIndexBuffer(&indexBufferView);
 
     int numIndices = indexBufferSize / 4;

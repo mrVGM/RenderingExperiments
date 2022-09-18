@@ -10,11 +10,11 @@ struct PSInput
     float2 uv       : UV;
 };
 
-PSInput VSMain(float3 position : POSITION, float3 normal : NORMAL, float2 uv : UV)
+PSInput VSMain(float3 position : POSITION, float3 normal : NORMAL, float2 uv : UV, float3 objectPosition : OBJECT_POSITION)
 {
     PSInput result;
 
-    result.position = mul(m_matrix, float4 (position, 1));
+    result.position = mul(m_matrix, float4 (objectPosition + position, 1));
     result.uv = uv;
 
     return result;

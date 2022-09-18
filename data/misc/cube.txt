@@ -26,13 +26,18 @@ let getIndexData = func() {
 
 let heap = api.heap();
 let indexHeap = api.heap();
+let instanceHeap = api.heap();
+
 let uploadHeap = api.heap();
 let indexUploadHeap = api.heap();
 
 let buffer = api.buffer();
 let uploadBuffer = api.buffer();
+
 let indexBuffer = api.buffer();
 let indexUploadBuffer = api.buffer();
+
+let instanceBuffer = api.buffer();
 
 let createHeap = func(device, type, data, onReady) {
 	let width = 4 * data.length;
@@ -78,7 +83,7 @@ let copy = func(device, onReady) {
 	copyCL2.execute(commandQueue, fence, 2);
 };
 
-let loadCubeVertexBuffer = func(device, onReady) {
+let loadCubeVertexBuffer = func(device, instanceData, onReady) {
 	let waiting = 4;
 
 	let data = getVertexData();
@@ -90,7 +95,7 @@ let loadCubeVertexBuffer = func(device, onReady) {
 
 	let callReady = func() {
 		copy(device, func() {
-			onReady(buffer, indexBuffer);
+			onReady(buffer, indexBuffer, instanceBuffer);
 		});
 	};
 
@@ -142,6 +147,22 @@ let loadCubeVertexBuffer = func(device, onReady) {
 		indexBuffer.place(device, indexHeap, 0, 0);
 
 		waiting = waiting - 1;
+		if (waiting == 0) {
+			callReady();
+		}
+	});
+
+	let instanceDataStride = 40;
+	let instanceBufferSize = 4 * instanceData.length;
+	createHeap(device, "UPLOAD", instanceData, func(h) {
+		instanceHeap = h;
+		instanceBuffer.init(instanceBufferSize);
+		instanceBuffer.setStride(instanceDataStride);
+		instanceBuffer.place(device, instanceHeap, 0, 0);
+		instanceBuffer.copyData(instanceData);
+
+		waiting = waiting - 1;
+
 		if (waiting == 0) {
 			callReady();
 		}

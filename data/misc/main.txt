@@ -121,11 +121,11 @@ let updateCamSafe = func() {
 	}
 };
 
-let startRender3D = func(vertexBuff, indexBuff) {
+let startRender3D = func(vertexBuff, indexBuff, instanceBuff) {
 	let render3DCL = require("displayCube.txt");
 	render3DCL(device, func(rend) {
 		rend3D = rend;
-		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, indexBuff, updateCamSafe);
+		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, indexBuff, instanceBuff, updateCamSafe);
 	});
 };
 
@@ -134,9 +134,20 @@ let cube = require("cube.txt");
 try {
 	generalInit();
 
-	cube(device, func(buffer, indexBuffer) {
-		print(indexBuffer);
-		startRender3D(buffer, indexBuffer);
+	let instanceData = [];
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(1);
+	instanceData.push(1);
+
+	cube(device, instanceData, func(buffer, indexBuffer, instanceBuffer) {
+		startRender3D(buffer, indexBuffer, instanceBuffer);
 	});
 
 	#worlyInit();

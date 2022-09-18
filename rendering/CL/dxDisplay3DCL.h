@@ -39,6 +39,9 @@ namespace rendering
 			int vertexBufferStride,
 			ID3D12Resource* indexBuffer,
 			int indexBufferSize,
+			ID3D12Resource* instanceBuffer,
+			int instanceBufferSize,
+			int instanceBufferStride,
 			std::string& errorMessage);
 
 		bool Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);

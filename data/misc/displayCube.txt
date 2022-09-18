@@ -41,7 +41,7 @@ let requestRenderer = func(device, onReady) {
 		return res;
 	};
 
-	let startRender = func(wnd, swapChain, commandQueue, vertexBuff, indexBuff, onRender) {
+	let startRender = func(wnd, swapChain, commandQueue, vertexBuff, indexBuff, instanceBuff, onRender) {
 
 		let shaders = compileShaders();
 
@@ -72,7 +72,7 @@ let requestRenderer = func(device, onReady) {
 				});
 
 				swapChain.updateCurrentFrameIndex();
-				display3DCL.populate(swapChain, vertexBuff, indexBuff);
+				display3DCL.populate(swapChain, vertexBuff, indexBuff, instanceBuff);
 				display3DCL.execute(commandQueue, fence, frame);
 			};
 
