@@ -130,7 +130,7 @@ let startRender3D = func(vertexBuff, indexBuff, instanceBuff) {
 };
 
 let cube = require("cube.txt");
-
+let deffShad = none;
 try {
 	generalInit();
 
@@ -163,6 +163,11 @@ try {
 
 	#worlyInit();
 	#requestRenderer();
+
+	let defferedShading = require("defferedShading.txt");
+	defferedShading(device, wnd.width(), wnd.height(), func(obj) {
+		deffShad = obj;
+	});
 } catch(e) {
 	print(e);
 }

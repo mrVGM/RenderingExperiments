@@ -1,0 +1,137 @@
+let vertexHeap = none;
+let vertexUploadHeap = none;
+let textureHeap = none;
+
+let vertexBuff = api.buffer();
+let vertexUploadBuff = api.buffer();
+let diffuseTex = api.texture();
+
+let vertexData = [];
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(1);
+
+
+let createHeap = func(device, type, size, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+
+	let h = api.heap();
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		onReady(h);
+	});
+
+	h.create(device, size, type);
+	h.makeResident(fence, 1);
+};
+
+let initVertexBuffers = func(device, onReady) {
+	let size = 4 * vertexData.length;
+
+	let waiting = 2;
+
+	let callReady = func() {
+		if (waiting == 0) {
+			onReady();
+		}
+	};
+
+	createHeap(device, "DEFAULT", size, func(h) {
+		vertexHeap = h;
+		vertexBuff.init(size);
+		vertexBuff.setStride(16);
+		vertexBuff.place(device, vertexHeap, 0, 0);
+
+		waiting = waiting - 1;
+		callReady();
+	});
+
+	createHeap(device, "UPLOAD", size, func(h) {
+		vertexUploadHeap = h;
+		vertexUploadBuff.init(size);
+		vertexUploadBuff.setStride(16);
+		vertexUploadBuff.place(device, vertexUploadHeap, 0, 0);
+		vertexUploadBuff.copyData(vertexData);
+
+		waiting = waiting - 1;
+		callReady();
+	});
+};
+
+let initTexture = func(device, width, height, onReady) {
+	diffuseTex.initAsDiffuseRT(width, height);
+
+	createHeap(device, "DEFAULT", diffuseTex.getAllocationSize(device), func(h) {
+		textureHeap = h;
+		diffuseTex.place(device, textureHeap, 0);
+		onReady();
+	});
+};
+
+let copyVertexData = func(device, onReady) {
+	let commandQueue = api.copyCommandQueue();
+	commandQueue.create(device);
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		vertexUploadHeap = none;
+		vertexUploadBuff = none;
+		onReady();
+	});
+
+	let copyCL = api.copyCL();
+	copyCL.create(device);
+	copyCL.populate(vertexBuff, vertexUploadBuff);
+	copyCL.execute(commandQueue, fence, 1);
+};
+
+let loadResources = func(device, width, height, onReady) {
+	let waiting = 2;
+
+	let callReady = func() {
+		if (waiting == 0) {
+			let res = {};
+			res.diffuseTex = diffuseTex;
+			res.vertexBuffer = vertexBuff;
+			onReady(res);
+		}
+	};
+
+	initVertexBuffers(device, func() {
+		copyVertexData(device, func() {
+			waiting = waiting - 1;
+			
+			callReady();
+		});
+	});
+
+	initTexture(device, width, height, func() {
+		waiting = waiting - 1;
+		callReady();
+	});
+};
+
+export = loadResources;

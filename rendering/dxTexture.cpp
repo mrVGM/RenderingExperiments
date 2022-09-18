@@ -103,8 +103,8 @@ return Value();
 		return Value();
 	});
 
-	Value& initDiffuseRT = GetOrCreateProperty(nativeObject, "initDiffuseRT");
-	initDiffuseRT = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+	Value& initAsDiffuseRT = GetOrCreateProperty(nativeObject, "initAsDiffuseRT");
+	initAsDiffuseRT = CreateNativeMethod(nativeObject, 2, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
 
