@@ -83,7 +83,7 @@ let loadCubeVertexBuffer = func(device, onReady) {
 
 	let data = getVertexData();
 	let size = 4 * data.length;
-	let stride = 40;
+	let stride = 32;
 
 	let indexData = getIndexData();
 	let indexSize = 4 * indexData.length;

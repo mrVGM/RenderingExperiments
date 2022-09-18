@@ -14,7 +14,6 @@ namespace
 		m_vertices.push_back(DirectX::XMVectorGetX(vector));
 		m_vertices.push_back(DirectX::XMVectorGetY(vector));
 		m_vertices.push_back(DirectX::XMVectorGetZ(vector));
-		m_vertices.push_back(DirectX::XMVectorGetW(vector));
 	}
 
 	void PushUV(float u, float v)
