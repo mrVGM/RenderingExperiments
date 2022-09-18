@@ -46,7 +46,7 @@ return Value();
             THROW_EXCEPTION("Please supply a pixel shader!")
         }
 
-        Value vertexBufferValue = scope.GetProperty("param4");
+        Value vertexBufferValue = scope.GetProperty("param3");
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
 
         if (!vertexBuffer) {
@@ -71,7 +71,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXGeometryPassEndCL* self = static_cast<DXGeometryPassEndCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -89,6 +89,13 @@ return Value();
             THROW_EXCEPTION("Please supply a diffuse texture!")
         }
 
+        Value descriptorHeapValue = scope.GetProperty("param0");
+        DXDescriptorHeap* descriptorHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(descriptorHeapValue));
+
+        if (!descriptorHeap) {
+            THROW_EXCEPTION("Please supply a descriptor heap!")
+        }
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
@@ -97,6 +104,7 @@ return Value();
             swapChain->GetCurrentRenderTarget(),
             &self->m_vertexBufferView,
             diffuseTex->GetTexture(),
+            descriptorHeap->GetHeap(),
             error);
 
         if (!res) {
@@ -199,9 +207,11 @@ bool rendering::DXGeometryPassEndCL::Create(
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
         CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsShaderResourceView(0, 0);
-
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
         rootSignatureDesc.Init_1_1(1, rootParameters, 1, &sampler, rootSignatureFlags);
 
@@ -268,6 +278,7 @@ bool rendering::DXGeometryPassEndCL::Populate(
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
     ID3D12Resource* diffuseTex,
+    ID3D12DescriptorHeap* descriptorHeap,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -286,7 +297,7 @@ bool rendering::DXGeometryPassEndCL::Populate(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetGraphicsRootShaderResourceView(0, diffuseTex->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootDescriptorTable(0, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     // Indicate that the back buffer will be used as a render target.
     {

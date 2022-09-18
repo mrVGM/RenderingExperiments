@@ -165,7 +165,7 @@ try {
 	#requestRenderer();
 
 	let defferedShading = require("defferedShading.txt");
-	defferedShading(device, wnd.width(), wnd.height(), func(obj) {
+	defferedShading(device, commandQueue, wnd.width(), wnd.height(), func(obj) {
 		deffShad = obj;
 	});
 } catch(e) {

@@ -27,7 +27,6 @@ vertexData.push(1);
 vertexData.push(0);
 vertexData.push(1);
 
-
 let createHeap = func(device, type, size, onReady) {
 	let fence = api.fence();
 	fence.create(device);
@@ -108,7 +107,60 @@ let copyVertexData = func(device, onReady) {
 	copyCL.execute(commandQueue, fence, 1);
 };
 
-let loadResources = func(device, width, height, onReady) {
+
+let loadPipeline = func(device, commandQueue) {
+	let geometryPassStart = api.geometryPassStart();
+	let geometryPassEnd = api.geometryPassEnd();
+
+	let shaderCode = readFile("defferedShading.hlsl");
+	let vertexShader = api.vertexShader();
+	let pixelShader = api.pixelShader();
+	
+	vertexShader.compile(shaderCode);
+	pixelShader.compile(shaderCode);
+	
+	geometryPassStart.create(device, diffuseTex);
+	geometryPassEnd.create(device, vertexShader, pixelShader, vertexBuff);
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let startPass = func() {
+		geometryPassStart.execute(commandQueue, fence, 0);
+	};
+
+	let descriptors = [];
+	let texDesc = {};
+	texDesc.type = "srv_tex";
+	texDesc.texture = diffuseTex;
+	descriptors.push(texDesc);
+
+	let descHeap = api.descriptorHeap();
+	descHeap.create(device, descriptors);
+
+	let counter = 1;
+	let endPass = func(swapChain, onReady) {
+		swapChain.swapChain.updateCurrentFrameIndex();
+		geometryPassEnd.populate(swapChain, diffuseTex, descHeap);
+
+		let fe = api.fenceEvent();
+		fe.create();
+
+		fe.wait(fence, counter, func(arg) {
+			counter = counter + 1;
+			onReady();
+		});
+
+		geometryPassEnd.execute(commandQueue, fence, counter);
+	};
+
+	let res = {};
+	res.startPass = startPass;
+	res.endPass = endPass;
+	return res;
+};
+
+let loadResources = func(device, commandQueue, width, height, onReady) {
 	let waiting = 2;
 
 	let callReady = func() {
@@ -116,6 +168,10 @@ let loadResources = func(device, width, height, onReady) {
 			let res = {};
 			res.diffuseTex = diffuseTex;
 			res.vertexBuffer = vertexBuff;
+			res.pipeline = loadPipeline(device, commandQueue);
+
+			print("YESS");
+
 			onReady(res);
 		}
 	};
