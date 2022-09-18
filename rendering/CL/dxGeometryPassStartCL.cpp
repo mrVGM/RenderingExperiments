@@ -3,13 +3,10 @@
 #include "nativeFunc.h"
 
 #include "dxDevice.h"
-#include "dxVertexShader.h"
-#include "dxPixelShader.h"
-#include "dxSwapChain.h"
-#include "dxBuffer.h"
 #include "dxDescriptorHeap.h"
 #include "dxCommandQueue.h"
 #include "dxFence.h"
+#include "dxTexture.h"
 
 void rendering::DXGeometryPassStartCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -20,7 +17,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXGeometryPassStartCL* self = static_cast<DXGeometryPassStartCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -31,29 +28,17 @@ return Value();
             THROW_EXCEPTION("Please supply a device!")
         }
 
-        Value widthValue = scope.GetProperty("param1");
-        if (widthValue.GetType() != ScriptingValueType::Number) {
-            THROW_EXCEPTION("Please supply width!")
-        }
-        int width = static_cast<int>(widthValue.GetNum());
-        if (width <= 0) {
-            THROW_EXCEPTION("Please supply valid width!")
-        }
+        Value diffuseTexValue = scope.GetProperty("param1");
+        DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
 
-        Value heightValue = scope.GetProperty("param2");
-        if (heightValue.GetType() != ScriptingValueType::Number) {
-            THROW_EXCEPTION("Please supply height!")
-        }
-        int height = static_cast<int>(heightValue.GetNum());
-        if (height <= 0) {
-            THROW_EXCEPTION("Please supply valid height!")
+        if (!diffuseTex) {
+            THROW_EXCEPTION("Please supply a diffuse texture!")
         }
 
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
-            width,
-            height,
+            diffuseTex->GetTexture(),
             error
         );
 
@@ -108,73 +93,10 @@ if (FAILED(hRes)) {\
 
 bool rendering::DXGeometryPassStartCL::Create(
     ID3D12Device* device,
-    UINT texturesWidth,
-    UINT texturesHeight,
+    ID3D12Resource* diffuseTexture,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
-
-    {
-        // Describe and create a Texture2D.
-        D3D12_RESOURCE_DESC textureDesc = {};
-        textureDesc.MipLevels = 1;
-        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        textureDesc.Width = texturesWidth;
-        textureDesc.Height = texturesHeight;
-        textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-        textureDesc.DepthOrArraySize = 1;
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
-        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-
-        CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
-
-        THROW_ERROR(
-            device->CreateCommittedResource(
-                &heapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &textureDesc,
-                D3D12_RESOURCE_STATE_PRESENT,
-                nullptr,
-                IID_PPV_ARGS(&m_diffuseTex)),
-            "Can't create diffuse texture!"
-        )
-
-        THROW_ERROR(
-            device->CreateCommittedResource(
-                &heapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &textureDesc,
-                D3D12_RESOURCE_STATE_PRESENT,
-                nullptr,
-                IID_PPV_ARGS(&m_specularTex)),
-            "Can't create specular texture!"
-        )
-
-        textureDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-
-        THROW_ERROR(
-            device->CreateCommittedResource(
-                &heapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &textureDesc,
-                D3D12_RESOURCE_STATE_PRESENT,
-                nullptr,
-                IID_PPV_ARGS(&m_positionTex)),
-            "Can't create position texture!"
-        )
-
-        THROW_ERROR(
-            device->CreateCommittedResource(
-                &heapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &textureDesc,
-                D3D12_RESOURCE_STATE_PRESENT,
-                nullptr,
-                IID_PPV_ARGS(&m_normalTex)),
-            "Can't create normal texture!"
-        )
-    }
 
     // Create descriptor heaps.
     {
@@ -194,16 +116,7 @@ bool rendering::DXGeometryPassStartCL::Create(
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
-        device->CreateRenderTargetView(m_diffuseTex.Get(), nullptr, rtvHandle);
-        rtvHandle.Offset(1, m_rtvDescriptorSize);
-
-        device->CreateRenderTargetView(m_specularTex.Get(), nullptr, rtvHandle);
-        rtvHandle.Offset(1, m_rtvDescriptorSize);
-
-        device->CreateRenderTargetView(m_positionTex.Get(), nullptr, rtvHandle);
-        rtvHandle.Offset(1, m_rtvDescriptorSize);
-
-        device->CreateRenderTargetView(m_normalTex.Get(), nullptr, rtvHandle);
+        device->CreateRenderTargetView(diffuseTexture, nullptr, rtvHandle);
         rtvHandle.Offset(1, m_rtvDescriptorSize);
     }
 
@@ -216,7 +129,13 @@ bool rendering::DXGeometryPassStartCL::Create(
         "Can't create Command List!")
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-    m_commandList->OMSetRenderTargets(4, &rtvHandle, FALSE, nullptr);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+    // Indicate that the back buffer will be used as a render target.
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTexture, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
 
     THROW_ERROR(
         m_commandList->Close(),

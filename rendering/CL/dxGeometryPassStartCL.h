@@ -15,11 +15,6 @@ namespace rendering
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
-		Microsoft::WRL::ComPtr<ID3D12Resource> m_diffuseTex;
-		Microsoft::WRL::ComPtr<ID3D12Resource> m_specularTex;
-		Microsoft::WRL::ComPtr<ID3D12Resource> m_positionTex;
-		Microsoft::WRL::ComPtr<ID3D12Resource> m_normalTex;
-
 		UINT m_rtvDescriptorSize;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 
@@ -27,12 +22,10 @@ namespace rendering
 
 		bool Create(
 			ID3D12Device* device,
-			UINT texturesWidth,
-			UINT texturesHeight,
+			ID3D12Resource* diffuseTex,
 			std::string& errorMessage);
 
 		bool Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
-
 	public:
 	};
 }

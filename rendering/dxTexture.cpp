@@ -103,6 +103,38 @@ return Value();
 		return Value();
 	});
 
+	Value& initDiffuseRT = GetOrCreateProperty(nativeObject, "initDiffuseRT");
+	initDiffuseRT = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value widthValue = scope.GetProperty("param0");
+		if (widthValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture width!");
+		}
+		int width = widthValue.GetNum();
+		if (width <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture width!");
+		}
+
+		Value heightValue = scope.GetProperty("param1");
+		if (heightValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture width!");
+		}
+		int height = heightValue.GetNum();
+		if (height <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture height!");
+		}
+
+		texture->m_width = width;
+		texture->m_height = height;
+		texture->m_allowUA = false;
+		texture->m_format = DXGI_FORMAT_R8G8B8A8_UINT;
+		texture->m_renderTarget = true;
+
+		return Value();
+	});
+
 	Value& place = GetOrCreateProperty(nativeObject, "place");
 	place = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
@@ -201,6 +233,9 @@ D3D12_RESOURCE_DESC rendering::DXTexture::GetTextureDescription() const
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
 	if (m_allowUA) {
 		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+	if (m_renderTarget) {
+		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	}
 
 	CD3DX12_RESOURCE_DESC textureDesc = {};

@@ -16,6 +16,8 @@ namespace rendering
 		UINT m_depth = -1;
 		UINT m_dimension = 2;
 		bool m_allowUA = false;
+		bool m_renderTarget = false;
+
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_texture;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
