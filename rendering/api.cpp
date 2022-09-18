@@ -30,6 +30,9 @@
 
 #include "primitives/cube.h"
 
+#include "CL/dxGeometryPassStartCL.h"
+#include "CL/dxGeometryPassEndCL.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -188,11 +191,24 @@ namespace rendering
 		}));
 #pragma endregion
 
+#pragma region Deffered Shading
 		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXDisplay3DCL* display3D = new DXDisplay3DCL();
 			return NativeObject::Create(display3D);
 		}));
 
+		m_api.SetProperty("geometryPassStart", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXGeometryPassStartCL* geometryPassStart = new DXGeometryPassStartCL();
+			return NativeObject::Create(geometryPassStart);
+		}));
+
+		m_api.SetProperty("geometryPassEnd", interpreter::CreateNativeFunc(0, [](Value scope) {
+			DXGeometryPassEndCL* geometryPassEnd = new DXGeometryPassEndCL();
+			return NativeObject::Create(geometryPassEnd);
+		}));
+#pragma endregion
+
+#pragma region AUX
 		m_api.SetProperty("aux", interpreter::utils::GetEmptyObject());
 		Value aux = m_api.GetProperty("aux");
 
@@ -200,6 +216,7 @@ namespace rendering
 			DXCamera* camera = new DXCamera();
 			return NativeObject::Create(camera);
 		}));
+#pragma endregion
 	}
 }
 
