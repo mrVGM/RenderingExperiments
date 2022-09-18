@@ -56,7 +56,7 @@ add_library (Rendering
 	"primitives/cube.h"
 	"primitives/cube.cpp"
 	"CL/dxGeometryPassStartCL.h"
-	"CL/dxGeometryPassStart.cpp"
+	"CL/dxGeometryPassStartCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
