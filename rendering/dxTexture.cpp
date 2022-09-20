@@ -129,7 +129,7 @@ return Value();
 		texture->m_width = width;
 		texture->m_height = height;
 		texture->m_allowUA = false;
-		texture->m_format = DXGI_FORMAT_R8G8B8A8_UINT;
+		texture->m_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		texture->m_renderTarget = true;
 
 		return Value();

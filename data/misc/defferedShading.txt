@@ -12,10 +12,10 @@ vertexData.push(-1);
 vertexData.push(0);
 vertexData.push(0);
 
-vertexData.push(1);
 vertexData.push(-1);
 vertexData.push(1);
 vertexData.push(0);
+vertexData.push(1);
 
 vertexData.push(1);
 vertexData.push(1);
@@ -23,9 +23,19 @@ vertexData.push(1);
 vertexData.push(1);
 
 vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(-1);
 vertexData.push(1);
 vertexData.push(0);
-vertexData.push(1);
 
 let createHeap = func(device, type, size, onReady) {
 	let fence = api.fence();
@@ -108,7 +118,7 @@ let copyVertexData = func(device, onReady) {
 };
 
 
-let loadPipeline = func(device, commandQueue) {
+let loadPipeline = func(device, swapChain, commandQueue) {
 	let geometryPassStart = api.geometryPassStart();
 	let geometryPassEnd = api.geometryPassEnd();
 
@@ -139,10 +149,7 @@ let loadPipeline = func(device, commandQueue) {
 	descHeap.create(device, descriptors);
 
 	let counter = 1;
-	let endPass = func(swapChain, onReady) {
-		swapChain.swapChain.updateCurrentFrameIndex();
-		geometryPassEnd.populate(swapChain, diffuseTex, descHeap);
-
+	let endPass = func(onReady) {
 		let fe = api.fenceEvent();
 		fe.create();
 
@@ -151,6 +158,8 @@ let loadPipeline = func(device, commandQueue) {
 			onReady();
 		});
 
+		swapChain.updateCurrentFrameIndex();
+		geometryPassEnd.populate(swapChain, diffuseTex, descHeap);
 		geometryPassEnd.execute(commandQueue, fence, counter);
 	};
 
@@ -160,7 +169,7 @@ let loadPipeline = func(device, commandQueue) {
 	return res;
 };
 
-let loadResources = func(device, commandQueue, width, height, onReady) {
+let loadResources = func(device, swapChain, commandQueue, width, height, onReady) {
 	let waiting = 2;
 
 	let callReady = func() {
@@ -168,10 +177,7 @@ let loadResources = func(device, commandQueue, width, height, onReady) {
 			let res = {};
 			res.diffuseTex = diffuseTex;
 			res.vertexBuffer = vertexBuff;
-			res.pipeline = loadPipeline(device, commandQueue);
-
-			print("YESS");
-
+			res.pipeline = loadPipeline(device, swapChain, commandQueue);
 			onReady(res);
 		}
 	};

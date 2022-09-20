@@ -11,7 +11,7 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 {
     PSInput result;
 
-    result.position = float4(position, 0, 1);
+    result.position = float4(0.5 * position, 0, 1);
     result.uv = uv;
 
     return result;

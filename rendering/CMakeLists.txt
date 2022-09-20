@@ -59,6 +59,8 @@ add_library (Rendering
 	"CL/dxGeometryPassStartCL.cpp"
 	"CL/dxGeometryPassEndCL.h"
 	"CL/dxGeometryPassEndCL.cpp"
+	"CL/dxPlainCL.h"
+	"CL/dxPlainCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

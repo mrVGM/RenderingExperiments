@@ -131,42 +131,66 @@ let startRender3D = func(vertexBuff, indexBuff, instanceBuff) {
 
 let cube = require("cube.txt");
 let deffShad = none;
+let plainCL = require("displayPlain.txt");
+let plainRender = none;
 try {
 	generalInit();
 
-	let instanceData = [];
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(0);
-	instanceData.push(math.cos(math.PI / 8));
-	instanceData.push(-math.sin(math.PI / 8));
-	instanceData.push(0);
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(1);
-	instanceData.push(1);
+	let dummy = func() {
+		let instanceData = [];
+		instanceData.push(0);
+		instanceData.push(1);
+		instanceData.push(0);
+		instanceData.push(math.cos(math.PI / 8));
+		instanceData.push(-math.sin(math.PI / 8));
+		instanceData.push(0);
+		instanceData.push(0);
+		instanceData.push(1);
+		instanceData.push(1);
+		instanceData.push(1);
 
-	instanceData.push(0);
-	instanceData.push(-1);
-	instanceData.push(0);
-	instanceData.push(math.cos(math.PI / 8));
-	instanceData.push(-math.sin(math.PI / 8));
-	instanceData.push(0);
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(1);
-	instanceData.push(1);
+		instanceData.push(0);
+		instanceData.push(-1);
+		instanceData.push(0);
+		instanceData.push(math.cos(math.PI / 8));
+		instanceData.push(-math.sin(math.PI / 8));
+		instanceData.push(0);
+		instanceData.push(0);
+		instanceData.push(1);
+		instanceData.push(1);
+		instanceData.push(1);
 
-	cube(device, instanceData, func(buffer, indexBuffer, instanceBuffer) {
-		startRender3D(buffer, indexBuffer, instanceBuffer);
-	});
+		cube(device, instanceData, func(buffer, indexBuffer, instanceBuffer) {
+			startRender3D(buffer, indexBuffer, instanceBuffer);
+		});
+	};
 
 	#worlyInit();
 	#requestRenderer();
 
+	let startRender = func() {
+		let rend = func() {
+			if (wnd.isAlive() == 0) {
+				return;
+			}
+			
+			deffShad.pipeline.startPass();
+			deffShad.pipeline.endPass(func() {
+				swapChain.present();
+				rend();
+			});
+		};
+
+		rend();
+	};
+
 	let defferedShading = require("defferedShading.txt");
-	defferedShading(device, commandQueue, wnd.width(), wnd.height(), func(obj) {
+	defferedShading(device, swapChain, commandQueue, wnd.width(), wnd.height(), func(obj) {
 		deffShad = obj;
+		plainCL(device, swapChain, commandQueue, func(renderFunc) {
+			plainRender = renderFunc;
+			startRender();
+		});
 	});
 } catch(e) {
 	print(e);

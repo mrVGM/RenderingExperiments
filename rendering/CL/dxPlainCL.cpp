@@ -1,4 +1,4 @@
-#include "CL/dxGeometryPassEndCL.h"
+#include "CL/dxPlainCL.h"
 
 #include "nativeFunc.h"
 
@@ -10,9 +10,8 @@
 #include "dxDescriptorHeap.h"
 #include "dxCommandQueue.h"
 #include "dxFence.h"
-#include "dxTexture.h"
 
-void rendering::DXGeometryPassEndCL::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::DXPlainCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -21,9 +20,9 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXGeometryPassEndCL* self = static_cast<DXGeometryPassEndCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXPlainCL* self = static_cast<DXPlainCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value deviceValue = scope.GetProperty("param0");
         DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
@@ -46,18 +45,44 @@ return Value();
             THROW_EXCEPTION("Please supply a pixel shader!")
         }
 
-        Value vertexBufferValue = scope.GetProperty("param3");
-        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
-
-        if (!vertexBuffer) {
-            THROW_EXCEPTION("Please supply a Vertex Buffer!")
-        }
-
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
             vertexShader->GetCompiledShader(),
             pixelShader->GetCompiledShader(),
+            error);
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
+
+    Value& populate = GetOrCreateProperty(nativeObject, "populate");
+    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXPlainCL* self = static_cast<DXPlainCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value swapChainValue = scope.GetProperty("param0");
+        DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
+
+        if (!swapChain) {
+            THROW_EXCEPTION("Please supply a swap chain!")
+        }
+
+        Value vertexBufferValue = scope.GetProperty("param1");
+        DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
+
+        if (!vertexBuffer) {
+            THROW_EXCEPTION("Please supply vertex buffer!")
+        }
+
+
+        std::string error;
+        bool res = self->Populate(
+            &swapChain->m_viewport,
+            &swapChain->m_scissorRect,
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             vertexBuffer->GetStride(),
@@ -70,54 +95,10 @@ return Value();
         return Value();
     });
 
-    Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 3, [](Value scope) {
-        Value selfValue = scope.GetProperty("self");
-        DXGeometryPassEndCL* self = static_cast<DXGeometryPassEndCL*>(NativeObject::ExtractNativeObject(selfValue));
-
-        Value swapChainValue = scope.GetProperty("param0");
-        DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
-
-        if (!swapChain) {
-            THROW_EXCEPTION("Please supply a swap chain!")
-        }
-
-        Value diffuseTexValue = scope.GetProperty("param1");
-        DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
-
-        if (!diffuseTex) {
-            THROW_EXCEPTION("Please supply a diffuse texture!")
-        }
-
-        Value descriptorHeapValue = scope.GetProperty("param2");
-        DXDescriptorHeap* descriptorHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(descriptorHeapValue));
-
-        if (!descriptorHeap) {
-            THROW_EXCEPTION("Please supply a descriptor heap!")
-        }
-
-        std::string error;
-        bool res = self->Populate(
-            &swapChain->m_viewport,
-            &swapChain->m_scissorRect,
-            swapChain->GetCurrentRTVDescriptor(),
-            swapChain->GetCurrentRenderTarget(),
-            &self->m_vertexBufferView,
-            diffuseTex->GetTexture(),
-            descriptorHeap->GetHeap(),
-            error);
-
-        if (!res) {
-            THROW_EXCEPTION(error)
-        }
-
-        return Value();
-    });
-
     Value& execute = GetOrCreateProperty(nativeObject, "execute");
     execute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXGeometryPassEndCL* self = static_cast<DXGeometryPassEndCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXPlainCL* self = static_cast<DXPlainCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
@@ -156,24 +137,13 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXGeometryPassEndCL::Create(
+bool rendering::DXPlainCL::Create(
     ID3D12Device* device,
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
-    ID3D12Resource* vertexBuffer,
-    int vertexBufferWidth,
-    int vertexBufferStride,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
-
-    // Create the vertex buffer view.
-    {
-        // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = vertexBufferStride;
-        m_vertexBufferView.SizeInBytes = vertexBufferWidth;
-    }
 
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -185,21 +155,6 @@ bool rendering::DXGeometryPassEndCL::Create(
             featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
 
-        D3D12_STATIC_SAMPLER_DESC sampler = {};
-        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        sampler.MipLODBias = 0;
-        sampler.MaxAnisotropy = 0;
-        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-        sampler.MinLOD = 0.0f;
-        sampler.MaxLOD = D3D12_FLOAT32_MAX;
-        sampler.ShaderRegister = 0;
-        sampler.RegisterSpace = 0;
-        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
         // Allow input layout and deny uneccessary access to certain pipeline stages.
         D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -207,13 +162,8 @@ bool rendering::DXGeometryPassEndCL::Create(
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(1, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -233,7 +183,6 @@ bool rendering::DXGeometryPassEndCL::Create(
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
         // Describe and create the graphics pipeline state object (PSO).
@@ -271,14 +220,12 @@ bool rendering::DXGeometryPassEndCL::Create(
     return true;
 }
 
-bool rendering::DXGeometryPassEndCL::Populate(
+bool rendering::DXPlainCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
-    ID3D12Resource* renderTarget,
-    const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
-    ID3D12Resource* diffuseTex,
-    ID3D12DescriptorHeap* descriptorHeap,
+    ID3D12Resource* vertexBuffer,
+    int vertexBufferWidth,
+    int vertexBufferStride,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -295,46 +242,21 @@ bool rendering::DXGeometryPassEndCL::Populate(
         m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()),
         "Can't reset Command List!")
 
-    // Diffuse Texture is now SRV
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-    
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetDescriptorHeaps(1, &descriptorHeap);
-    m_commandList->SetGraphicsRootDescriptorTable(0, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
-
-    // Indicate that the back buffer will be used as a render target.
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    
-    const float clearColor[] = { 1.0f, 0.2f, 0.4f, 1.0f };
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
-    
+
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+    vertexBufferView.SizeInBytes = vertexBufferWidth;
+    vertexBufferView.StrideInBytes = vertexBufferStride;
+
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, vertexBufferView);
+    m_commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
     m_commandList->DrawInstanced(6, 1, 0, 0);
 
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-
-    // Indicate that the back buffer will now be used to present.
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-     
     THROW_ERROR(
         m_commandList->Close(),
         "Can't close Command List!")
@@ -342,7 +264,7 @@ bool rendering::DXGeometryPassEndCL::Populate(
     return true;
 }
 
-bool rendering::DXGeometryPassEndCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+bool rendering::DXPlainCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);

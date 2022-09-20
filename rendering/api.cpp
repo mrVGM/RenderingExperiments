@@ -33,6 +33,8 @@
 #include "CL/dxGeometryPassStartCL.h"
 #include "CL/dxGeometryPassEndCL.h"
 
+#include "CL/dxPlainCL.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -215,6 +217,11 @@ namespace rendering
 		aux.SetProperty("camera", CreateNativeFunc(0, [](Value scope) {
 			DXCamera* camera = new DXCamera();
 			return NativeObject::Create(camera);
+		}));
+
+		aux.SetProperty("plainCL", CreateNativeFunc(0, [](Value scope) {
+			DXPlainCL* plainCL = new DXPlainCL();
+			return NativeObject::Create(plainCL);
 		}));
 #pragma endregion
 	}

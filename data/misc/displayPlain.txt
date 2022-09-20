@@ -1,0 +1,76 @@
+let vertexData = [];
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(-1);
+
+let vertexHeap = api.heap();
+let vertexBuff = api.buffer();
+
+let buffSize = 4 * vertexData.length;
+
+let loadVertexData = func(device, onReady) {
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		vertexBuff.init(buffSize);
+		vertexBuff.place(device, vertexHeap, 0, 0);
+		vertexBuff.copyData(vertexData);
+
+		onReady();
+	});
+
+	vertexHeap.create(device, buffSize, "UPLOAD");
+	vertexHeap.makeResident(fence, 1);
+};
+
+let requestRenderer = func(device, swapChain, commandQueue, onReady) {
+	let shaderCode = readFile("plainShader.hlsl");
+
+	let vertexShader = api.vertexShader();
+	vertexShader.compile(shaderCode);
+
+	let pixelShader = api.pixelShader();
+	pixelShader.compile(shaderCode);
+
+	let plainCL = api.aux.plainCL();
+	plainCL.create(device, vertexShader, pixelShader);
+
+	let renderFunc = func(onRender) {
+		let frame = 0;
+		let fence = api.fence();
+		fence.create(device);
+
+		let render = func() {
+			let renderFE = api.fenceEvent();
+			renderFE.create();
+
+			renderFE.wait(fence, frame, func(arg) {
+				frame = frame + 1;
+				onRender();
+			});
+
+			plainCL.populate(swapChain, vertexBuff);
+			plainCL.execute(commandQueue, fence, frame);
+		};
+
+		return render;
+	};
+
+	loadVertexData(device, func() {
+		onReady(renderFunc);
+	});
+};
+
+export = requestRenderer;
