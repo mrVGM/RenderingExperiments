@@ -25,6 +25,7 @@ let loadVertexData = func(device, onReady) {
 	fe.create();
 	fe.wait(fence, 1, func(arg) {
 		vertexBuff.init(buffSize);
+		vertexBuff.setStride(8);
 		vertexBuff.place(device, vertexHeap, 0, 0);
 		vertexBuff.copyData(vertexData);
 

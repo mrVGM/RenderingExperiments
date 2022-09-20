@@ -169,12 +169,18 @@ try {
 	#requestRenderer();
 
 	let startRender = func() {
+		let plain = plainRender(func() {
+			let a = 5;
+		});
 		let rend = func() {
 			if (wnd.isAlive() == 0) {
 				return;
 			}
-			
+
 			deffShad.pipeline.startPass();
+
+			plain();
+
 			deffShad.pipeline.endPass(func() {
 				swapChain.present();
 				rend();
