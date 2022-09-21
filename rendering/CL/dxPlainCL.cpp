@@ -10,6 +10,7 @@
 #include "dxDescriptorHeap.h"
 #include "dxCommandQueue.h"
 #include "dxFence.h"
+#include "dxGeometryPassStartCL.h"
 
 void rendering::DXPlainCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -60,7 +61,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXPlainCL* self = static_cast<DXPlainCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -78,11 +79,19 @@ return Value();
             THROW_EXCEPTION("Please supply vertex buffer!")
         }
 
+        Value geometryPassStartValue = scope.GetProperty("param2");
+        DXGeometryPassStartCL* geometryPassStart = dynamic_cast<DXGeometryPassStartCL*>(NativeObject::ExtractNativeObject(geometryPassStartValue));
+
+        if (!geometryPassStart) {
+            THROW_EXCEPTION("Please supply geometry pass!")
+        }
+
 
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
             &swapChain->m_scissorRect,
+            geometryPassStart->GetRTVHeap(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             vertexBuffer->GetStride(),
@@ -223,6 +232,7 @@ bool rendering::DXPlainCL::Create(
 bool rendering::DXPlainCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
+    ID3D12DescriptorHeap* rtvHeap,
     ID3D12Resource* vertexBuffer,
     int vertexBufferWidth,
     int vertexBufferStride,
@@ -247,6 +257,9 @@ bool rendering::DXPlainCL::Populate(
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
     vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();

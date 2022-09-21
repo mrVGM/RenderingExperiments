@@ -156,4 +156,9 @@ bool rendering::DXGeometryPassStartCL::Execute(ID3D12CommandQueue* commandQueue,
     return true;
 }
 
+ID3D12DescriptorHeap* rendering::DXGeometryPassStartCL::GetRTVHeap() const
+{
+    return m_rtvHeap.Get();
+}
+
 #undef THROW_ERROR

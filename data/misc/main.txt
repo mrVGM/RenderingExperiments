@@ -169,6 +169,7 @@ try {
 	#requestRenderer();
 
 	let startRender = func() {
+
 		let plain = plainRender(func() {
 			let a = 5;
 		});
@@ -193,7 +194,8 @@ try {
 	let defferedShading = require("defferedShading.txt");
 	defferedShading(device, swapChain, commandQueue, wnd.width(), wnd.height(), func(obj) {
 		deffShad = obj;
-		plainCL(device, swapChain, commandQueue, func(renderFunc) {
+
+		plainCL(device, swapChain, commandQueue, deffShad.pipeline.geometryStart, func(renderFunc) {
 			plainRender = renderFunc;
 			startRender();
 		});

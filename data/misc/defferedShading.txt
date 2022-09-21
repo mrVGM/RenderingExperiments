@@ -166,6 +166,8 @@ let loadPipeline = func(device, swapChain, commandQueue) {
 	let res = {};
 	res.startPass = startPass;
 	res.endPass = endPass;
+	res.geometryStart = geometryPassStart;
+
 	return res;
 };
 

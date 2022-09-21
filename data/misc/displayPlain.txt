@@ -36,7 +36,7 @@ let loadVertexData = func(device, onReady) {
 	vertexHeap.makeResident(fence, 1);
 };
 
-let requestRenderer = func(device, swapChain, commandQueue, onReady) {
+let requestRenderer = func(device, swapChain, commandQueue, geometryPassStart, onReady) {
 	let shaderCode = readFile("plainShader.hlsl");
 
 	let vertexShader = api.vertexShader();
@@ -62,7 +62,7 @@ let requestRenderer = func(device, swapChain, commandQueue, onReady) {
 				onRender();
 			});
 
-			plainCL.populate(swapChain, vertexBuff);
+			plainCL.populate(swapChain, vertexBuff, geometryPassStart);
 			plainCL.execute(commandQueue, fence, frame);
 		};
 

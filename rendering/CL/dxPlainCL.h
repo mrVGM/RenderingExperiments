@@ -27,6 +27,7 @@ namespace rendering
 		bool Populate(
 			const CD3DX12_VIEWPORT* viewport,
 			CD3DX12_RECT* scissorRect,
+			ID3D12DescriptorHeap* rtvHeap,
 			ID3D12Resource* vertexBuffer,
 			int vertexBufferWidth,
 			int vertexBufferStride,

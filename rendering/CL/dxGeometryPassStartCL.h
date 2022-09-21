@@ -27,5 +27,7 @@ namespace rendering
 
 		bool Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 	public:
+
+		ID3D12DescriptorHeap* GetRTVHeap() const;
 	};
 }
