@@ -19,9 +19,6 @@ let device = api.device();
 let swapChain = api.swapChain();
 let commandQueue = api.commandQueue();
 
-let worlyData = none;
-let worlyRenderer = none;
-
 let generalInit = func() {
 	device.create();
 	commandQueue.create(device);
@@ -29,69 +26,8 @@ let generalInit = func() {
 	print("General Init!");
 };
 
-let offset = 0;
-let updateUVW = func() {
-	return;
-	offset = offset + 0.001;
-	let tmp = [];
-	tmp.push(offset);
-
-	worlyRenderer.constBuff.copyData(tmp);
-};
-
-let tryStartRender = func() {
-	if (worlyData == none) {
-		return;
-	}
-	if (worlyRenderer == none) {
-		return;
-	}
-
-	try {
-		worlyRenderer.startRender(wnd, swapChain, commandQueue, worlyData, updateUVW);
-	}  catch(e) {
-		print(e);
-	}
-};
-
-let requestRenderer = func() {
-	let req = require("displayWorly.txt");
-	req(device, func(renderer) {
-		worlyRenderer = renderer;
-		print("Renderer acquired!");
-		tryStartRender();
-	});
-};
-
-
-let worlyExecute = func() {
-	try {
-		print("Texture Processing Begin!");
-		
-		worlyData.execute(device, commandQueue, func() {
-			print("Texture Processing End!");
-			tryStartRender();
-		});
-
-	} catch(e) {
-		print(e);
-	}
-};
-
-let worlyInit = func() {
-	let worly = require("worlyCompute.txt");
-	worly.prepare(device, 256, func(data) {
-		worlyData = data;
-		print("Worly Init!");
-
-		worlyExecute();
-	});
-};
-
 let rend3D = none;
-
 let cam = api.aux.camera();
-
 let offset = 0;
 
 let updateCam = func() {
@@ -129,77 +65,63 @@ let startRender3D = func(vertexBuff, indexBuff, instanceBuff) {
 	});
 };
 
-let cube = require("cube.txt");
-let deffShad = none;
-let plainCL = require("displayPlain.txt");
-let plainRender = none;
+let cube = require("primitives/cube.txt");
+let cubeVerts = none;
+let instance = none;
+let resources = require("resources/resourceUtils.txt");
+
+let render2Cubes = func() {
+	let tryRend = func() {
+		if (cubeVerts == none || instance == none) {
+			return;
+		}
+
+		startRender3D(cubeVerts.vertex.buffer, cubeVerts.index.buffer, instance.buffer);
+	};
+
+	cube(device, func(verts) {
+		cubeVerts = verts;
+		tryRend();
+	});
+
+	let instanceData = [];
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(0);
+	instanceData.push(math.cos(math.PI / 8));
+	instanceData.push(-math.sin(math.PI / 8));
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(1);
+	instanceData.push(1);
+
+	instanceData.push(0);
+	instanceData.push(-1);
+	instanceData.push(0);
+	instanceData.push(math.cos(math.PI / 8));
+	instanceData.push(-math.sin(math.PI / 8));
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(1);
+	instanceData.push(1);
+
+	let instanceBB = resources.bufferBuilder();
+	instanceBB.upload(1);
+	instanceBB.setSize(4 * instanceData.length);
+	instanceBB.setStride(40);
+	instanceBB.build(device, func(buff) {
+		instance = buff;
+		instance.buffer.copyData(instanceData);
+
+		tryRend();
+	});
+};
+
 try {
 	generalInit();
-
-	let dummy = func() {
-		let instanceData = [];
-		instanceData.push(0);
-		instanceData.push(1);
-		instanceData.push(0);
-		instanceData.push(math.cos(math.PI / 8));
-		instanceData.push(-math.sin(math.PI / 8));
-		instanceData.push(0);
-		instanceData.push(0);
-		instanceData.push(1);
-		instanceData.push(1);
-		instanceData.push(1);
-
-		instanceData.push(0);
-		instanceData.push(-1);
-		instanceData.push(0);
-		instanceData.push(math.cos(math.PI / 8));
-		instanceData.push(-math.sin(math.PI / 8));
-		instanceData.push(0);
-		instanceData.push(0);
-		instanceData.push(1);
-		instanceData.push(1);
-		instanceData.push(1);
-
-		cube(device, instanceData, func(buffer, indexBuffer, instanceBuffer) {
-			startRender3D(buffer, indexBuffer, instanceBuffer);
-		});
-	};
-
-	#worlyInit();
-	#requestRenderer();
-
-	let startRender = func() {
-
-		let plain = plainRender(func() {
-			let a = 5;
-		});
-		let rend = func() {
-			if (wnd.isAlive() == 0) {
-				return;
-			}
-
-			deffShad.pipeline.startPass();
-
-			plain();
-
-			deffShad.pipeline.endPass(func() {
-				swapChain.present();
-				rend();
-			});
-		};
-
-		rend();
-	};
-
-	let defferedShading = require("defferedShading.txt");
-	defferedShading(device, swapChain, commandQueue, wnd.width(), wnd.height(), func(obj) {
-		deffShad = obj;
-
-		plainCL(device, swapChain, commandQueue, deffShad.pipeline.geometryStart, func(renderFunc) {
-			plainRender = renderFunc;
-			startRender();
-		});
-	});
+	render2Cubes();
 } catch(e) {
 	print(e);
 }

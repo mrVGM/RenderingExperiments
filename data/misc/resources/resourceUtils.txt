@@ -1,0 +1,84 @@
+let bufferBuilder = func() {
+	let allowUA = 0;
+	let upload = 0;
+	let size = 0;
+	let stride = 0;
+
+	let res = {};
+	res.allowUA = func(x) {
+		allowAU = x;
+	};
+
+	res.upload = func(x) {
+		upload = x;
+	};
+
+	res.setSize = func(x) {
+		size = x;
+	};
+
+	res.setStride = func(x) {
+		stride = x;
+	};
+
+	res.build = func(device, onReady) {
+		if (size == 0) {
+			throw("Size of buffer not set!");
+		}
+
+		let heap = api.heap();
+		let buffer = api.buffer();
+
+		let fence = api.fence();
+		fence.create(device);
+
+		let fe = api.fenceEvent();
+		fe.create();
+		fe.wait(fence, 1, func(arg) {
+			buffer.init(size);
+			buffer.setStride(stride);
+			buffer.place(device, heap, 0, allowUA);
+
+			let buffData = {};
+			buffData.heap = heap;
+			buffData.buffer = buffer;
+			onReady(buffData);
+		});
+
+		let type = "DEFAULT";
+		if (upload) {
+			type = "UPLOAD";
+		}
+
+		heap.create(device, size, type);
+		heap.makeResident(fence, 1);
+	};
+
+	return res;
+};
+
+let copyBuffers = func(device, dst, src, onReady) {
+	let commandQueue = api.copyCommandQueue();
+	commandQueue.create(device);
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		onReady();
+	});
+
+	let copyCL = api.copyCL();
+	copyCL.create(device);
+	copyCL.populate(dst, src);
+	copyCL.execute(commandQueue, fence, 1);
+};
+
+let obj = {};
+obj.bufferBuilder = bufferBuilder;
+obj.copyBuffers = copyBuffers;
+
+export = obj;
+
