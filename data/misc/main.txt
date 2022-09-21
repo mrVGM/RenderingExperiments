@@ -119,9 +119,20 @@ let render2Cubes = func() {
 	});
 };
 
+let gBuffer = api.deferred.gBuffer();
+
 try {
 	generalInit();
 	render2Cubes();
+
+	let texBB = resources.textureBuilder();
+	texBB.setWidth(wnd.width());
+	texBB.setHeight(wnd.height());
+	texBB.setRTV(1);
+	texBB.build(device, func(texData) {
+		gBuffer.create(device, texData.texture);
+	});
+
 } catch(e) {
 	print(e);
 }

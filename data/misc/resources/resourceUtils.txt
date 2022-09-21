@@ -76,9 +76,91 @@ let copyBuffers = func(device, dst, src, onReady) {
 	copyCL.execute(commandQueue, fence, 1);
 };
 
+let textureBuilder = func() {
+	let allowUA = 0;
+	let width = 0;
+	let height = 0;
+	let depth = 0;
+	let dim = 2;
+	let rtv = 0;
+
+	let res = {};
+	res.allowUA = func(x) {
+		allowAU = x;
+	};
+
+	res.setWidth = func(x) {
+		width = x;
+	};
+
+	res.setHeight = func(x) {
+		height = x;
+	};
+
+	res.setDepth = func(x) {
+		depth = x;
+	};
+
+	res.setDim = func(x) {
+		dim = x;
+	};
+
+	res.setRTV = func(x) {
+		rtv = x;
+	};
+
+	res.build = func(device, onReady) {
+		if (width <= 0 || height <= 0) {
+			throw("Invalid width or height of the texture!");
+		}
+
+		let heap = api.heap();
+		let tex = api.texture();
+
+		let initTex = func() {
+			if (rtv) {
+				tex.initAsDiffuseRT(width, height);
+				return;
+			}
+
+			if (dim == 2) {
+				tex.init(width, height, allowUA);
+				return;
+			}
+			if (dim == 3) {
+				tex.init3D(width, height, depth, allowUA);
+				return;
+			}
+		};
+		initTex();
+
+		let fence = api.fence();
+		fence.create(device);
+
+		let fe = api.fenceEvent();
+		fe.create();
+		fe.wait(fence, 1, func(arg) {
+			tex.place(device, heap, 0);
+			let texData = {};
+			texData.heap = heap;
+			texData.texture = tex;
+			onReady(texData);
+		});
+
+		let type = "DEFAULT";
+		let size = tex.getAllocationSize(device);
+
+		heap.create(device, size, type);
+		heap.makeResident(fence, 1);
+	};
+
+	return res;
+};
+
 let obj = {};
 obj.bufferBuilder = bufferBuilder;
 obj.copyBuffers = copyBuffers;
+obj.textureBuilder = textureBuilder;
 
 export = obj;
 

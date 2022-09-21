@@ -35,6 +35,8 @@
 
 #include "CL/dxPlainCL.h"
 
+#include "deferred/gBuffer.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -194,6 +196,7 @@ namespace rendering
 #pragma endregion
 
 #pragma region Deffered Shading
+
 		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXDisplay3DCL* display3D = new DXDisplay3DCL();
 			return NativeObject::Create(display3D);
@@ -208,6 +211,15 @@ namespace rendering
 			DXGeometryPassEndCL* geometryPassEnd = new DXGeometryPassEndCL();
 			return NativeObject::Create(geometryPassEnd);
 		}));
+
+		m_api.SetProperty("deferred", interpreter::utils::GetEmptyObject());
+		Value deferred = m_api.GetProperty("deferred");
+		
+		deferred.SetProperty("gBuffer", interpreter::CreateNativeFunc(0, [](Value scope) {
+			rendering::deferred::GBuffer* gBuffer = new rendering::deferred::GBuffer();
+			return NativeObject::Create(gBuffer);
+		}));
+
 #pragma endregion
 
 #pragma region AUX

@@ -61,7 +61,7 @@ add_library (Rendering
 	"CL/dxGeometryPassEndCL.cpp"
 	"CL/dxPlainCL.h"
 	"CL/dxPlainCL.cpp"
-)
+ "deferred/gBuffer.h" "deferred/gBuffer.cpp")
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
