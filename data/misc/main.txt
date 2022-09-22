@@ -119,18 +119,15 @@ let render2Cubes = func() {
 	});
 };
 
-let gBuffer = api.deferred.gBuffer();
+let gBuffer = none;
 
 try {
 	generalInit();
 	render2Cubes();
 
-	let texBB = resources.textureBuilder();
-	texBB.setWidth(wnd.width());
-	texBB.setHeight(wnd.height());
-	texBB.setRTV(1);
-	texBB.build(device, func(tex) {
-		gBuffer.create(device, tex);
+	let loadGBuff = require("gBuffer.txt");
+	loadGBuff(device, wnd.width(), wnd.height(), func(gBuff) {
+		gBuffer = gBuff;
 	});
 
 } catch(e) {
