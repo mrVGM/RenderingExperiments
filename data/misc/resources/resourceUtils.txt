@@ -38,11 +38,7 @@ let bufferBuilder = func() {
 			buffer.init(size);
 			buffer.setStride(stride);
 			buffer.place(device, heap, 0, allowUA);
-
-			let buffData = {};
-			buffData.heap = heap;
-			buffData.buffer = buffer;
-			onReady(buffData);
+			onReady(buffer);
 		});
 
 		let type = "DEFAULT";
@@ -141,10 +137,7 @@ let textureBuilder = func() {
 		fe.create();
 		fe.wait(fence, 1, func(arg) {
 			tex.place(device, heap, 0);
-			let texData = {};
-			texData.heap = heap;
-			texData.texture = tex;
-			onReady(texData);
+			onReady(tex);
 		});
 
 		let type = "DEFAULT";

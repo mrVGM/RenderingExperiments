@@ -19,6 +19,8 @@ void rendering::DXTexture::InitProperties(interpreter::NativeObject & nativeObje
 scope.SetProperty("exception", Value(error));\
 return Value();
 
+	Value& heapProp = GetOrCreateProperty(nativeObject, "heap");
+
 	Value& init = GetOrCreateProperty(nativeObject, "init");
 	init = CreateNativeMethod(nativeObject, 3, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
@@ -136,7 +138,7 @@ return Value();
 	});
 
 	Value& place = GetOrCreateProperty(nativeObject, "place");
-	place = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+	place = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -183,6 +185,8 @@ return Value();
 		if (!res) {
 			THROW_EXCEPTION(error);
 		}
+
+		heapProp = heapValue;
 
 		return Value();
 	});
