@@ -7,6 +7,10 @@
 #include "dxCommandQueue.h"
 #include "dxFence.h"
 #include "dxTexture.h"
+#include "dxBuffer.h"
+#include "dxVertexShader.h"
+#include "dxPixelShader.h"
+#include "dxDescriptorHeap.h"
 
 void rendering::deferred::GBuffer::InitProperties(interpreter::NativeObject& nativeObject)
 {
@@ -16,8 +20,14 @@ void rendering::deferred::GBuffer::InitProperties(interpreter::NativeObject& nat
 scope.SetProperty("exception", Value(error));\
 return Value();
 
+    Value& diffuseTexture = GetOrCreateProperty(nativeObject, "diffuseTexture");
+    Value& vertexBuffer = GetOrCreateProperty(nativeObject, "vertexBuffer");
+    Value& vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
+    Value& pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
+    Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "gBuffDescriptorHeap");
+
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 6, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         GBuffer* self = static_cast<GBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -28,12 +38,45 @@ return Value();
             THROW_EXCEPTION("Please supply a device!")
         }
 
-        Value diffuseTexValue = scope.GetProperty("param1");
+        Value vertexBufferValue = scope.GetProperty("param1");
+        DXBuffer* dxVertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
+
+        if (!dxVertexBuffer) {
+            THROW_EXCEPTION("Please supply a Vertex Buffer!")
+        }
+        vertexBuffer = vertexBufferValue;
+
+        Value vertexShaderValue = scope.GetProperty("param2");
+        DXVertexShader* dxVertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
+
+        if (!dxVertexShader) {
+            THROW_EXCEPTION("Please supply a Vertex Shader!")
+        }
+        vertexShader = vertexShaderValue;
+
+        Value pixelShaderValue = scope.GetProperty("param3");
+        DXPixelShader* dxPixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(pixelShaderValue));
+
+        if (!dxPixelShader) {
+            THROW_EXCEPTION("Please supply a Pixel Shader!")
+        }
+        pixelShader = pixelShaderValue;
+
+        Value gBuffDescHeapValue = scope.GetProperty("param4");
+        DXDescriptorHeap* gBuffDescHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(gBuffDescHeapValue));
+
+        if (!gBuffDescHeap) {
+            THROW_EXCEPTION("Please supply a GBuffer Descriptor Heap!")
+        }
+        gBuffDescriptorHeap = gBuffDescHeapValue;
+
+        Value diffuseTexValue = scope.GetProperty("param5");
         DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
 
         if (!diffuseTex) {
             THROW_EXCEPTION("Please supply a diffuse texture!")
         }
+        diffuseTexture = diffuseTexValue;
 
         std::string error;
         bool res = self->Create(

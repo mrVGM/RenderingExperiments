@@ -1,0 +1,116 @@
+let vertexData = [];
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(-1);
+vertexData.push(-1);
+vertexData.push(0);
+vertexData.push(0);
+
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+vertexData.push(1);
+
+vertexData.push(1);
+vertexData.push(-1);
+vertexData.push(1);
+vertexData.push(0);
+
+let createGBuff = func(device, onReady) {
+	let resources = require("resources/resourceUtils.txt");
+
+	let shaderCode = readFile("defferedShading.hlsl");
+	let vertexShader = api.vertexShader();
+	vertexShader.compile(shaderCode);
+
+	let pixelShader = api.pixelShader();
+	pixelShader.compile(shaderCode);
+
+	let vertexBuffer = none;
+	let vertexUploadBuffer = none;
+	let diffuseTex = none;
+
+	let vertexBB = resources.bufferBuilder();
+	vertexBB.upload(0);
+	vertexBB.setSize(4 * vertexData.length);
+	vertexBB.setStride(16);
+
+	let vertexUploadBB = resources.bufferBuilder();
+	vertexUploadBB.upload(0);
+	vertexUploadBB.setSize(4 * vertexData.length);
+	vertexUploadBB.setStride(16);
+
+	let texBB = resources.textureBuilder();
+	texBB.setWidth(wnd.width());
+	texBB.setHeight(wnd.height());
+	texBB.setRTV(1);
+
+	let copied = 0;
+
+	let assembleGBuff = func() {
+		if (copied == 0 || diffuseTex == none) {
+			return;
+		}
+
+		let descriptors = [];
+		let texDesc = {};
+		texDesc.type = "srv_tex";
+		texDesc.texture = diffuseTex.texture;
+		descriptors.push(texDesc);
+
+		let descHeap = api.descriptorHeap();
+		descHeap.create(device, descriptors);
+
+		let gBuffer = api.deferred.gBuffer();
+		gBuffer.create(
+			device,
+			vertexBuffer.buffer,
+			vertexShader,
+			pixelShader,
+			descHeap,
+			diffuseTex.texture);
+
+		onReady(gBuffer);
+	};
+
+	let copy = func() {
+		if (vertexBuffer == none || vertexUploadBuffer == none) {
+			return;
+		}
+
+		resources.copyBuffers(device, vertexBuffer.buffer, vertexUploadBuffer.buffer, func() {
+			assembleGBuff();
+		});
+	};
+
+	vertexBB.build(device, func(vertex) {
+		vertexBuffer = vertex;
+		copy();
+	});
+
+	vertexUploladBB.build(device, func(vertexUpload) {
+		vertexUploadBuffer = vertexUpload;
+		vertexUploadBuffer.buffer.copyData(vertexData);
+		copy();
+	});
+
+	texBB.build(device, func(texData) {
+		assembleGBuff();
+	});
+
+};
+
+export = createGBuff;
