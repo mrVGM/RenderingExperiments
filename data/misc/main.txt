@@ -76,7 +76,7 @@ let render2Cubes = func() {
 			return;
 		}
 
-		startRender3D(cubeVerts.vertex.buffer, cubeVerts.index.buffer, instance.buffer);
+		startRender3D(cubeVerts.vertex, cubeVerts.index, instance);
 	};
 
 	cube(device, func(verts) {
@@ -113,7 +113,7 @@ let render2Cubes = func() {
 	instanceBB.setStride(40);
 	instanceBB.build(device, func(buff) {
 		instance = buff;
-		instance.buffer.copyData(instanceData);
+		instance.copyData(instanceData);
 
 		tryRend();
 	});
@@ -129,8 +129,8 @@ try {
 	texBB.setWidth(wnd.width());
 	texBB.setHeight(wnd.height());
 	texBB.setRTV(1);
-	texBB.build(device, func(texData) {
-		gBuffer.create(device, texData.texture);
+	texBB.build(device, func(tex) {
+		gBuffer.create(device, tex);
 	});
 
 } catch(e) {

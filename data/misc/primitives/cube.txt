@@ -55,7 +55,7 @@ let prepareData = func(device, onReady) {
 		if (vertexUploadBuff == none || vertexBuff == none) {
 			return;
 		}
-		resources.copyBuffers(device, vertexBuff.buffer, vertexUploadBuff.buffer, func() {
+		resources.copyBuffers(device, vertexBuff, vertexUploadBuff, func() {
 			copyLeft = copyLeft - 1;
 			dataPrepared();
 		});
@@ -66,7 +66,7 @@ let prepareData = func(device, onReady) {
 			return;
 		}
 
-		resources.copyBuffers(device, indexBuff.buffer, indexUploadBuff.buffer, func() {
+		resources.copyBuffers(device, indexBuff, indexUploadBuff, func() {
 			copyLeft = copyLeft - 1;
 			dataPrepared();
 		});
@@ -74,7 +74,7 @@ let prepareData = func(device, onReady) {
 
 	vertexUploadBB.build(device, func(buff) {
 		vertexUploadBuff = buff;
-		vertexUploadBuff.buffer.copyData(verts.vertexData);
+		vertexUploadBuff.copyData(verts.vertexData);
 		copyVertex();
 	});
 
@@ -85,7 +85,7 @@ let prepareData = func(device, onReady) {
 
 	indexUploadBB.build(device, func(buff) {
 		indexUploadBuff = buff;
-		indexUploadBuff.buffer.copyIntData(verts.indexData);
+		indexUploadBuff.copyIntData(verts.indexData);
 		copyIndex();
 	});
 

@@ -21,6 +21,8 @@ void rendering::DXBuffer::InitProperties(interpreter::NativeObject & nativeObjec
 scope.SetProperty("exception", Value(error));\
 return Value();
 
+	Value& heapProp = GetOrCreateProperty(nativeObject, "heap");
+
 	Value& init = GetOrCreateProperty(nativeObject, "init");
 	init = CreateNativeMethod(nativeObject, 1, [](Value scope) {
 		Value selfValue = scope.GetProperty("self");
@@ -41,7 +43,7 @@ return Value();
 	});
 
 	Value& place = GetOrCreateProperty(nativeObject, "place");
-	place = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+	place = CreateNativeMethod(nativeObject, 4, [&](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXBuffer* buffer = static_cast<DXBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -96,6 +98,8 @@ return Value();
 		if (!res) {
 			THROW_EXCEPTION(error);
 		}
+
+		heapProp = heapValue;
 
 		return Value();
 	});
