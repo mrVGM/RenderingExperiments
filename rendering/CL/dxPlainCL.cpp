@@ -11,6 +11,7 @@
 #include "dxCommandQueue.h"
 #include "dxFence.h"
 #include "dxGeometryPassStartCL.h"
+#include "deferred/gBuffer.h"
 
 void rendering::DXPlainCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -79,19 +80,18 @@ return Value();
             THROW_EXCEPTION("Please supply vertex buffer!")
         }
 
-        Value geometryPassStartValue = scope.GetProperty("param2");
-        DXGeometryPassStartCL* geometryPassStart = dynamic_cast<DXGeometryPassStartCL*>(NativeObject::ExtractNativeObject(geometryPassStartValue));
+        Value gBuffValue = scope.GetProperty("param2");
+        deferred::GBuffer* gBuff = dynamic_cast<deferred::GBuffer*>(NativeObject::ExtractNativeObject(gBuffValue));
 
-        if (!geometryPassStart) {
-            THROW_EXCEPTION("Please supply geometry pass!")
+        if (!gBuff) {
+            THROW_EXCEPTION("Please supply GBuffer!")
         }
-
 
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
             &swapChain->m_scissorRect,
-            geometryPassStart->GetRTVHeap(),
+            gBuff->GetRTVHeap(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             vertexBuffer->GetStride(),

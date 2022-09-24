@@ -49,6 +49,7 @@ namespace rendering::deferred
 			std::string& errorMessage);
 
 		bool ExecuteStart(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
+		bool ExecuteEnd(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 	public:
 	};
 }

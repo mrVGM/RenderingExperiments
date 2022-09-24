@@ -100,25 +100,18 @@ return Value();
     });
 
     Value& populateEnd = GetOrCreateProperty(nativeObject, "populateEnd");
-    populateEnd = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+    populateEnd = CreateNativeMethod(nativeObject, 2, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXLitPassCL* self = static_cast<DXLitPassCL*>(NativeObject::ExtractNativeObject(selfValue));
 
-        Value deviceValue = scope.GetProperty("param0");
-        DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
-
-        if (!device) {
-            THROW_EXCEPTION("Please supply a device!")
-        }
-
-        Value swapChainValue = scope.GetProperty("param1");
+        Value swapChainValue = scope.GetProperty("param0");
         DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
 
         if (!swapChain) {
             THROW_EXCEPTION("Please supply SwapChain!")
         }
 
-        Value gBufferValue = scope.GetProperty("param2");
+        Value gBufferValue = scope.GetProperty("param1");
         GBuffer* gBuffer = dynamic_cast<GBuffer*>(NativeObject::ExtractNativeObject(gBufferValue));
 
         if (!gBuffer) {
@@ -130,7 +123,8 @@ return Value();
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("vertexShader")));
         DXPixelShader* pixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("pixelShader")));
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("vertexBuffer")));
-
+        DXDescriptorHeap* descriptorHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("descriptorHeap")));
+        
         std::string error;
         bool res = self->PopulateEnd(
             &swapChain->m_viewport,
@@ -139,7 +133,7 @@ return Value();
             swapChain->GetCurrentRenderTarget(),
             &self->m_vertexBufferView,
             diffuseTex->GetTexture(),
-            gBuffer->GetRTVHeap(),
+            descriptorHeap->GetHeap(),
             error
         );
 
@@ -150,8 +144,8 @@ return Value();
         return Value();
     });
 
-    Value& execute = GetOrCreateProperty(nativeObject, "execute");
-    execute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+    Value& executeStart = GetOrCreateProperty(nativeObject, "executeStart");
+    executeStart = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXLitPassCL* self = static_cast<DXLitPassCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -175,6 +169,38 @@ return Value();
 
         std::string error;
         bool res = self->ExecuteStart(commandQueue->GetCommandQueue(), fence->GetFence(), signal, error);
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
+
+    Value& executeEnd = GetOrCreateProperty(nativeObject, "executeEnd");
+    executeEnd = CreateNativeMethod(nativeObject, 3, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXLitPassCL* self = static_cast<DXLitPassCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value commandQueueValue = scope.GetProperty("param0");
+        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+        if (!commandQueue) {
+            THROW_EXCEPTION("Please supply a Command Queue!")
+        }
+
+        Value fenceValue = scope.GetProperty("param1");
+        DXFence* fence = dynamic_cast<DXFence*>(NativeObject::ExtractNativeObject(fenceValue));
+        if (!fence) {
+            THROW_EXCEPTION("Please supply a Fence!")
+        }
+
+        Value signalValue = scope.GetProperty("param2");
+        if (signalValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a Signal Value!")
+        }
+        int signal = static_cast<int>(signalValue.GetNum());
+
+        std::string error;
+        bool res = self->ExecuteEnd(commandQueue->GetCommandQueue(), fence->GetFence(), signal, error);
         if (!res) {
             THROW_EXCEPTION(error)
         }
@@ -424,6 +450,15 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(const CD3DX12_VIEWPORT* viewp
 bool rendering::deferred::DXLitPassCL::ExecuteStart(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_commandListStart.Get() };
+    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    commandQueue->Signal(fence, signal);
+
+    return true;
+}
+
+bool rendering::deferred::DXLitPassCL::ExecuteEnd(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+{
+    ID3D12CommandList* ppCommandLists[] = { m_commandListEnd.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
     commandQueue->Signal(fence, signal);
 

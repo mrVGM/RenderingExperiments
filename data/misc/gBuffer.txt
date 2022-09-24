@@ -65,6 +65,8 @@ let createGBuff = func(device, width, height, onReady) {
 			return;
 		}
 
+		print(diffuseTex);
+
 		let descriptors = [];
 		let texDesc = {};
 		texDesc.type = "srv_tex";

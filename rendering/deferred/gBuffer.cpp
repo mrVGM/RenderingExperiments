@@ -24,7 +24,7 @@ return Value();
     Value& vertexBuffer = GetOrCreateProperty(nativeObject, "vertexBuffer");
     Value& vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
-    Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "gBuffDescriptorHeap");
+    Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
     create = CreateNativeMethod(nativeObject, 6, [&](Value scope) {

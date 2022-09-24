@@ -120,14 +120,60 @@ let render2Cubes = func() {
 };
 
 let gBuffer = none;
+let litPass = api.deferred.litPass();
+
+let renderPlain = func() {
+	let fence = api.fence();
+	fence.create(device);
+
+	let index = 1;
+
+	let plain = require("displayPlain.txt");
+	let rendFunc = none;
+
+	let render = func() {
+		if (wnd.isAlive() == 0) {
+			return;
+		}
+
+		let fe = api.fenceEvent();
+		fe.create();
+
+		fe.wait(fence, index, func(arg) {
+			index = index + 1;
+
+			swapChain.present();
+			render();
+		});
+
+		swapChain.updateCurrentFrameIndex();
+		litPass.executeStart(commandQueue, fence, 0);
+		rendFunc(func() {
+			let a = 5;
+		});
+		litPass.populateEnd(swapChain, gBuffer);
+		litPass.executeEnd(commandQueue, fence, index);
+	};
+
+	plain(device, swapChain, commandQueue, gBuffer, func(rend) {
+		rendFunc = rend;
+
+		render();
+	});
+};
 
 try {
 	generalInit();
-	render2Cubes();
+	#render2Cubes();
 
 	let loadGBuff = require("gBuffer.txt");
 	loadGBuff(device, wnd.width(), wnd.height(), func(gBuff) {
 		gBuffer = gBuff;
+
+		litPass.setupStartCL(device, gBuffer);
+		litPass.setupEndCL(device, gBuffer);
+
+		renderPlain();
 	});
 
 } catch(e) {

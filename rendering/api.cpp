@@ -36,6 +36,7 @@
 #include "CL/dxPlainCL.h"
 
 #include "deferred/gBuffer.h"
+#include "deferred/dxLitPassCL.h"
 
 #include <cmath>
 #include <numbers>
@@ -218,6 +219,11 @@ namespace rendering
 		deferred.SetProperty("gBuffer", interpreter::CreateNativeFunc(0, [](Value scope) {
 			rendering::deferred::GBuffer* gBuffer = new rendering::deferred::GBuffer();
 			return NativeObject::Create(gBuffer);
+		}));
+
+		deferred.SetProperty("litPass", interpreter::CreateNativeFunc(0, [](Value scope) {
+			rendering::deferred::DXLitPassCL* litPass = new rendering::deferred::DXLitPassCL();
+			return NativeObject::Create(litPass);
 		}));
 
 #pragma endregion
