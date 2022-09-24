@@ -30,9 +30,6 @@
 
 #include "primitives/cube.h"
 
-#include "CL/dxGeometryPassStartCL.h"
-#include "CL/dxGeometryPassEndCL.h"
-
 #include "CL/dxPlainCL.h"
 
 #include "deferred/gBuffer.h"
@@ -197,16 +194,6 @@ namespace rendering
 #pragma endregion
 
 #pragma region Deffered Shading
-
-		m_api.SetProperty("geometryPassStart", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXGeometryPassStartCL* geometryPassStart = new DXGeometryPassStartCL();
-			return NativeObject::Create(geometryPassStart);
-		}));
-
-		m_api.SetProperty("geometryPassEnd", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXGeometryPassEndCL* geometryPassEnd = new DXGeometryPassEndCL();
-			return NativeObject::Create(geometryPassEnd);
-		}));
 
 		m_api.SetProperty("deferred", interpreter::utils::GetEmptyObject());
 		Value deferred = m_api.GetProperty("deferred");

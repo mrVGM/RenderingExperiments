@@ -10,7 +10,6 @@
 #include "dxDescriptorHeap.h"
 #include "dxCommandQueue.h"
 #include "dxFence.h"
-#include "dxGeometryPassStartCL.h"
 #include "deferred/gBuffer.h"
 
 void rendering::DXPlainCL::InitProperties(interpreter::NativeObject & nativeObject)
