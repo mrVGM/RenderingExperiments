@@ -70,39 +70,32 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 5, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
-        Value swapChainValue = scope.GetProperty("param0");
-        DXSwapChain* swapChain = dynamic_cast<DXSwapChain*>(NativeObject::ExtractNativeObject(swapChainValue));
-
-        if (!swapChain) {
-            THROW_EXCEPTION("Please supply a swap chain!")
-        }
-
-        Value vertexBufferValue = scope.GetProperty("param1");
+        Value vertexBufferValue = scope.GetProperty("param0");
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
 
         if (!vertexBuffer) {
             THROW_EXCEPTION("Please supply a vertex buffer!")
         }
 
-        Value indexBufferValue = scope.GetProperty("param2");
+        Value indexBufferValue = scope.GetProperty("param1");
         DXBuffer* indexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(indexBufferValue));
 
         if (!indexBuffer) {
             THROW_EXCEPTION("Please supply an index buffer!")
         }
 
-        Value instanceBufferValue = scope.GetProperty("param3");
+        Value instanceBufferValue = scope.GetProperty("param2");
         DXBuffer* instanceBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(instanceBufferValue));
 
         if (!instanceBuffer) {
             THROW_EXCEPTION("Please supply an instance buffer!")
         }
 
-        Value gBufferValue = scope.GetProperty("param4");
+        Value gBufferValue = scope.GetProperty("param3");
         deferred::GBuffer* gBuffer = dynamic_cast<deferred::GBuffer*>(NativeObject::ExtractNativeObject(gBufferValue));
         if (!gBuffer) {
             THROW_EXCEPTION("Please supply a GBuffer!")
@@ -111,10 +104,16 @@ return Value();
         Value diffuseTexValue = gBufferValue.GetManagedValue()->GetProperty("diffuseTexture");
         DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
 
+        Value w = gBufferValue.GetProperty("width");
+        Value h = gBufferValue.GetProperty("height");
+
+        CD3DX12_VIEWPORT viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w.GetNum()), static_cast<float>(h.GetNum()));
+        CD3DX12_RECT scissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(w.GetNum()), static_cast<LONG>(h.GetNum()));
+
         std::string error;
         bool res = self->Populate(
-            &swapChain->m_viewport,
-            &swapChain->m_scissorRect,
+            &viewport,
+            &scissorRect,
             gBuffer->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
             diffuseTex->GetTexture(),
             vertexBuffer->GetBuffer(),

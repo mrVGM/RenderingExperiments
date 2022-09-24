@@ -80,6 +80,8 @@ let createGBuff = func(device, width, height, onReady) {
 			vertexBuffer,
 			vertexShader,
 			pixelShader,
+			width,
+			height,
 			descHeap,
 			diffuseTex);
 

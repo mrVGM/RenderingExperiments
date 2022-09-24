@@ -20,6 +20,9 @@ void rendering::deferred::GBuffer::InitProperties(interpreter::NativeObject& nat
 scope.SetProperty("exception", Value(error));\
 return Value();
 
+    Value& width = GetOrCreateProperty(nativeObject, "width");
+    Value& height = GetOrCreateProperty(nativeObject, "height");
+
     Value& diffuseTexture = GetOrCreateProperty(nativeObject, "diffuseTexture");
     Value& vertexBuffer = GetOrCreateProperty(nativeObject, "vertexBuffer");
     Value& vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
@@ -27,7 +30,7 @@ return Value();
     Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 6, [&](Value scope) {
+    create = CreateNativeMethod(nativeObject, 8, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         GBuffer* self = static_cast<GBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -62,7 +65,19 @@ return Value();
         }
         pixelShader = pixelShaderValue;
 
-        Value gBuffDescHeapValue = scope.GetProperty("param4");
+        Value widthValue = scope.GetProperty("param4");
+        if (widthValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a width value!")
+        }
+        width = widthValue;
+
+        Value heightValue = scope.GetProperty("param5");
+        if (heightValue.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a height value!")
+        }
+        height = heightValue;
+
+        Value gBuffDescHeapValue = scope.GetProperty("param6");
         DXDescriptorHeap* gBuffDescHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(gBuffDescHeapValue));
 
         if (!gBuffDescHeap) {
@@ -70,7 +85,7 @@ return Value();
         }
         gBuffDescriptorHeap = gBuffDescHeapValue;
 
-        Value diffuseTexValue = scope.GetProperty("param5");
+        Value diffuseTexValue = scope.GetProperty("param7");
         DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
 
         if (!diffuseTex) {
