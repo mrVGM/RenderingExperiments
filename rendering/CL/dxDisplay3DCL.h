@@ -45,6 +45,7 @@ namespace rendering
 			std::string& errorMessage);
 
 		bool Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
+		bool ExecuteAsync(ID3D12CommandQueue* commandQueue, std::string& error);
 
 	public:
 	};

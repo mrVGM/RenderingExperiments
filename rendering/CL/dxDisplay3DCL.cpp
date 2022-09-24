@@ -155,6 +155,25 @@ return Value();
         return Value();
     });
 
+    Value& executeAsync = GetOrCreateProperty(nativeObject, "executeAsync");
+    executeAsync = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value commandQueueValue = scope.GetProperty("param0");
+        DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
+        if (!commandQueue) {
+            THROW_EXCEPTION("Please supply a Command Queue!")
+        }
+
+        std::string error;
+        bool res = self->ExecuteAsync(commandQueue->GetCommandQueue(), error);
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
 
 #undef THROW_EXCEPTION
 }
@@ -356,6 +375,14 @@ bool rendering::DXDisplay3DCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12F
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
     commandQueue->Signal(fence, signal);
+
+    return true;
+}
+
+bool rendering::DXDisplay3DCL::ExecuteAsync(ID3D12CommandQueue* commandQueue, std::string& error)
+{
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
     return true;
 }

@@ -1,0 +1,39 @@
+let createLitMaterial = func(device, shadersFile, cameraBuffer, gBuffer) {
+	let camBuff = cameraBuffer;
+	let gBuff = gBuffer;
+
+	let shaderCode = readFile(shaderFile);
+
+	let vertexShader = api.vertexShader();
+	vertexShader.compile(shaderCode);
+
+	let pixelShader = api.pixelShader();
+	pixelShader.compile(shaderCode);
+
+	let object = none;
+	let instanceBuffer = none;
+
+	let setObject = func(obj) {
+		object = obj;
+	};
+	let setInstanceBuffer = func(instanceBuff) {
+		instanceBuffer = instanceBuff;
+	};
+	
+	let display3D = api.display3DCL();
+	display3D.create(device, vertexShader, pixelShader, camBuff);
+
+	let render = func(swapChain, commandQueue) {
+		display3D.populate(swapChain, object.vertexBuffer, object.indexBufferValue, instanceBuffer);
+		display3D.executeAsync(commandQueue);
+	};
+
+	let res = {};
+	res.setObject = setObject;
+	res.setInstanceBuffer = setInstanceBuffer;
+	res.render = render;
+
+	return res;
+};
+
+export = createLitMaterial;
