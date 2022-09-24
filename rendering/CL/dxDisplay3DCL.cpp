@@ -10,6 +10,8 @@
 #include "dxDescriptorHeap.h"
 #include "dxCommandQueue.h"
 #include "dxFence.h"
+#include "deferred/gBuffer.h"
+#include "dxTexture.h"
 
 void rendering::DXDisplay3DCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -68,7 +70,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 5, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -100,12 +102,21 @@ return Value();
             THROW_EXCEPTION("Please supply an instance buffer!")
         }
 
+        Value gBufferValue = scope.GetProperty("param4");
+        deferred::GBuffer* gBuffer = dynamic_cast<deferred::GBuffer*>(NativeObject::ExtractNativeObject(gBufferValue));
+        if (!gBuffer) {
+            THROW_EXCEPTION("Please supply a GBuffer!")
+        }
+
+        Value diffuseTexValue = gBufferValue.GetManagedValue()->GetProperty("diffuseTexture");
+        DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
             &swapChain->m_scissorRect,
-            swapChain->GetCurrentRTVDescriptor(),
-            swapChain->GetCurrentRenderTarget(),
+            gBuffer->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
+            diffuseTex->GetTexture(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             vertexBuffer->GetStride(),
@@ -257,7 +268,7 @@ bool rendering::DXDisplay3DCL::Create(
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         psoDesc.SampleDesc.Count = 1;
         THROW_ERROR(
             device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)),
@@ -282,7 +293,7 @@ bool rendering::DXDisplay3DCL::Create(
 bool rendering::DXDisplay3DCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
     ID3D12Resource* vertexBuffer,
     int vertexBufferSize,
@@ -312,15 +323,13 @@ bool rendering::DXDisplay3DCL::Populate(
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
 
+#if false
     // Indicate that the back buffer will be used as a render target.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
         m_commandList->ResourceBarrier(1, &barrier);
     }
-
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-
+#endif
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
@@ -357,11 +366,13 @@ bool rendering::DXDisplay3DCL::Populate(
         m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
     }
 
+#if false
     // Indicate that the back buffer will now be used to present.
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         m_commandList->ResourceBarrier(1, &barrier);
     }
+#endif
 
     THROW_ERROR(
         m_commandList->Close(),

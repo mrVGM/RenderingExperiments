@@ -30,7 +30,7 @@ let rend3D = none;
 let cam = api.aux.camera();
 let offset = 0;
 
-let updateCam = func() {
+let updateCam = func(camBuff) {
 	offset = offset + 0.01;
 
 	let pos = math.vector3(5 * math.cos(offset), 0, 5 * math.sin(offset));
@@ -46,7 +46,7 @@ let updateCam = func() {
 
 	let mat = cam.getMVPMatrix();
 
-	rend3D.constBuff.copyData(mat);
+	camBuff.copyData(mat);
 };
 
 let updateCamSafe = func() {
@@ -194,12 +194,102 @@ let prepMaterial = func(onReady) {
 
 	getCamBuff(func(cam) {
 		camera = cam;
+		updateCam(camera);
+
 		callReady();
 	});
 
 	cube(device, func(verts) {
 		cubeVerts = verts;
 		callReady();
+	});
+};
+
+let theMaterial = none;
+
+let startRendMat = func() {
+
+	let instance = none;
+
+	let instanceData = [];
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(0);
+	instanceData.push(math.cos(math.PI / 8));
+	instanceData.push(-math.sin(math.PI / 8));
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(1);
+	instanceData.push(1);
+
+	instanceData.push(0);
+	instanceData.push(-1);
+	instanceData.push(0);
+	instanceData.push(math.cos(math.PI / 8));
+	instanceData.push(-math.sin(math.PI / 8));
+	instanceData.push(0);
+	instanceData.push(0);
+	instanceData.push(1);
+	instanceData.push(1);
+	instanceData.push(1);
+
+
+	let r = func() {
+
+		let fence = api.fence();
+		fence.create(device);
+
+		let index = 1;
+
+		let render = func() {
+			if (wnd.isAlive() == 0) {
+				return;
+			}
+
+			let fe = api.fenceEvent();
+			fe.create();
+
+			fe.wait(fence, index, func(arg) {
+				index = index + 1;
+
+				swapChain.present();
+				render();
+			});
+
+			swapChain.updateCurrentFrameIndex();
+			litPass.executeStart(commandQueue, fence, 0);
+
+			theMaterial.render(swapChain, commandQueue);
+
+			litPass.populateEnd(swapChain, gBuffer);
+			litPass.executeEnd(commandQueue, fence, index);
+		};
+
+		render();
+	};
+
+	let startRend = func() {
+		if (instance == none) {
+			return;
+		}
+
+		theMaterial.setObject(cubeVerts);
+		theMaterial.setInstanceBuffer(instance);
+
+		r();
+	};
+
+
+	let instanceBB = resources.bufferBuilder();
+	instanceBB.upload(1);
+	instanceBB.setSize(4 * instanceData.length);
+	instanceBB.setStride(40);
+	instanceBB.build(device, func(buff) {
+		instance = buff;
+		instance.copyData(instanceData);
+
+		startRend();
 	});
 };
 
@@ -215,10 +305,11 @@ try {
 		litPass.setupEndCL(device, gBuffer);
 
 		prepMaterial(func(mat) {
-			print(mat);
+			theMaterial = mat;
+			print(theMaterial);
+			startRendMat();
 		});
 
-		renderPlain();
 	});
 
 } catch(e) {

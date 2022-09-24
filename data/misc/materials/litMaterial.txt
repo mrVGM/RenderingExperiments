@@ -24,7 +24,7 @@ let createLitMaterial = func(device, shadersFile, cameraBuffer, gBuffer) {
 	display3D.create(device, vertexShader, pixelShader, camBuff);
 
 	let render = func(swapChain, commandQueue) {
-		display3D.populate(swapChain, object.vertexBuffer, object.indexBufferValue, instanceBuffer);
+		display3D.populate(swapChain, object.vertex, object.index, instanceBuffer, gBuffer);
 		display3D.executeAsync(commandQueue);
 	};
 
