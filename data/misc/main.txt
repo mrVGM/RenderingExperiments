@@ -161,6 +161,48 @@ let renderPlain = func() {
 	});
 };
 
+let camBuff = none;
+let getCamBuff = func(onReady) {
+	if (camBuff != none) {
+		onReady(camBuff);
+		return;
+	}
+
+	let camBB = resources.bufferBuilder();
+	camBB.upload(1);
+	camBB.setSize(256);
+	camBB.setStride(256);
+	camBB.build(device, func(buff) {
+		camBuff = buff;
+		onReady(camBuff);
+	});
+};
+
+let prepMaterial = func(onReady) {
+	let camera = none;
+
+	let callReady = func() {
+		if (camera == none || cubeVerts == none) {
+			return;
+		}
+
+		let createMaterial = require("materials/litMaterial.txt");
+		let material = createMaterial(device, "cube.hlsl", camera, gBuffer);
+
+		onReady(material);
+	};
+
+	getCamBuff(func(cam) {
+		camera = cam;
+		callReady();
+	});
+
+	cube(device, func(verts) {
+		cubeVerts = verts;
+		callReady();
+	});
+};
+
 try {
 	generalInit();
 	#render2Cubes();
@@ -171,6 +213,10 @@ try {
 
 		litPass.setupStartCL(device, gBuffer);
 		litPass.setupEndCL(device, gBuffer);
+
+		prepMaterial(func(mat) {
+			print(mat);
+		});
 
 		renderPlain();
 	});

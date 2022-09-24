@@ -2,7 +2,7 @@ let createLitMaterial = func(device, shadersFile, cameraBuffer, gBuffer) {
 	let camBuff = cameraBuffer;
 	let gBuff = gBuffer;
 
-	let shaderCode = readFile(shaderFile);
+	let shaderCode = readFile(shadersFile);
 
 	let vertexShader = api.vertexShader();
 	vertexShader.compile(shaderCode);
