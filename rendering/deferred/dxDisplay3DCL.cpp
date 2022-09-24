@@ -1,4 +1,4 @@
-#include "CL/dxDisplay3DCL.h"
+#include "deferred/dxDisplay3DCL.h"
 
 #include "nativeFunc.h"
 
@@ -13,7 +13,7 @@
 #include "deferred/gBuffer.h"
 #include "dxTexture.h"
 
-void rendering::DXDisplay3DCL::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::deferred::DXLitMatCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -24,7 +24,7 @@ return Value();
     Value& create = GetOrCreateProperty(nativeObject, "create");
     create = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXLitMatCL* self = static_cast<DXLitMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value deviceValue = scope.GetProperty("param0");
         DXDevice* device = dynamic_cast<DXDevice*>(NativeObject::ExtractNativeObject(deviceValue));
@@ -72,7 +72,7 @@ return Value();
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
     populate = CreateNativeMethod(nativeObject, 4, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXLitMatCL* self = static_cast<DXLitMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value vertexBufferValue = scope.GetProperty("param0");
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
@@ -136,7 +136,7 @@ return Value();
     Value& execute = GetOrCreateProperty(nativeObject, "execute");
     execute = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXLitMatCL* self = static_cast<DXLitMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
@@ -168,7 +168,7 @@ return Value();
     Value& executeAsync = GetOrCreateProperty(nativeObject, "executeAsync");
     executeAsync = CreateNativeMethod(nativeObject, 1, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXDisplay3DCL* self = static_cast<DXDisplay3DCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXLitMatCL* self = static_cast<DXLitMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value commandQueueValue = scope.GetProperty("param0");
         DXCommandQueue* commandQueue = dynamic_cast<DXCommandQueue*>(NativeObject::ExtractNativeObject(commandQueueValue));
@@ -194,7 +194,7 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXDisplay3DCL::Create(
+bool rendering::deferred::DXLitMatCL::Create(
     ID3D12Device* device,
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
@@ -289,7 +289,7 @@ bool rendering::DXDisplay3DCL::Create(
     return true;
 }
 
-bool rendering::DXDisplay3DCL::Populate(
+bool rendering::deferred::DXLitMatCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
@@ -380,7 +380,7 @@ bool rendering::DXDisplay3DCL::Populate(
     return true;
 }
 
-bool rendering::DXDisplay3DCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+bool rendering::deferred::DXLitMatCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -389,7 +389,7 @@ bool rendering::DXDisplay3DCL::Execute(ID3D12CommandQueue* commandQueue, ID3D12F
     return true;
 }
 
-bool rendering::DXDisplay3DCL::ExecuteAsync(ID3D12CommandQueue* commandQueue, std::string& error)
+bool rendering::deferred::DXLitMatCL::ExecuteAsync(ID3D12CommandQueue* commandQueue, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);

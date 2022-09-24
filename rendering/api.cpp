@@ -24,7 +24,7 @@
 #include "CL/dxWorlyTextureComputeCL.h"
 #include "CL/dxDisplayWorlyCL.h"
 
-#include "CL/dxDisplay3DCL.h"
+#include "deferred/dxDisplay3DCL.h"
 
 #include "aux/dxCamera.h"
 
@@ -199,7 +199,7 @@ namespace rendering
 #pragma region Deffered Shading
 
 		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXDisplay3DCL* display3D = new DXDisplay3DCL();
+			deferred::DXLitMatCL* display3D = new deferred::DXLitMatCL();
 			return NativeObject::Create(display3D);
 		}));
 

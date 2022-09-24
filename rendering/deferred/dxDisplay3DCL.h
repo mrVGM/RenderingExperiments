@@ -8,9 +8,9 @@
 #include <wrl.h>
 #include <string>
 
-namespace rendering
+namespace rendering::deferred
 {
-	class DXDisplay3DCL : public interpreter::INativeObject
+	class DXLitMatCL : public interpreter::INativeObject
 	{
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
