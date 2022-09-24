@@ -26,7 +26,6 @@ let generalInit = func() {
 	print("General Init!");
 };
 
-let rend3D = none;
 let cam = api.aux.camera();
 let offset = 0;
 
@@ -49,39 +48,22 @@ let updateCam = func(camBuff) {
 	camBuff.copyData(mat);
 };
 
-let updateCamSafe = func() {
-	try {
-		updateCam();
-	} catch(e) {
-		print(e);
-	}
-};
-
-let startRender3D = func(vertexBuff, indexBuff, instanceBuff) {
-	let render3DCL = require("displayCube.txt");
-	render3DCL(device, func(rend) {
-		rend3D = rend;
-		rend3D.startRender(wnd, swapChain, commandQueue, vertexBuff, indexBuff, instanceBuff, updateCamSafe);
-	});
-};
-
 let cube = require("primitives/cube.txt");
 let cubeVerts = none;
 let instance = none;
-let resources = require("resources/resourceUtils.txt");
 
-let render2Cubes = func() {
-	let tryRend = func() {
+let loadGeometry = func(onReady) {
+	let callReady = func() {
 		if (cubeVerts == none || instance == none) {
 			return;
 		}
 
-		startRender3D(cubeVerts.vertex, cubeVerts.index, instance);
+		onReady();
 	};
 
 	cube(device, func(verts) {
 		cubeVerts = verts;
-		tryRend();
+		callReady();
 	});
 
 	let instanceData = [];
@@ -115,21 +97,50 @@ let render2Cubes = func() {
 		instance = buff;
 		instance.copyData(instanceData);
 
-		tryRend();
+		callReady();
 	});
 };
+
+let resources = require("resources/resourceUtils.txt");
 
 let gBuffer = none;
 let litPass = api.deferred.litPass();
 
-let renderPlain = func() {
+let camBuff = none;
+let prepCamBuff = func(onReady) {
+	if (camBuff != none) {
+		onReady(camBuff);
+		return;
+	}
+
+	let camBB = resources.bufferBuilder();
+	camBB.upload(1);
+	camBB.setSize(256);
+	camBB.setStride(256);
+	camBB.build(device, func(buff) {
+		camBuff = buff;
+		onReady();
+	});
+};
+
+let prepMaterial = func() {
+	let createMaterial = require("materials/litMaterial.txt");
+	let material = createMaterial(device, "cube.hlsl", camBuff, gBuffer);
+	return material;
+};
+
+let theMaterial = none;
+
+let startRendMat = func() {
+	print("start render mat");
+
+	theMaterial.setObject(cubeVerts);
+	theMaterial.setInstanceBuffer(instance);
+
 	let fence = api.fence();
 	fence.create(device);
 
 	let index = 1;
-
-	let plain = require("displayPlain.txt");
-	let rendFunc = none;
 
 	let render = func() {
 		if (wnd.isAlive() == 0) {
@@ -148,168 +159,49 @@ let renderPlain = func() {
 
 		swapChain.updateCurrentFrameIndex();
 		litPass.executeStart(commandQueue, fence, 0);
-		rendFunc();
+
+		theMaterial.render(swapChain, commandQueue);
+
 		litPass.populateEnd(swapChain, gBuffer);
 		litPass.executeEnd(commandQueue, fence, index);
 	};
 
-	plain(device, swapChain, commandQueue, gBuffer, func(rendCreator) {
-		rendFunc = rendCreator(func() {
-			let a = 5;
-		});
-		render();
-	});
-};
-
-let camBuff = none;
-let getCamBuff = func(onReady) {
-	if (camBuff != none) {
-		onReady(camBuff);
-		return;
-	}
-
-	let camBB = resources.bufferBuilder();
-	camBB.upload(1);
-	camBB.setSize(256);
-	camBB.setStride(256);
-	camBB.build(device, func(buff) {
-		camBuff = buff;
-		onReady(camBuff);
-	});
-};
-
-let prepMaterial = func(onReady) {
-	let camera = none;
-
-	let callReady = func() {
-		if (camera == none || cubeVerts == none) {
-			return;
-		}
-
-		let createMaterial = require("materials/litMaterial.txt");
-		let material = createMaterial(device, "cube.hlsl", camera, gBuffer);
-
-		onReady(material);
-	};
-
-	getCamBuff(func(cam) {
-		camera = cam;
-		updateCam(camera);
-
-		callReady();
-	});
-
-	cube(device, func(verts) {
-		cubeVerts = verts;
-		callReady();
-	});
-};
-
-let theMaterial = none;
-
-let startRendMat = func() {
-
-	let instance = none;
-
-	let instanceData = [];
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(0);
-	instanceData.push(math.cos(math.PI / 8));
-	instanceData.push(-math.sin(math.PI / 8));
-	instanceData.push(0);
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(1);
-	instanceData.push(1);
-
-	instanceData.push(0);
-	instanceData.push(-1);
-	instanceData.push(0);
-	instanceData.push(math.cos(math.PI / 8));
-	instanceData.push(-math.sin(math.PI / 8));
-	instanceData.push(0);
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(1);
-	instanceData.push(1);
-
-
-	let r = func() {
-
-		let fence = api.fence();
-		fence.create(device);
-
-		let index = 1;
-
-		let render = func() {
-			if (wnd.isAlive() == 0) {
-				return;
-			}
-
-			let fe = api.fenceEvent();
-			fe.create();
-
-			fe.wait(fence, index, func(arg) {
-				index = index + 1;
-
-				swapChain.present();
-				render();
-			});
-
-			swapChain.updateCurrentFrameIndex();
-			litPass.executeStart(commandQueue, fence, 0);
-
-			theMaterial.render(swapChain, commandQueue);
-
-			litPass.populateEnd(swapChain, gBuffer);
-			litPass.executeEnd(commandQueue, fence, index);
-		};
-
-		render();
-	};
-
-	let startRend = func() {
-		if (instance == none) {
-			return;
-		}
-
-		theMaterial.setObject(cubeVerts);
-		theMaterial.setInstanceBuffer(instance);
-
-		r();
-	};
-
-
-	let instanceBB = resources.bufferBuilder();
-	instanceBB.upload(1);
-	instanceBB.setSize(4 * instanceData.length);
-	instanceBB.setStride(40);
-	instanceBB.build(device, func(buff) {
-		instance = buff;
-		instance.copyData(instanceData);
-
-		startRend();
-	});
+	render();
 };
 
 try {
 	generalInit();
-	#render2Cubes();
 
 	let loadGBuff = require("gBuffer.txt");
+
+	let getMat = func() {
+		if (cubeVerts == none || camBuff == none || gBuffer == none) {
+			return;
+		}
+		updateCam(camBuff);
+		theMaterial = prepMaterial();
+
+		startRendMat();
+	};
+
+	loadGeometry(func() {
+		print("Geometry Loaded!");
+		getMat();
+	});
+
+	prepCamBuff(func() {
+		print("Cam Buff loaded!");
+		getMat();
+	});
+
 	loadGBuff(device, wnd.width(), wnd.height(), func(gBuff) {
 		gBuffer = gBuff;
 
 		litPass.setupStartCL(device, gBuffer);
 		litPass.setupEndCL(device, gBuffer);
 
-		prepMaterial(func(mat) {
-			theMaterial = mat;
-			print(theMaterial);
-			startRendMat();
-		});
-
+		print("GBuffer set up!");
+		getMat();
 	});
 
 } catch(e) {
