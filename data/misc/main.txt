@@ -32,7 +32,7 @@ let offset = 0;
 let updateCam = func(camBuff) {
 	offset = offset + 0.01;
 
-	let pos = math.vector3(5 * math.cos(offset), 0, 5 * math.sin(offset));
+	let pos = math.vector3(5 * math.cos(offset), offset, 5 * math.sin(offset));
 	let target = math.vector3(0, 0, 0);
 
 	let aspect = wnd.width() / wnd.height();
@@ -161,6 +161,7 @@ let startRendMat = func() {
 		litPass.executeStart(commandQueue, fence, 0);
 
 		theMaterial.render(swapChain, commandQueue);
+		updateCam(camBuff);
 
 		litPass.populateEnd(swapChain, gBuffer);
 		litPass.executeEnd(commandQueue, fence, index);
