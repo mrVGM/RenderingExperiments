@@ -198,11 +198,6 @@ namespace rendering
 
 #pragma region Deffered Shading
 
-		m_api.SetProperty("display3DCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			deferred::DXLitMatCL* display3D = new deferred::DXLitMatCL();
-			return NativeObject::Create(display3D);
-		}));
-
 		m_api.SetProperty("geometryPassStart", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXGeometryPassStartCL* geometryPassStart = new DXGeometryPassStartCL();
 			return NativeObject::Create(geometryPassStart);
@@ -224,6 +219,11 @@ namespace rendering
 		deferred.SetProperty("litPass", interpreter::CreateNativeFunc(0, [](Value scope) {
 			rendering::deferred::DXLitPassCL* litPass = new rendering::deferred::DXLitPassCL();
 			return NativeObject::Create(litPass);
+		}));
+
+		deferred.SetProperty("litMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			deferred::DXLitMatCL* litMat = new deferred::DXLitMatCL();
+			return NativeObject::Create(litMat);
 		}));
 
 #pragma endregion

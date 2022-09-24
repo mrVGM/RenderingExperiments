@@ -20,12 +20,12 @@ let createLitMaterial = func(device, shadersFile, cameraBuffer, gBuffer) {
 		instanceBuffer = instanceBuff;
 	};
 	
-	let display3D = api.display3DCL();
-	display3D.create(device, vertexShader, pixelShader, camBuff);
+	let litMat = api.deferred.litMatCL();
+	litMat.create(device, vertexShader, pixelShader, camBuff);
 
 	let render = func(swapChain, commandQueue) {
-		display3D.populate(object.vertex, object.index, instanceBuffer, gBuffer);
-		display3D.executeAsync(commandQueue);
+		litMat.populate(object.vertex, object.index, instanceBuffer, gBuffer);
+		litMat.executeAsync(commandQueue);
 	};
 
 	let res = {};
