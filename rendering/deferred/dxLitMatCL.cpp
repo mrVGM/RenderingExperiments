@@ -1,4 +1,4 @@
-#include "deferred/dxDisplay3DCL.h"
+#include "deferred/dxLitMatCL.h"
 
 #include "nativeFunc.h"
 

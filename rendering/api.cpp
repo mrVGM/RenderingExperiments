@@ -24,7 +24,7 @@
 #include "CL/dxWorlyTextureComputeCL.h"
 #include "CL/dxDisplayWorlyCL.h"
 
-#include "deferred/dxDisplay3DCL.h"
+#include "deferred/dxLitMatCL.h"
 
 #include "aux/dxCamera.h"
 
