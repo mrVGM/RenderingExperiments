@@ -115,7 +115,7 @@ let textureBuilder = func() {
 
 		let initTex = func() {
 			if (rtv) {
-				tex.initAsDiffuseRT(width, height);
+				tex.initAsRT(width, height);
 				return;
 			}
 
