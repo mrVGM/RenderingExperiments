@@ -4,8 +4,11 @@ struct PSInput
     float2 uv       : UV;
 };
 
-Texture2D p_texture     : register(t0);
-SamplerState p_sampler  : register(s0);
+Texture2D p_diffuseTexture  : register(t0);
+Texture2D p_normalTexture   : register(t1);
+Texture2D p_positionTexture : register(t2);
+
+SamplerState p_sampler      : register(s0);
 
 PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 {
@@ -19,5 +22,5 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return p_texture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y));
+    return p_normalTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y));
 }

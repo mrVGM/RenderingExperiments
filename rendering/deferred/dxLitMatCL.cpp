@@ -114,9 +114,10 @@ return Value();
         bool res = self->Populate(
             &viewport,
             &scissorRect,
-            gBuffer->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Diffuse),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Normal),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Position),
             gBuffer->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(),
-            diffuseTex->GetTexture(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
             vertexBuffer->GetStride(),
@@ -295,9 +296,10 @@ bool rendering::deferred::DXLitMatCL::Create(
 bool rendering::deferred::DXLitMatCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE diffuseTexHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE normalTexHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE positionTexHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
-    ID3D12Resource* renderTarget,
     ID3D12Resource* vertexBuffer,
     int vertexBufferSize,
     int vertexBufferStride,
@@ -329,7 +331,8 @@ bool rendering::deferred::DXLitMatCL::Populate(
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    D3D12_CPU_DESCRIPTOR_HANDLE handles[] = { diffuseTexHandle, normalTexHandle, positionTexHandle };
+    m_commandList->OMSetRenderTargets(_countof(handles), handles, FALSE, &dsvHandle);
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2];
     D3D12_VERTEX_BUFFER_VIEW& realVertexBufferView = vertexBufferViews[0];
