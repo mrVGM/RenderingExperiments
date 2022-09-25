@@ -13,6 +13,8 @@
 #include "dxBuffer.h"
 #include "dxSwapChain.h"
 
+#include <vector>
+
 void rendering::deferred::DXLitPassCL::InitProperties(interpreter::NativeObject& nativeObject)
 {
     using namespace interpreter;
@@ -40,15 +42,17 @@ return Value();
             THROW_EXCEPTION("Please supply a GBuffer!")
         }
 
-        DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("diffuseTexture")));
-
 
         std::string error;
         bool res = self->SetupStartCL(
             &device->GetDevice(),
-            gBuffer->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Diffuse),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Normal),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Position),
             gBuffer->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(),
-            diffuseTex->GetTexture(),
+            gBuffer->GetTexture(GBuffer::GBuffer_Diffuse),
+            gBuffer->GetTexture(GBuffer::GBuffer_Normal),
+            gBuffer->GetTexture(GBuffer::GBuffer_Position),
             error
         );
 
@@ -121,8 +125,6 @@ return Value();
             THROW_EXCEPTION("Please supply a GBuffer!")
         }
 
-        DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("diffuseTexture")));
-
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("vertexShader")));
         DXPixelShader* pixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("pixelShader")));
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("vertexBuffer")));
@@ -135,7 +137,9 @@ return Value();
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
             &self->m_vertexBufferView,
-            diffuseTex->GetTexture(),
+            gBuffer->GetTexture(GBuffer::GBuffer_Diffuse),
+            gBuffer->GetTexture(GBuffer::GBuffer_Normal),
+            gBuffer->GetTexture(GBuffer::GBuffer_Position),
             descriptorHeap->GetHeap(),
             error
         );
@@ -222,9 +226,13 @@ if (FAILED(hRes)) {\
 
 bool rendering::deferred::DXLitPassCL::SetupStartCL(
     ID3D12Device* device,
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE diffuseHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE normalHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE positionHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
     ID3D12Resource* diffuseTexture,
+    ID3D12Resource* normalTexture,
+    ID3D12Resource* positionTexture,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
@@ -238,14 +246,23 @@ bool rendering::deferred::DXLitPassCL::SetupStartCL(
         "Can't create Command List Start!")
 
     {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTexture, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        m_commandListStart->ResourceBarrier(1, &barrier);
+        CD3DX12_RESOURCE_BARRIER barriers[] = {
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTexture, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(positionTexture, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET), 
+        };
+        m_commandListStart->ResourceBarrier(3, barriers);
     }
 
-    m_commandListStart->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[] = { diffuseHandle, normalHandle, positionHandle };
+    m_commandListStart->OMSetRenderTargets(3, rtvHandles, FALSE, &dsvHandle);
 
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    m_commandListStart->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    const float blackColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_commandListStart->ClearRenderTargetView(diffuseHandle, clearColor, 0, nullptr);
+    m_commandListStart->ClearRenderTargetView(normalHandle, blackColor, 0, nullptr);
+    m_commandListStart->ClearRenderTargetView(positionHandle, blackColor, 0, nullptr);
+
     m_commandListStart->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     THROW_ERROR(
@@ -370,7 +387,17 @@ bool rendering::deferred::DXLitPassCL::SetupEndCL(
     return true;
 }
 
-bool rendering::deferred::DXLitPassCL::PopulateEnd(const CD3DX12_VIEWPORT* viewport, CD3DX12_RECT* scissorRect, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, ID3D12Resource* renderTarget, const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView, ID3D12Resource* diffuseTex, ID3D12DescriptorHeap* descriptorHeap, std::string& errorMessage)
+bool rendering::deferred::DXLitPassCL::PopulateEnd(
+    const CD3DX12_VIEWPORT* viewport,
+    CD3DX12_RECT* scissorRect,
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+    ID3D12Resource* renderTarget,
+    const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+    ID3D12Resource* diffuseTex,
+    ID3D12Resource* normalTex,
+    ID3D12Resource* positionTex,
+    ID3D12DescriptorHeap* descriptorHeap,
+    std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
     // command lists have finished execution on the GPU; apps should use 
@@ -386,10 +413,14 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(const CD3DX12_VIEWPORT* viewp
         m_commandListEnd->Reset(m_commandAllocatorEnd.Get(), m_pipelineState.Get()),
         "Can't reset Command List End!")
 
-    // Diffuse Texture is now SRV
+    // Textures are now SRV
     {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        m_commandListEnd->ResourceBarrier(1, &barrier);
+        CD3DX12_RESOURCE_BARRIER barriers[] = {
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(normalTex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(positionTex, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        };
+        m_commandListEnd->ResourceBarrier(3, barriers);
     }
 
     // Set necessary state.
@@ -416,8 +447,12 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(const CD3DX12_VIEWPORT* viewp
     m_commandListEnd->DrawInstanced(6, 1, 0, 0);
 
     {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT);
-        m_commandListEnd->ResourceBarrier(1, &barrier);
+        CD3DX12_RESOURCE_BARRIER barriers[] = {
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(diffuseTex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT),
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(normalTex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT),
+            CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(positionTex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT),
+        };
+        m_commandListEnd->ResourceBarrier(3, barriers);
     }
 
     // Indicate that the back buffer will now be used to present.

@@ -104,6 +104,7 @@ return Value();
             THROW_EXCEPTION("Please supply a diffuse texture!")
         }
         diffuseTexture = diffuseTexValue;
+        m_diffuseTex = diffuseTex->GetTexture();
 
         Value normalTexValue = scope.GetProperty("param9");
         DXTexture* normalTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(normalTexValue));
@@ -112,6 +113,7 @@ return Value();
             THROW_EXCEPTION("Please supply a normal texture!")
         }
         normalTexture = normalTexValue;
+        m_normalTex = normalTex->GetTexture();
 
         Value positionTexValue = scope.GetProperty("param10");
         DXTexture* positionTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(positionTexValue));
@@ -120,12 +122,15 @@ return Value();
             THROW_EXCEPTION("Please supply a position texture!")
         }
         positionTexture = positionTexValue;
+        m_positionTex = positionTex->GetTexture();
 
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
             dsTex->GetTexture(),
             diffuseTex->GetTexture(),
+            normalTex->GetTexture(),
+            positionTex->GetTexture(),
             error
         );
 
@@ -148,7 +153,9 @@ if (FAILED(hRes)) {\
 bool rendering::deferred::GBuffer::Create(
     ID3D12Device* device,
     ID3D12Resource* dsTexture,
-    ID3D12Resource* diffuseTexture,
+    ID3D12Resource* diffuseTex,
+    ID3D12Resource* normalTex,
+    ID3D12Resource* positionTex,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
@@ -171,7 +178,13 @@ bool rendering::deferred::GBuffer::Create(
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
-        device->CreateRenderTargetView(diffuseTexture, nullptr, rtvHandle);
+        device->CreateRenderTargetView(diffuseTex, nullptr, rtvHandle);
+        rtvHandle.Offset(1, m_rtvDescriptorSize);
+
+        device->CreateRenderTargetView(normalTex, nullptr, rtvHandle);
+        rtvHandle.Offset(1, m_rtvDescriptorSize);
+
+        device->CreateRenderTargetView(positionTex, nullptr, rtvHandle);
         rtvHandle.Offset(1, m_rtvDescriptorSize);
     }
 
@@ -212,6 +225,30 @@ ID3D12DescriptorHeap* rendering::deferred::GBuffer::GetRTVHeap() const
 ID3D12DescriptorHeap* rendering::deferred::GBuffer::GetDSVHeap() const
 {
     return m_dsvHeap.Get();
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE rendering::deferred::GBuffer::GetDescriptorHandleFor(GBuffTextureType texType)
+{
+    CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+
+    for (int i = 0; i < texType; ++i) {
+        handle.Offset(m_rtvDescriptorSize);
+    }
+    return handle;
+}
+
+ID3D12Resource* rendering::deferred::GBuffer::GetTexture(GBuffTextureType texType)
+{
+    switch (texType)
+    {
+    case GBuffer_Diffuse:
+        return m_diffuseTex;
+    case GBuffer_Normal:
+        return m_normalTex;
+    case GBuffer_Position:
+        return m_positionTex;
+    }
+    return nullptr;
 }
 
 #undef THROW_ERROR
