@@ -266,8 +266,10 @@ bool rendering::deferred::DXLitMatCL::Create(
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
+        psoDesc.NumRenderTargets = 3;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        psoDesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        psoDesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         psoDesc.SampleDesc.Count = 1;
         THROW_ERROR(
