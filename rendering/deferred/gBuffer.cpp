@@ -24,13 +24,16 @@ return Value();
     Value& height = GetOrCreateProperty(nativeObject, "height");
 
     Value& diffuseTexture = GetOrCreateProperty(nativeObject, "diffuseTexture");
+    Value& normalTexture = GetOrCreateProperty(nativeObject, "normalTexture");
+    Value& positionTexture = GetOrCreateProperty(nativeObject, "positionTexture");
+
     Value& vertexBuffer = GetOrCreateProperty(nativeObject, "vertexBuffer");
     Value& vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
     Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 8, [&](Value scope) {
+    create = CreateNativeMethod(nativeObject, 10, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         GBuffer* self = static_cast<GBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -92,6 +95,22 @@ return Value();
             THROW_EXCEPTION("Please supply a diffuse texture!")
         }
         diffuseTexture = diffuseTexValue;
+
+        Value normalTexValue = scope.GetProperty("param8");
+        DXTexture* normalTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(normalTexValue));
+
+        if (!normalTex) {
+            THROW_EXCEPTION("Please supply a normal texture!")
+        }
+        normalTexture = normalTexValue;
+
+        Value positionTexValue = scope.GetProperty("param8");
+        DXTexture* positionTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(positionTexValue));
+
+        if (!positionTex) {
+            THROW_EXCEPTION("Please supply a position texture!")
+        }
+        positionTexture = positionTexValue;
 
         std::string error;
         bool res = self->Create(

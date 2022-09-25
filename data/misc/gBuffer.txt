@@ -42,6 +42,8 @@ let createGBuff = func(device, width, height, onReady) {
 	let vertexBuffer = none;
 	let vertexUploadBuffer = none;
 	let diffuseTex = none;
+	let normalTex = none;
+	let positionTex = none;
 
 	let vertexBB = resources.bufferBuilder();
 	vertexBB.upload(0);
@@ -53,15 +55,28 @@ let createGBuff = func(device, width, height, onReady) {
 	vertexUploadBB.setSize(4 * vertexData.length);
 	vertexUploadBB.setStride(16);
 
-	let texBB = resources.textureBuilder();
-	texBB.setWidth(width);
-	texBB.setHeight(height);
-	texBB.setRTV(1);
+	let diffuseTexBB = resources.textureBuilder();
+	diffuseTexBB.setWidth(width);
+	diffuseTexBB.setHeight(height);
+	diffuseTexBB.setRTV(1);
+
+	let normalTexBB = resources.textureBuilder();
+	normalTexBB.setWidth(width);
+	normalTexBB.setHeight(height);
+	normalTexBB.setRTV(1);
+
+	let positionTexBB = resources.textureBuilder();
+	positionTexBB.setWidth(width);
+	positionTexBB.setHeight(height);
+	positionTexBB.setRTV(1);
 
 	let copied = 0;
 
 	let assembleGBuff = func() {
-		if (copied == 0 || diffuseTex == none) {
+		if (copied == 0 ||
+			diffuseTex == none ||
+			normalTex == none ||
+			positionTex == none) {
 			return;
 		}
 
@@ -83,7 +98,9 @@ let createGBuff = func(device, width, height, onReady) {
 			width,
 			height,
 			descHeap,
-			diffuseTex);
+			diffuseTex,
+			normalTex,
+			positionTex);
 
 		onReady(gBuffer);
 	};
@@ -110,10 +127,21 @@ let createGBuff = func(device, width, height, onReady) {
 		copy();
 	});
 
-	texBB.build(device, func(tex) {
+	diffuseTexBB.build(device, func(tex) {
 		diffuseTex = tex;
 		assembleGBuff();
 	});
+
+	normalTexBB.build(device, func(tex) {
+		normalTex = tex;
+		assembleGBuff();
+	});
+
+	positionTexBB.build(device, func(tex) {
+		positionTex = tex;
+		assembleGBuff();
+	});
+
 
 };
 
