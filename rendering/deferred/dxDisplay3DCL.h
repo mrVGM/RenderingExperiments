@@ -33,6 +33,7 @@ namespace rendering::deferred
 			const CD3DX12_VIEWPORT* viewport,
 			CD3DX12_RECT* scissorRect,
 			D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
 			ID3D12Resource* renderTarget,
 			ID3D12Resource* vertexBuffer,
 			int vertexBufferSize,

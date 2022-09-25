@@ -42,9 +42,11 @@ return Value();
 
         DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("diffuseTexture")));
 
+
         std::string error;
         bool res = self->SetupStartCL(
             &device->GetDevice(),
+            gBuffer->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(),
             diffuseTex->GetTexture(),
             error
         );
@@ -219,6 +221,7 @@ if (FAILED(hRes)) {\
 
 bool rendering::deferred::DXLitPassCL::SetupStartCL(
     ID3D12Device* device,
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
     ID3D12Resource* diffuseTexture,
     std::string& errorMessage)
 {
@@ -256,11 +259,11 @@ bool rendering::deferred::DXLitPassCL::SetupStartCL(
     }
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-    m_commandListStart->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    m_commandListStart->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     m_commandListStart->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-
+    m_commandListStart->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     THROW_ERROR(
         m_commandListStart->Close(),

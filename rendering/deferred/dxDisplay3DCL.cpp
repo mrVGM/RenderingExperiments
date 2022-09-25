@@ -115,6 +115,7 @@ return Value();
             &viewport,
             &scissorRect,
             gBuffer->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
+            gBuffer->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(),
             diffuseTex->GetTexture(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
@@ -262,12 +263,12 @@ bool rendering::deferred::DXLitMatCL::Create(
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader);
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.StencilEnable = FALSE;
+        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         psoDesc.SampleDesc.Count = 1;
         THROW_ERROR(
             device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)),
@@ -293,6 +294,7 @@ bool rendering::deferred::DXLitMatCL::Populate(
     const CD3DX12_VIEWPORT* viewport,
     CD3DX12_RECT* scissorRect,
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
     ID3D12Resource* renderTarget,
     ID3D12Resource* vertexBuffer,
     int vertexBufferSize,
@@ -322,18 +324,10 @@ bool rendering::deferred::DXLitMatCL::Populate(
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
 
-#if false
-    // Indicate that the back buffer will be used as a render target.
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-#endif
-
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2];
     D3D12_VERTEX_BUFFER_VIEW& realVertexBufferView = vertexBufferViews[0];
@@ -364,14 +358,6 @@ bool rendering::deferred::DXLitMatCL::Populate(
     for (int i = 0; i < numInstances; ++i) {
         m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
     }
-
-#if false
-    // Indicate that the back buffer will now be used to present.
-    {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        m_commandList->ResourceBarrier(1, &barrier);
-    }
-#endif
 
     THROW_ERROR(
         m_commandList->Close(),

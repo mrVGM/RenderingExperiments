@@ -26,6 +26,7 @@ namespace rendering::deferred
 
 		bool SetupStartCL(
 			ID3D12Device* device,
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
 			ID3D12Resource* diffuseTex,
 			std::string& errorMessage);
 

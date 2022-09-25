@@ -124,6 +124,7 @@ return Value();
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
+            dsTex->GetTexture(),
             diffuseTex->GetTexture(),
             error
         );
@@ -146,6 +147,7 @@ if (FAILED(hRes)) {\
 
 bool rendering::deferred::GBuffer::Create(
     ID3D12Device* device,
+    ID3D12Resource* dsTexture,
     ID3D12Resource* diffuseTexture,
     std::string& errorMessage)
 {
@@ -164,7 +166,7 @@ bool rendering::deferred::GBuffer::Create(
 
         m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
-
+    
     // Create frame resources.
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -172,6 +174,32 @@ bool rendering::deferred::GBuffer::Create(
         device->CreateRenderTargetView(diffuseTexture, nullptr, rtvHandle);
         rtvHandle.Offset(1, m_rtvDescriptorSize);
     }
+
+    // Create DSV Heap
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+        dsvHeapDesc.NumDescriptors = 1;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        THROW_ERROR(
+            device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)),
+            "Can't Create DSV Heap!"
+        );
+
+        m_dsvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    }
+
+    {
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
+        device->CreateDepthStencilView(dsTexture, &depthStencilDesc, dsvHandle);
+    }
+    
     
     return true;
 }
@@ -179,6 +207,11 @@ bool rendering::deferred::GBuffer::Create(
 ID3D12DescriptorHeap* rendering::deferred::GBuffer::GetRTVHeap() const
 {
     return m_rtvHeap.Get();
+}
+
+ID3D12DescriptorHeap* rendering::deferred::GBuffer::GetDSVHeap() const
+{
+    return m_dsvHeap.Get();
 }
 
 #undef THROW_ERROR
