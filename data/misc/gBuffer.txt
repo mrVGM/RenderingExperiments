@@ -81,11 +81,22 @@ let createGBuff = func(device, width, height, onReady) {
 		}
 
 		let descriptors = [];
-		let texDesc = {};
-		texDesc.type = "srv_tex";
-		texDesc.texture = diffuseTex;
-		descriptors.push(texDesc);
+		let diffuseTexDesc = {};
+		diffuseTexDesc.type = "srv_tex";
+		diffuseTexDesc.texture = diffuseTex;
+		descriptors.push(diffuseTexDesc);
 
+		let normalTexDesc = {};
+		normalTexDesc.type = "srv_tex";
+		normalTexDesc.texture = normalTex;
+		descriptors.push(normalTexDesc);
+
+		let positionTexDesc = {};
+		positionTexDesc.type = "srv_tex";
+		positionTexDesc.texture = positionTex;
+		descriptors.push(positionTexDesc);
+
+		
 		let descHeap = api.descriptorHeap();
 		descHeap.create(device, descriptors);
 

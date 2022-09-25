@@ -104,7 +104,7 @@ return Value();
         }
         normalTexture = normalTexValue;
 
-        Value positionTexValue = scope.GetProperty("param8");
+        Value positionTexValue = scope.GetProperty("param9");
         DXTexture* positionTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(positionTexValue));
 
         if (!positionTex) {
