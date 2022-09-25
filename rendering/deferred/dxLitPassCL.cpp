@@ -46,6 +46,7 @@ return Value();
         std::string error;
         bool res = self->SetupStartCL(
             &device->GetDevice(),
+            gBuffer->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(),
             gBuffer->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(),
             diffuseTex->GetTexture(),
             error
@@ -221,29 +222,12 @@ if (FAILED(hRes)) {\
 
 bool rendering::deferred::DXLitPassCL::SetupStartCL(
     ID3D12Device* device,
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
     ID3D12Resource* diffuseTexture,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
-
-    // Create descriptor heaps.
-    {
-        // Describe and create a render target view (RTV) descriptor heap.
-        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = 4;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        THROW_ERROR(
-            device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)),
-            "Can't create a descriptor heap!")
-    }
-
-    // Create frame resources.
-    {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-        device->CreateRenderTargetView(diffuseTexture, nullptr, rtvHandle);
-    }
 
     THROW_ERROR(
         device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocatorStart)),
@@ -258,7 +242,6 @@ bool rendering::deferred::DXLitPassCL::SetupStartCL(
         m_commandListStart->ResourceBarrier(1, &barrier);
     }
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
     m_commandListStart->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };

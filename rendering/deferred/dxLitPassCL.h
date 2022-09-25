@@ -20,12 +20,12 @@ namespace rendering::deferred
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandListEnd;
 
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		bool SetupStartCL(
 			ID3D12Device* device,
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle,
 			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
 			ID3D12Resource* diffuseTex,
 			std::string& errorMessage);
