@@ -79,6 +79,7 @@ let textureBuilder = func() {
 	let depth = 0;
 	let dim = 2;
 	let rtv = 0;
+	let ds = 0;
 
 	let res = {};
 	res.allowUA = func(x) {
@@ -105,6 +106,10 @@ let textureBuilder = func() {
 		rtv = x;
 	};
 
+	res.setDS = func(x) {
+		ds = x;
+	};
+
 	res.build = func(device, onReady) {
 		if (width <= 0 || height <= 0) {
 			throw("Invalid width or height of the texture!");
@@ -116,6 +121,11 @@ let textureBuilder = func() {
 		let initTex = func() {
 			if (rtv) {
 				tex.initAsRT(width, height);
+				return;
+			}
+
+			if (ds) {
+				tex.initAsDS(width, height);
 				return;
 			}
 

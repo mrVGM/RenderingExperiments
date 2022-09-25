@@ -23,6 +23,7 @@ return Value();
     Value& width = GetOrCreateProperty(nativeObject, "width");
     Value& height = GetOrCreateProperty(nativeObject, "height");
 
+    Value& dsTexture = GetOrCreateProperty(nativeObject, "dsTexture");
     Value& diffuseTexture = GetOrCreateProperty(nativeObject, "diffuseTexture");
     Value& normalTexture = GetOrCreateProperty(nativeObject, "normalTexture");
     Value& positionTexture = GetOrCreateProperty(nativeObject, "positionTexture");
@@ -33,7 +34,7 @@ return Value();
     Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 10, [&](Value scope) {
+    create = CreateNativeMethod(nativeObject, 11, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         GBuffer* self = static_cast<GBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -80,7 +81,15 @@ return Value();
         }
         height = heightValue;
 
-        Value gBuffDescHeapValue = scope.GetProperty("param6");
+        Value dsTexValue = scope.GetProperty("param6");
+        DXTexture* dsTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(dsTexValue));
+
+        if (!dsTex) {
+            THROW_EXCEPTION("Please supply a depth stencil texture!")
+        }
+        dsTexture = dsTexValue;
+
+        Value gBuffDescHeapValue = scope.GetProperty("param7");
         DXDescriptorHeap* gBuffDescHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(gBuffDescHeapValue));
 
         if (!gBuffDescHeap) {
@@ -88,7 +97,7 @@ return Value();
         }
         gBuffDescriptorHeap = gBuffDescHeapValue;
 
-        Value diffuseTexValue = scope.GetProperty("param7");
+        Value diffuseTexValue = scope.GetProperty("param8");
         DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
 
         if (!diffuseTex) {
@@ -96,7 +105,7 @@ return Value();
         }
         diffuseTexture = diffuseTexValue;
 
-        Value normalTexValue = scope.GetProperty("param8");
+        Value normalTexValue = scope.GetProperty("param9");
         DXTexture* normalTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(normalTexValue));
 
         if (!normalTex) {
@@ -104,7 +113,7 @@ return Value();
         }
         normalTexture = normalTexValue;
 
-        Value positionTexValue = scope.GetProperty("param9");
+        Value positionTexValue = scope.GetProperty("param10");
         DXTexture* positionTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(positionTexValue));
 
         if (!positionTex) {

@@ -17,6 +17,7 @@ namespace rendering
 		UINT m_dimension = 2;
 		bool m_allowUA = false;
 		bool m_renderTarget = false;
+		bool m_depthStencil = false;
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_texture;
 

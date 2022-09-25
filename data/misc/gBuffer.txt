@@ -41,6 +41,8 @@ let createGBuff = func(device, width, height, onReady) {
 
 	let vertexBuffer = none;
 	let vertexUploadBuffer = none;
+
+	let dsTex = none;
 	let diffuseTex = none;
 	let normalTex = none;
 	let positionTex = none;
@@ -70,13 +72,19 @@ let createGBuff = func(device, width, height, onReady) {
 	positionTexBB.setHeight(height);
 	positionTexBB.setRTV(1);
 
+	let dsTexBB = resources.textureBuilder();
+	dsTexBB.setWidth(width);
+	dsTexBB.setHeight(height);
+	dsTexBB.setDS(1);
+
 	let copied = 0;
 
 	let assembleGBuff = func() {
 		if (copied == 0 ||
 			diffuseTex == none ||
 			normalTex == none ||
-			positionTex == none) {
+			positionTex == none ||
+			dsTex == none) {
 			return;
 		}
 
@@ -96,7 +104,6 @@ let createGBuff = func(device, width, height, onReady) {
 		positionTexDesc.texture = positionTex;
 		descriptors.push(positionTexDesc);
 
-		
 		let descHeap = api.descriptorHeap();
 		descHeap.create(device, descriptors);
 
@@ -108,6 +115,7 @@ let createGBuff = func(device, width, height, onReady) {
 			pixelShader,
 			width,
 			height,
+			dsTex,
 			descHeap,
 			diffuseTex,
 			normalTex,
@@ -150,6 +158,11 @@ let createGBuff = func(device, width, height, onReady) {
 
 	positionTexBB.build(device, func(tex) {
 		positionTex = tex;
+		assembleGBuff();
+	});
+
+	dsTexBB.build(device, func(tex) {
+		dsTex = tex;
 		assembleGBuff();
 	});
 

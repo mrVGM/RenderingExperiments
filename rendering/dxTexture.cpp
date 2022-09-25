@@ -137,6 +137,38 @@ return Value();
 		return Value();
 	});
 
+	Value& initAsDS = GetOrCreateProperty(nativeObject, "initAsDS");
+	initAsDS = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXTexture* texture = static_cast<DXTexture*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value widthValue = scope.GetProperty("param0");
+		if (widthValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture width!");
+		}
+		int width = widthValue.GetNum();
+		if (width <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture width!");
+		}
+
+		Value heightValue = scope.GetProperty("param1");
+		if (heightValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply texture width!");
+		}
+		int height = heightValue.GetNum();
+		if (height <= 0) {
+			THROW_EXCEPTION("Please supply a valid texture height!");
+		}
+
+		texture->m_width = width;
+		texture->m_height = height;
+		texture->m_allowUA = false;
+		texture->m_format = DXGI_FORMAT_D32_FLOAT;
+		texture->m_depthStencil = true;
+
+		return Value();
+	});
+
 	Value& place = GetOrCreateProperty(nativeObject, "place");
 	place = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
 		Value selfValue = scope.GetProperty("self");
@@ -172,6 +204,9 @@ return Value();
 		}
 		if (heapType == "READBACK") {
 			initialResourceState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST;
+		}
+		if (texture->m_depthStencil) {
+			initialResourceState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		}
 
 		std::string error;
@@ -220,8 +255,19 @@ bool rendering::DXTexture::Place(
 {
 	D3D12_RESOURCE_DESC textureDesc = GetTextureDescription();
 	
+	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+	depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
 	THROW_ERROR(
-		device->CreatePlacedResource(heap, heapOffset, &textureDesc, initialState, nullptr, IID_PPV_ARGS(&m_texture)),
+		device->CreatePlacedResource(
+			heap,
+			heapOffset,
+			&textureDesc,
+			initialState,
+			m_depthStencil ? &depthOptimizedClearValue : nullptr,
+			IID_PPV_ARGS(&m_texture)),
 		"Can't place texture in the heap!")
 
 	return true;
@@ -240,6 +286,9 @@ D3D12_RESOURCE_DESC rendering::DXTexture::GetTextureDescription() const
 	}
 	if (m_renderTarget) {
 		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	}
+	if (m_depthStencil) {
+		flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 	}
 
 	CD3DX12_RESOURCE_DESC textureDesc = {};
