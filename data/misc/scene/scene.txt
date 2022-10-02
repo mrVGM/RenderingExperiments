@@ -73,6 +73,8 @@ let loadLightsConstantBuff = func(device, onReady) {
 		lightsInfo.push(1);
 		lightsInfo.push(1);
 
+		lightsInfo.push(0.3);
+
 		scene.lightsConstantBuff.copyData(lightsInfo);
 
 		onReady();

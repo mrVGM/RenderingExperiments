@@ -15,6 +15,7 @@ cbuffer LightsInfo : register(b0)
 {
     float m_numLights;
     float3 m_ambientLight;
+    float m_ambientIntensity;
 };
 
 StructuredBuffer<LightData> m_lights : register(t0);
@@ -37,5 +38,5 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return p_normalTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y));
+    return p_diffuseTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y));
 }
