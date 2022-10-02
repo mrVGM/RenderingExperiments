@@ -50,14 +50,19 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     for (int i = 0; i < m_numLights; ++i) {
         LightData cur = m_lights[i];
-        float3 lightDir = cur.m_position - position;
-        lightDir = normalize(lightDir);
+        float3 lightOffset = cur.m_position - position;
+        float3 lightDir = normalize(lightOffset);
 
         float diffuseCoef = dot(normal, lightDir);
 
-        if (diffuseCoef > 0) {
-            color += cur.m_intensity * diffuseCoef * diffuse * cur.m_color;
+        if (diffuseCoef <= 0) {
+            continue;
         }
+
+        float intensity = length(lightOffset) / cur.m_intensity;
+        intensity = 1 - clamp(intensity, 0, 1);
+
+        color += intensity * diffuseCoef * diffuse * cur.m_color;
     }
 
     return float4(color, 1);
