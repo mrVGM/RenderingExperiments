@@ -11,6 +11,12 @@ struct LightData
     float m_intensity;
 };
 
+cbuffer LightsInfo : register(b0)
+{
+    float m_numLights;
+    float3 m_ambientLight;
+};
+
 StructuredBuffer<LightData> m_lights : register(t0);
 
 Texture2D p_diffuseTexture  : register(t1);

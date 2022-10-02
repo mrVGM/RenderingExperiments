@@ -170,7 +170,7 @@ let startRendMat = func() {
 		updateCam(camBuff);
 
 
-		litPass.populateEnd(swapChain, gBuffer, scene.lightsBuff);
+		litPass.populateEnd(swapChain, gBuffer, scene.lightsBuff, scene.lightsConstantBuff);
 		litPass.executeEnd(commandQueue, fence, index);
 	};
 

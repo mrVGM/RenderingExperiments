@@ -59,6 +59,26 @@ let loadLights = func(device, onReady) {
 	});
 };
 
+let loadLightsConstantBuff = func(device, onReady) {
+	let cBB = resources.bufferBuilder();
+
+	cBB.upload(1);
+	cBB.setSize(256);
+	cBB.setStride(256);
+	cBB.build(device, func(buff) {
+		scene.lightsConstantBuff = buff;
+		let lightsInfo = [];
+		lightsInfo.push(scene.lights.length / 7);
+		lightsInfo.push(1);
+		lightsInfo.push(1);
+		lightsInfo.push(1);
+
+		scene.lightsConstantBuff.copyData(lightsInfo);
+
+		onReady();
+	});
+};
+
 scene.addLight = func(position, color, intensity) {
 	if (scene.lights == none) {
 		scene.lights = [];
@@ -79,11 +99,13 @@ scene.load = func(device, onReady) {
 	let cubeLoaded = 0;
 	let instanceBuffLoaded = 0;
 	let lightsBuffLoaded = 0;
+	let lightsConstantBuffLoaded = 0;
 
 	let callReady = func() {
 		if (cubeLoaded == 0 ||
 			instanceBuffLoaded == 0 ||
-			lightsBuffLoaded == 0) {
+			lightsBuffLoaded == 0 ||
+			lightsConstantBuffLoaded == 0) {
 
 			return;
 		}
@@ -102,6 +124,11 @@ scene.load = func(device, onReady) {
 
 	loadLights(device, func() {
 		lightsBuffLoaded = 1;
+		callReady();
+	});
+
+	loadLightsConstantBuff(device, func() {
+		lightsConstantBuffLoaded = 1;
 		callReady();
 	});
 };
