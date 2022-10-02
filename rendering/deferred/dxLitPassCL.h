@@ -49,6 +49,7 @@ namespace rendering::deferred
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
 			ID3D12Resource* renderTarget,
 			const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+			ID3D12Resource* lightsBuffer,
 			ID3D12Resource* diffuseTex,
 			ID3D12Resource* normalTex,
 			ID3D12Resource* positionTex,

@@ -4,9 +4,18 @@ struct PSInput
     float2 uv       : UV;
 };
 
-Texture2D p_diffuseTexture  : register(t0);
-Texture2D p_normalTexture   : register(t1);
-Texture2D p_positionTexture : register(t2);
+struct LightData
+{
+    float3 m_position;
+    float3 m_color;
+    float m_intensity;
+};
+
+StructuredBuffer<LightData> m_lights : register(t0);
+
+Texture2D p_diffuseTexture  : register(t1);
+Texture2D p_normalTexture   : register(t2);
+Texture2D p_positionTexture : register(t3);
 
 SamplerState p_sampler      : register(s0);
 

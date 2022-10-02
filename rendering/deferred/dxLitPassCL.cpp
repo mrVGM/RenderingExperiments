@@ -107,7 +107,7 @@ return Value();
     });
 
     Value& populateEnd = GetOrCreateProperty(nativeObject, "populateEnd");
-    populateEnd = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+    populateEnd = CreateNativeMethod(nativeObject, 3, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXLitPassCL* self = static_cast<DXLitPassCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -130,6 +130,13 @@ return Value();
         DXBuffer* vertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("vertexBuffer")));
         DXDescriptorHeap* descriptorHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(gBufferValue.GetManagedValue()->GetProperty("descriptorHeap")));
         
+        Value lightsBufferValue = scope.GetProperty("param2");
+        DXBuffer* lightsBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(lightsBufferValue));
+
+        if (!lightsBuffer) {
+            THROW_EXCEPTION("Please supply a Lights Buffer!")
+        }
+
         std::string error;
         bool res = self->PopulateEnd(
             &swapChain->m_viewport,
@@ -137,6 +144,7 @@ return Value();
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
             &self->m_vertexBufferView,
+            lightsBuffer->GetBuffer(),
             gBuffer->GetTexture(GBuffer::GBuffer_Diffuse),
             gBuffer->GetTexture(GBuffer::GBuffer_Normal),
             gBuffer->GetTexture(GBuffer::GBuffer_Position),
@@ -324,12 +332,13 @@ bool rendering::deferred::DXLitPassCL::SetupEndCL(
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
         CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0);
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_PIXEL);
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 1, 0);
+        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+        rootParameters[0].InitAsShaderResourceView(0, 0);
+        rootParameters[1].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(1, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(2, rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -393,6 +402,7 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+    ID3D12Resource* lightsBuffer,
     ID3D12Resource* diffuseTex,
     ID3D12Resource* normalTex,
     ID3D12Resource* positionTex,
@@ -426,8 +436,8 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(
     // Set necessary state.
     m_commandListEnd->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandListEnd->SetDescriptorHeaps(1, &descriptorHeap);
-    m_commandListEnd->SetGraphicsRootDescriptorTable(0, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
+    m_commandListEnd->SetGraphicsRootShaderResourceView(0, lightsBuffer->GetGPUVirtualAddress());
+    m_commandListEnd->SetGraphicsRootDescriptorTable(1, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     // Indicate that the back buffer will be used as a render target.
     {
