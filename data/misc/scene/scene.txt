@@ -1,0 +1,120 @@
+let resources = require("resources/resourceUtils.txt");
+let utils = require("utils.txt");
+
+let scene = {};
+
+scene.addObject = func(position, rotation, scale) {
+	if (scene.instanceData == none) {
+		scene.instanceData = [];
+	}
+
+	utils.foreach(position, func(x) {
+		scene.instanceData.push(x);
+	});
+
+	utils.foreach(rotation, func(x) {
+		scene.instanceData.push(x);
+	});
+
+	utils.foreach(scale, func(x) {
+		scene.instanceData.push(x);
+	});
+};
+
+let loadCube = func(device, onReady) {
+	let prepCube = require("primitives/cube.txt");
+	prepCube(device, func(x) {
+		scene.primitives = {};
+		scene.primitives.cube = x;
+		onReady();
+	});
+};
+
+let loadInstanceBuff = func(device, onReady) {
+	let instanceData = scene.instanceData;
+
+	let instanceBB = resources.bufferBuilder();
+	instanceBB.upload(1);
+	instanceBB.setSize(4 * instanceData.length);
+	instanceBB.setStride(40);
+	instanceBB.build(device, func(buff) {
+		scene.instanceBuff = buff;
+		scene.instanceBuff.copyData(instanceData);
+
+		onReady();
+	});
+};
+
+let loadLights = func(device, onReady) {
+	let lightsBB = resources.bufferBuilder();
+
+	lightsBB.upload(1);
+	lightsBB.setSize(4 * scene.lights.length);
+	lightsBB.setStride(28);
+	lightsBB.build(device, func(buff) {
+		scene.lightsBuff = buff;
+		scene.lightsBuff.copyData(scene.lights);
+
+		onReady();
+	});
+};
+
+scene.addLight = func(position, color, intensity) {
+	if (scene.lights == none) {
+		scene.lights = [];
+	}
+
+	utils.foreach(position, func(x) {
+		scene.lights.push(x);
+	});
+
+	utils.foreach(color, func(x) {
+		scene.lights.push(x);
+	});
+	
+	scene.lights.push(intensity);
+};
+
+scene.load = func(device, onReady) {
+	let cubeLoaded = 0;
+	let instanceBuffLoaded = 0;
+	let lightsBuffLoaded = 0;
+
+	let callReady = func() {
+		if (cubeLoaded == 0 ||
+			instanceBuffLoaded == 0 ||
+			lightsBuffLoaded == 0) {
+
+			return;
+		}
+		onReady();
+	};
+
+	loadCube(device, func() {
+		cubeLoaded = 1;
+		callReady();
+	});
+
+	loadInstanceBuff(device, func() {
+		instanceBuffLoaded = 1;
+		callReady();
+	});
+
+	loadLights(device, func() {
+		lightsBuffLoaded = 1;
+		callReady();
+	});
+};
+
+scene.getObjects = func() {
+	let res = [];
+
+	let tmp = {};
+	tmp.geometry = scene.primitives.cube;
+	tmp.instances = scene.instanceBuff;
+
+	res.push(tmp);
+	return res;
+};
+
+export = scene;

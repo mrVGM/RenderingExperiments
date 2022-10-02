@@ -160,8 +160,15 @@ let startRendMat = func() {
 		swapChain.updateCurrentFrameIndex();
 		litPass.executeStart(commandQueue, fence, 0);
 
-		theMaterial.render(swapChain, commandQueue);
+		let objects = scene.getObjects();
+
+		utils.foreach(objects, func(x) {
+			theMaterial.setObject(x.geometry);
+			theMaterial.setInstanceBuffer(x.instances);
+			theMaterial.render(swapChain, commandQueue);
+		});
 		updateCam(camBuff);
+
 
 		litPass.populateEnd(swapChain, gBuffer);
 		litPass.executeEnd(commandQueue, fence, index);
@@ -170,13 +177,24 @@ let startRendMat = func() {
 	render();
 };
 
+let scene = require("scene/scene.txt");
+
 try {
 	generalInit();
 
 	let loadGBuff = require("gBuffer.txt");
 
+	scene.addObject(math.vector3(0,0,0), math.vector(1,0,0,0), math.vector3(1,1,1));
+	scene.addLight(math.vector3(0,5,0), math.vector3(1,1,1), 10);
+	let sceneLoaded = 0;
+
+	scene.load(device, func() {
+		sceneLoaded = 1;
+		print("NANA");
+	});
+
 	let getMat = func() {
-		if (cubeVerts == none || camBuff == none || gBuffer == none) {
+		if (cubeVerts == none || camBuff == none || gBuffer == none || sceneLoaded == 0) {
 			return;
 		}
 		updateCam(camBuff);
