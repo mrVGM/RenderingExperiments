@@ -6,9 +6,10 @@ cbuffer MVCMatrix : register(b0)
 
 struct PSInput
 {
-    float4 position : SV_POSITION;
-    float4 normal   : NORMAL;
-    float2 uv       : UV;
+    float4 position         : SV_POSITION;
+    float4 world_position   : WORLD_POSITION;
+    float4 normal           : NORMAL;
+    float2 uv               : UV;
 };
 
 struct PixelOutput
@@ -52,17 +53,18 @@ PSInput VSMain(
 
     float3 pos = float3(rotatedPos.y, rotatedPos.z, rotatedPos.w);
     result.position = mul(m_matrix, float4(objectPosition + pos, 1));
+    result.world_position = float4(position, 1);
     result.normal = float4(normal, 1);
     result.uv = uv;
 
     return result;
 }
 
-PixelOutput PSMain(float4 position : SV_POSITION, float4 normal : NORMAL)
+PixelOutput PSMain(float4 position : SV_POSITION, float4 worldPosition : WORLD_POSITION, float4 normal : NORMAL)
 {
     PixelOutput res;
     res.diffuse = float4(1, 0, 1, 1);
     res.normal = normal;
-    res.position = position;
+    res.position = worldPosition;
     return res;
 }
