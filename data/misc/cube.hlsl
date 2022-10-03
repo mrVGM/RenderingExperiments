@@ -17,6 +17,7 @@ struct PixelOutput
     float4 diffuse		: SV_Target0;
     float4 normal		: SV_Target1;
     float4 position		: SV_Target2;
+    float4 specular		: SV_Target3;
 };
 
 float4 multiplyQuat(float4 q1, float4 q2)
@@ -66,5 +67,6 @@ PixelOutput PSMain(float4 position : SV_POSITION, float4 worldPosition : WORLD_P
     res.diffuse = float4(1, 0, 1, 1);
     res.normal = normal;
     res.position = worldPosition;
+    res.specular = worldPosition;
     return res;
 }

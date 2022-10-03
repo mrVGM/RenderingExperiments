@@ -15,6 +15,7 @@ namespace rendering::deferred
 		ID3D12Resource* m_diffuseTex = nullptr;
 		ID3D12Resource* m_normalTex = nullptr;
 		ID3D12Resource* m_positionTex = nullptr;
+		ID3D12Resource* m_specularTex = nullptr;
 
 		UINT m_rtvDescriptorSize;
 		UINT m_dsvDescriptorSize;
@@ -30,6 +31,7 @@ namespace rendering::deferred
 			ID3D12Resource* diffuseTex,
 			ID3D12Resource* normalTex,
 			ID3D12Resource* positionTex,
+			ID3D12Resource* specularTex,
 			std::string& errorMessage);
 	public:
 		enum GBuffTextureType
@@ -37,6 +39,7 @@ namespace rendering::deferred
 			GBuffer_Diffuse = 0,
 			GBuffer_Normal = 1,
 			GBuffer_Position = 2,
+			GBuffer_Specular = 3,
 		};
 
 		ID3D12DescriptorHeap* GetRTVHeap() const;

@@ -46,6 +46,7 @@ let createGBuff = func(device, width, height, onReady) {
 	let diffuseTex = none;
 	let normalTex = none;
 	let positionTex = none;
+	let specularTex = none;
 
 	let vertexBB = resources.bufferBuilder();
 	vertexBB.upload(0);
@@ -72,6 +73,11 @@ let createGBuff = func(device, width, height, onReady) {
 	positionTexBB.setHeight(height);
 	positionTexBB.setRTV(1);
 
+	let specularTexBB = resources.textureBuilder();
+	specularTexBB.setWidth(width);
+	specularTexBB.setHeight(height);
+	specularTexBB.setRTV(1);
+
 	let dsTexBB = resources.textureBuilder();
 	dsTexBB.setWidth(width);
 	dsTexBB.setHeight(height);
@@ -84,6 +90,7 @@ let createGBuff = func(device, width, height, onReady) {
 			diffuseTex == none ||
 			normalTex == none ||
 			positionTex == none ||
+			specularTex == none ||
 			dsTex == none) {
 			return;
 		}
@@ -104,6 +111,11 @@ let createGBuff = func(device, width, height, onReady) {
 		positionTexDesc.texture = positionTex;
 		descriptors.push(positionTexDesc);
 
+		let specularTexDesc = {};
+		specularTexDesc.type = "srv_tex";
+		specularTexDesc.texture = specularTex;
+		descriptors.push(specularTexDesc);
+
 		let descHeap = api.descriptorHeap();
 		descHeap.create(device, descriptors);
 
@@ -119,7 +131,8 @@ let createGBuff = func(device, width, height, onReady) {
 			descHeap,
 			diffuseTex,
 			normalTex,
-			positionTex);
+			positionTex,
+			specularTex);
 
 		onReady(gBuffer);
 	};
@@ -158,6 +171,11 @@ let createGBuff = func(device, width, height, onReady) {
 
 	positionTexBB.build(device, func(tex) {
 		positionTex = tex;
+		assembleGBuff();
+	});
+
+	specularTexBB.build(device, func(tex) {
+		specularTex = tex;
 		assembleGBuff();
 	});
 

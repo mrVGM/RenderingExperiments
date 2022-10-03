@@ -23,6 +23,7 @@ StructuredBuffer<LightData> m_lights : register(t0);
 Texture2D p_diffuseTexture  : register(t1);
 Texture2D p_normalTexture   : register(t2);
 Texture2D p_positionTexture : register(t3);
+Texture2D p_specularTexture : register(t4);
 
 SamplerState p_sampler      : register(s0);
 
@@ -45,6 +46,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     float3 diffuse = p_diffuseTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;
     float3 position = p_positionTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;
+    float3 specular = p_specularTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;
 
     float3 color = m_ambientIntensity * diffuse * m_ambientLight;
 

@@ -28,10 +28,12 @@ namespace rendering::deferred
 			D3D12_CPU_DESCRIPTOR_HANDLE diffuseHandle,
 			D3D12_CPU_DESCRIPTOR_HANDLE normalHandle,
 			D3D12_CPU_DESCRIPTOR_HANDLE positionHandle,
+			D3D12_CPU_DESCRIPTOR_HANDLE specularHandle,
 			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
 			ID3D12Resource* diffuseTex,
 			ID3D12Resource* normalTexture,
 			ID3D12Resource* positionTexture,
+			ID3D12Resource* specularTexture,
 			std::string& errorMessage);
 
 		bool SetupEndCL(
@@ -54,6 +56,7 @@ namespace rendering::deferred
 			ID3D12Resource* diffuseTex,
 			ID3D12Resource* normalTex,
 			ID3D12Resource* positionTex,
+			ID3D12Resource* specularTex,
 			ID3D12DescriptorHeap* descriptorHeap,
 			std::string& errorMessage);
 

@@ -117,6 +117,7 @@ return Value();
             gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Diffuse),
             gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Normal),
             gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Position),
+            gBuffer->GetDescriptorHandleFor(GBuffer::GBuffer_Specular),
             gBuffer->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(),
             vertexBuffer->GetBuffer(),
             vertexBuffer->GetBufferWidth(),
@@ -267,10 +268,11 @@ bool rendering::deferred::DXLitMatCL::Create(
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 3;
+        psoDesc.NumRenderTargets = 4;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         psoDesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         psoDesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        psoDesc.RTVFormats[3] = DXGI_FORMAT_R32G32B32A32_FLOAT;
         psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         psoDesc.SampleDesc.Count = 1;
         THROW_ERROR(
@@ -299,6 +301,7 @@ bool rendering::deferred::DXLitMatCL::Populate(
     D3D12_CPU_DESCRIPTOR_HANDLE diffuseTexHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE normalTexHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE positionTexHandle,
+    D3D12_CPU_DESCRIPTOR_HANDLE specularTexHandle,
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle,
     ID3D12Resource* vertexBuffer,
     int vertexBufferSize,
@@ -331,7 +334,7 @@ bool rendering::deferred::DXLitMatCL::Populate(
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE handles[] = { diffuseTexHandle, normalTexHandle, positionTexHandle };
+    D3D12_CPU_DESCRIPTOR_HANDLE handles[] = { diffuseTexHandle, normalTexHandle, positionTexHandle, specularTexHandle };
     m_commandList->OMSetRenderTargets(_countof(handles), handles, FALSE, &dsvHandle);
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2];

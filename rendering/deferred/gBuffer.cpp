@@ -27,6 +27,7 @@ return Value();
     Value& diffuseTexture = GetOrCreateProperty(nativeObject, "diffuseTexture");
     Value& normalTexture = GetOrCreateProperty(nativeObject, "normalTexture");
     Value& positionTexture = GetOrCreateProperty(nativeObject, "positionTexture");
+    Value& specularTexture = GetOrCreateProperty(nativeObject, "specularTexture");
 
     Value& vertexBuffer = GetOrCreateProperty(nativeObject, "vertexBuffer");
     Value& vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
@@ -34,7 +35,7 @@ return Value();
     Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 11, [&](Value scope) {
+    create = CreateNativeMethod(nativeObject, 12, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         GBuffer* self = static_cast<GBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -124,6 +125,15 @@ return Value();
         positionTexture = positionTexValue;
         m_positionTex = positionTex->GetTexture();
 
+        Value specularTexValue = scope.GetProperty("param11");
+        DXTexture* specularTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(specularTexValue));
+
+        if (!specularTex) {
+            THROW_EXCEPTION("Please supply a specular texture!")
+        }
+        specularTexture = specularTexValue;
+        m_specularTex = specularTex->GetTexture();
+
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
@@ -131,6 +141,7 @@ return Value();
             diffuseTex->GetTexture(),
             normalTex->GetTexture(),
             positionTex->GetTexture(),
+            specularTex->GetTexture(),
             error
         );
 
@@ -156,6 +167,7 @@ bool rendering::deferred::GBuffer::Create(
     ID3D12Resource* diffuseTex,
     ID3D12Resource* normalTex,
     ID3D12Resource* positionTex,
+    ID3D12Resource* specularTex,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
@@ -185,6 +197,9 @@ bool rendering::deferred::GBuffer::Create(
         rtvHandle.Offset(1, m_rtvDescriptorSize);
 
         device->CreateRenderTargetView(positionTex, nullptr, rtvHandle);
+        rtvHandle.Offset(1, m_rtvDescriptorSize);
+
+        device->CreateRenderTargetView(specularTex, nullptr, rtvHandle);
         rtvHandle.Offset(1, m_rtvDescriptorSize);
     }
 
@@ -247,6 +262,8 @@ ID3D12Resource* rendering::deferred::GBuffer::GetTexture(GBuffTextureType texTyp
         return m_normalTex;
     case GBuffer_Position:
         return m_positionTex;
+    case GBuffer_Specular:
+        return m_specularTex;
     }
     return nullptr;
 }
