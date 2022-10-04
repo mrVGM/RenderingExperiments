@@ -18,6 +18,12 @@ cbuffer LightsInfo : register(b0)
     float m_ambientIntensity;
 };
 
+cbuffer CamInfo : register(b1)
+{
+    float4x4 m_matrix;
+    float3 m_camPos;
+};
+
 StructuredBuffer<LightData> m_lights : register(t0);
 
 Texture2D p_diffuseTexture  : register(t1);

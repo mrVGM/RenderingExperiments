@@ -43,9 +43,12 @@ let updateCam = func(camBuff) {
 	cam.setFarPlane(10000);
 	cam.setFOV(60);
 
-	let mat = cam.getMVPMatrix();
+	let camData = cam.getMVPMatrix();
+	utils.foreach(pos, func(x) {
+		camData.push(x);
+	});
 
-	camBuff.copyData(mat);
+	camBuff.copyData(camData);
 };
 
 let resources = require("resources/resourceUtils.txt");
