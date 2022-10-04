@@ -79,7 +79,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     float3 diffuse = p_diffuseTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;
     float3 position = p_positionTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;
-    float3 specular = p_specularTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;
+
+    float4 specular = p_specularTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y));
+    float3 specularColor = specular.xyz;
 
     float3 color = m_ambientIntensity * diffuse * m_ambientLight;
 
@@ -94,10 +96,20 @@ float4 PSMain(PSInput input) : SV_TARGET
             continue;
         }
 
-        float intensity = length(lightOffset) / cur.m_intensity;
+        float3 viewOffset = m_camPos - position;
+        float intensity = max(length(viewOffset), length(lightOffset)) / cur.m_intensity;
         intensity = 1 - clamp(intensity, 0, 1);
 
         color += intensity * diffuseCoef * diffuse * cur.m_color;
+
+        float3 viewDir = normalize(viewOffset);
+        float3 reflection = CalculateReflection(normal, lightDir);
+        float specularCoef = dot(viewDir, reflection);
+        if (specularCoef <= 0) {
+            continue;
+        }
+
+        color += intensity * pow(specularCoef, specular.w) * specular * cur.m_color;
     }
 
     return float4(color, 1);

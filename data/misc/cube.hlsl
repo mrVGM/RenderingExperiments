@@ -67,6 +67,6 @@ PixelOutput PSMain(float4 position : SV_POSITION, float4 worldPosition : WORLD_P
     res.diffuse = float4(1, 0, 1, 1);
     res.normal = normal;
     res.position = worldPosition;
-    res.specular = worldPosition;
+    res.specular = float4(0, 1, 0, 5);
     return res;
 }
