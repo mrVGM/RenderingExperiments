@@ -153,6 +153,7 @@ return Value();
             swapChain->GetCurrentRTVDescriptor(),
             swapChain->GetCurrentRenderTarget(),
             &self->m_vertexBufferView,
+            gBuffer->GetCamBuffer(),
             lightsConstantBuffer->GetBuffer(),
             lightsBuffer->GetBuffer(),
             gBuffer->GetTexture(GBuffer::GBuffer_Diffuse),
@@ -348,13 +349,14 @@ bool rendering::deferred::DXLitPassCL::SetupEndCL(
 
         CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 1, 0);
-        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[4];
         rootParameters[0].InitAsConstantBufferView(0, 0);
         rootParameters[1].InitAsShaderResourceView(0, 0);
         rootParameters[2].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsConstantBufferView(1, 0);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(3, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(4, rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -418,6 +420,7 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle,
     ID3D12Resource* renderTarget,
     const D3D12_VERTEX_BUFFER_VIEW* vertexBufferView,
+    ID3D12Resource* camBuffer,
     ID3D12Resource* lightsConstantBuffer,
     ID3D12Resource* lightsBuffer,
     ID3D12Resource* diffuseTex,
@@ -459,6 +462,7 @@ bool rendering::deferred::DXLitPassCL::PopulateEnd(
     m_commandListEnd->SetGraphicsRootConstantBufferView(0, lightsConstantBuffer->GetGPUVirtualAddress());
     m_commandListEnd->SetGraphicsRootShaderResourceView(1, lightsBuffer->GetGPUVirtualAddress());
     m_commandListEnd->SetGraphicsRootDescriptorTable(2, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandListEnd->SetGraphicsRootConstantBufferView(3, camBuffer->GetGPUVirtualAddress());
 
     // Indicate that the back buffer will be used as a render target.
     {

@@ -29,13 +29,15 @@ return Value();
     Value& positionTexture = GetOrCreateProperty(nativeObject, "positionTexture");
     Value& specularTexture = GetOrCreateProperty(nativeObject, "specularTexture");
 
+    Value& camBuffer = GetOrCreateProperty(nativeObject, "camBuffer");
+
     Value& vertexBuffer = GetOrCreateProperty(nativeObject, "vertexBuffer");
     Value& vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
     Value& gBuffDescriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 12, [&](Value scope) {
+    create = CreateNativeMethod(nativeObject, 13, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         GBuffer* self = static_cast<GBuffer*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -46,7 +48,16 @@ return Value();
             THROW_EXCEPTION("Please supply a device!")
         }
 
-        Value vertexBufferValue = scope.GetProperty("param1");
+        Value camBuffValue = scope.GetProperty("param1");
+        DXBuffer* camBuff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(camBuffValue));
+
+        if (!camBuff) {
+            THROW_EXCEPTION("Please supply a Cam Buffer!")
+        }
+        m_camBuffer = camBuff->GetBuffer();
+        camBuffer = camBuffValue;
+
+        Value vertexBufferValue = scope.GetProperty("param2");
         DXBuffer* dxVertexBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(vertexBufferValue));
 
         if (!dxVertexBuffer) {
@@ -54,7 +65,7 @@ return Value();
         }
         vertexBuffer = vertexBufferValue;
 
-        Value vertexShaderValue = scope.GetProperty("param2");
+        Value vertexShaderValue = scope.GetProperty("param3");
         DXVertexShader* dxVertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
 
         if (!dxVertexShader) {
@@ -62,7 +73,7 @@ return Value();
         }
         vertexShader = vertexShaderValue;
 
-        Value pixelShaderValue = scope.GetProperty("param3");
+        Value pixelShaderValue = scope.GetProperty("param4");
         DXPixelShader* dxPixelShader = dynamic_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(pixelShaderValue));
 
         if (!dxPixelShader) {
@@ -70,19 +81,19 @@ return Value();
         }
         pixelShader = pixelShaderValue;
 
-        Value widthValue = scope.GetProperty("param4");
+        Value widthValue = scope.GetProperty("param5");
         if (widthValue.GetType() != ScriptingValueType::Number) {
             THROW_EXCEPTION("Please supply a width value!")
         }
         width = widthValue;
 
-        Value heightValue = scope.GetProperty("param5");
+        Value heightValue = scope.GetProperty("param6");
         if (heightValue.GetType() != ScriptingValueType::Number) {
             THROW_EXCEPTION("Please supply a height value!")
         }
         height = heightValue;
 
-        Value dsTexValue = scope.GetProperty("param6");
+        Value dsTexValue = scope.GetProperty("param7");
         DXTexture* dsTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(dsTexValue));
 
         if (!dsTex) {
@@ -90,7 +101,7 @@ return Value();
         }
         dsTexture = dsTexValue;
 
-        Value gBuffDescHeapValue = scope.GetProperty("param7");
+        Value gBuffDescHeapValue = scope.GetProperty("param8");
         DXDescriptorHeap* gBuffDescHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(gBuffDescHeapValue));
 
         if (!gBuffDescHeap) {
@@ -98,7 +109,7 @@ return Value();
         }
         gBuffDescriptorHeap = gBuffDescHeapValue;
 
-        Value diffuseTexValue = scope.GetProperty("param8");
+        Value diffuseTexValue = scope.GetProperty("param9");
         DXTexture* diffuseTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(diffuseTexValue));
 
         if (!diffuseTex) {
@@ -107,7 +118,7 @@ return Value();
         diffuseTexture = diffuseTexValue;
         m_diffuseTex = diffuseTex->GetTexture();
 
-        Value normalTexValue = scope.GetProperty("param9");
+        Value normalTexValue = scope.GetProperty("param10");
         DXTexture* normalTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(normalTexValue));
 
         if (!normalTex) {
@@ -116,7 +127,7 @@ return Value();
         normalTexture = normalTexValue;
         m_normalTex = normalTex->GetTexture();
 
-        Value positionTexValue = scope.GetProperty("param10");
+        Value positionTexValue = scope.GetProperty("param11");
         DXTexture* positionTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(positionTexValue));
 
         if (!positionTex) {
@@ -125,7 +136,7 @@ return Value();
         positionTexture = positionTexValue;
         m_positionTex = positionTex->GetTexture();
 
-        Value specularTexValue = scope.GetProperty("param11");
+        Value specularTexValue = scope.GetProperty("param12");
         DXTexture* specularTex = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(specularTexValue));
 
         if (!specularTex) {
@@ -266,6 +277,11 @@ ID3D12Resource* rendering::deferred::GBuffer::GetTexture(GBuffTextureType texTyp
         return m_specularTex;
     }
     return nullptr;
+}
+
+ID3D12Resource* rendering::deferred::GBuffer::GetCamBuffer() const
+{
+    return m_camBuffer;
 }
 
 #undef THROW_ERROR

@@ -106,26 +106,9 @@ let resources = require("resources/resourceUtils.txt");
 let gBuffer = none;
 let litPass = api.deferred.litPass();
 
-let camBuff = none;
-let prepCamBuff = func(onReady) {
-	if (camBuff != none) {
-		onReady(camBuff);
-		return;
-	}
-
-	let camBB = resources.bufferBuilder();
-	camBB.upload(1);
-	camBB.setSize(256);
-	camBB.setStride(256);
-	camBB.build(device, func(buff) {
-		camBuff = buff;
-		onReady();
-	});
-};
-
 let prepMaterial = func() {
 	let createMaterial = require("materials/litMaterial.txt");
-	let material = createMaterial(device, "cube.hlsl", camBuff, gBuffer);
+	let material = createMaterial(device, "cube.hlsl", gBuffer);
 	return material;
 };
 
@@ -167,7 +150,7 @@ let startRendMat = func() {
 			theMaterial.setInstanceBuffer(x.instances);
 			theMaterial.render(swapChain, commandQueue);
 		});
-		updateCam(camBuff);
+		updateCam(gBuffer.camBuffer);
 
 
 		litPass.populateEnd(swapChain, gBuffer, scene.lightsBuff, scene.lightsConstantBuff);
@@ -194,10 +177,10 @@ try {
 	});
 
 	let getMat = func() {
-		if (cubeVerts == none || camBuff == none || gBuffer == none || sceneLoaded == 0) {
+		if (cubeVerts == none || gBuffer == none || sceneLoaded == 0) {
 			return;
 		}
-		updateCam(camBuff);
+		updateCam(gBuffer.camBuffer);
 		theMaterial = prepMaterial();
 
 		startRendMat();
@@ -205,11 +188,6 @@ try {
 
 	loadGeometry(func() {
 		print("Geometry Loaded!");
-		getMat();
-	});
-
-	prepCamBuff(func() {
-		print("Cam Buff loaded!");
 		getMat();
 	});
 

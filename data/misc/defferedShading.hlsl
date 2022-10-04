@@ -37,6 +37,33 @@ PSInput VSMain(float2 position : POSITION, float2 uv : UV)
     return result;
 }
 
+float3 CalculateReflection(float3 normal, float3 ray)
+{
+    float3 x = cross(normal, ray);
+    if (dot(x, x) <= 0) {
+        return ray;
+    }
+
+    float3 z = cross(normal, x);
+
+    x = normalize(x);
+    z = normalize(z);
+
+    float3x3 mat = {
+        x[0], normal[0], z[0],
+        x[1], normal[1], z[1],
+        x[2], normal[2], z[2],
+    };
+
+    float3x3 trMat = transpose(mat);
+
+    float3 refl = mul(trMat, ray);
+    refl = float3(-refl[0], refl[1], -refl[2]);
+    refl = mul(mat, refl);
+
+    return refl;
+}
+
 float4 PSMain(PSInput input) : SV_TARGET
 {
     float3 normal = p_normalTexture.Sample(p_sampler, float2(input.uv.x, 1 - input.uv.y)).xyz;

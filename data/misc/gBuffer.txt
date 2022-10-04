@@ -39,6 +39,8 @@ let createGBuff = func(device, width, height, onReady) {
 	let pixelShader = api.pixelShader();
 	pixelShader.compile(shaderCode);
 
+	let camBuffer = none;
+
 	let vertexBuffer = none;
 	let vertexUploadBuffer = none;
 
@@ -47,6 +49,11 @@ let createGBuff = func(device, width, height, onReady) {
 	let normalTex = none;
 	let positionTex = none;
 	let specularTex = none;
+
+	let camUploadBB = resources.bufferBuilder();
+	camUploadBB.upload(1);
+	camUploadBB.setSize(256);
+	camUploadBB.setStride(256);
 
 	let vertexBB = resources.bufferBuilder();
 	vertexBB.upload(0);
@@ -91,7 +98,8 @@ let createGBuff = func(device, width, height, onReady) {
 			normalTex == none ||
 			positionTex == none ||
 			specularTex == none ||
-			dsTex == none) {
+			dsTex == none ||
+			camBuffer == none) {
 			return;
 		}
 
@@ -122,6 +130,7 @@ let createGBuff = func(device, width, height, onReady) {
 		let gBuffer = api.deferred.gBuffer();
 		gBuffer.create(
 			device,
+			camBuffer,
 			vertexBuffer,
 			vertexShader,
 			pixelShader,
@@ -147,6 +156,11 @@ let createGBuff = func(device, width, height, onReady) {
 			assembleGBuff();
 		});
 	};
+
+	camUploadBB.build(device, func(buff) {
+		camBuffer = buff;
+		assembleGBuff();
+	});
 
 	vertexBB.build(device, func(vertex) {
 		vertexBuffer = vertex;

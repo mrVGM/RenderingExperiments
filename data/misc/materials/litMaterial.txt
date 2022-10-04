@@ -1,6 +1,6 @@
-let createLitMaterial = func(device, shadersFile, cameraBuffer, gBuffer) {
-	let camBuff = cameraBuffer;
+let createLitMaterial = func(device, shadersFile, gBuffer) {
 	let gBuff = gBuffer;
+	let camBuff = gBuffer.camBuffer;
 
 	let shaderCode = readFile(shadersFile);
 

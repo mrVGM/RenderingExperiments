@@ -12,6 +12,8 @@ namespace rendering::deferred
 {
 	class GBuffer : public interpreter::INativeObject
 	{
+		ID3D12Resource* m_camBuffer = nullptr;
+
 		ID3D12Resource* m_diffuseTex = nullptr;
 		ID3D12Resource* m_normalTex = nullptr;
 		ID3D12Resource* m_positionTex = nullptr;
@@ -47,5 +49,6 @@ namespace rendering::deferred
 
 		D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorHandleFor(GBuffTextureType texType);
 		ID3D12Resource* GetTexture(GBuffTextureType texType);
+		ID3D12Resource* GetCamBuffer() const;
 	};
 }
