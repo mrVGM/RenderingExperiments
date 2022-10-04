@@ -1,6 +1,7 @@
 #include "window.h"
 
 #include "nativeFunc.h"
+#include "utils.h"
 
 namespace
 {
@@ -67,11 +68,13 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 	{
+		m_keysDown.push_back(wParam);
 		return 0;
 	}
 
 	case WM_KEYUP:
 	{
+		m_keysUp.push_back(wParam);
 		return 0;
 	}
 	}
@@ -91,6 +94,12 @@ rendering::Window::~Window()
 
 void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 {
+#define THROW_EXCEPTION(error)\
+scope.SetProperty("exception", Value(error));\
+return Value();
+
+	using namespace interpreter;
+
 	interpreter::Value create = interpreter::CreateNativeMethod(nativeObject, 2, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
 		interpreter::NativeObject* obj = static_cast<interpreter::NativeObject*>(self.GetManagedValue());
@@ -135,7 +144,10 @@ void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 		return interpreter::Value(wnd->m_height);
 	});
 
-	interpreter::Value drag = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
+	Value& keyDownHandler = GetOrCreateProperty(nativeObject, "keyDownHandler");
+	Value& keyUpHandler = GetOrCreateProperty(nativeObject, "keyUpHandler");
+
+	interpreter::Value windowLoop = interpreter::CreateNativeMethod(nativeObject, 0, [&](interpreter::Value scope) {
 		MSG msg;
 		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 			if (!GetMessage(&msg, NULL, 0, 0)) {
@@ -144,6 +156,32 @@ void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		if (!keyDownHandler.IsNone()) {
+			for (std::list<WPARAM>::const_iterator it = m_keysDown.begin(); it != m_keysDown.end(); ++it) {
+				WPARAM cur = *it;
+				
+				Value arg = utils::GetEmptyObject();
+				arg.SetProperty("keyDown", Value(cur));
+
+				interpreter::utils::RunCallback(keyDownHandler, arg);
+			}
+		}
+
+		if (!keyUpHandler.IsNone()) {
+			for (std::list<WPARAM>::const_iterator it = m_keysUp.begin(); it != m_keysUp.end(); ++it) {
+				WPARAM cur = *it;
+
+				Value arg = utils::GetEmptyObject();
+				arg.SetProperty("keyUp", Value(cur));
+
+				interpreter::utils::RunCallback(keyUpHandler, arg);
+			}
+		}
+
+		m_keysDown.clear();
+		m_keysUp.clear();
+
 		return interpreter::Value();
 	});
 
@@ -157,12 +195,43 @@ void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
 	});
 	
 	interpreter::Value& createProp = GetOrCreateProperty(nativeObject, "create");
-	interpreter::Value& dragProp = GetOrCreateProperty(nativeObject, "drag");
+	interpreter::Value& windowLoopProp = GetOrCreateProperty(nativeObject, "windowLoop");
 	interpreter::Value& aliveProp = GetOrCreateProperty(nativeObject, "isAlive");
 
 	createProp = create;
-	dragProp = drag;
+	windowLoopProp = windowLoop;
 	aliveProp = alive;
+
+
+	Value& setKeyDownHandler = GetOrCreateProperty(nativeObject, "setKeyDownHandler");
+	setKeyDownHandler = interpreter::CreateNativeMethod(nativeObject, 1, [&](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		Window* wnd = static_cast<Window*>(interpreter::NativeObject::ExtractNativeObject(self));
+
+		Value handler = scope.GetProperty("param0");
+		if (handler.GetType() != ScriptingValueType::Object) {
+			THROW_EXCEPTION("Please supply a callback function!")
+		}
+
+		keyDownHandler = handler;
+		return Value();
+	});
+
+	Value& setKeyUpHandler = GetOrCreateProperty(nativeObject, "setKeyUpHandler");
+	setKeyUpHandler = interpreter::CreateNativeMethod(nativeObject, 1, [&](interpreter::Value scope) {
+		interpreter::Value self = scope.GetProperty("self");
+		Window* wnd = static_cast<Window*>(interpreter::NativeObject::ExtractNativeObject(self));
+
+		Value handler = scope.GetProperty("param0");
+		if (handler.GetType() != ScriptingValueType::Object) {
+			THROW_EXCEPTION("Please supply a callback function!")
+		}
+
+		keyUpHandler = handler;
+		return Value();
+	});
+
+#undef THROW_EXCEPTION
 }
 
 

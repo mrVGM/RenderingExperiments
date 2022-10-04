@@ -3,12 +3,16 @@
 #include "nativeObject.h"
 
 #include <Windows.h>
+#include <list>
 
 
 namespace rendering
 {
 	class Window : public interpreter::INativeObject
 	{
+		std::list<WPARAM> m_keysDown;
+		std::list<WPARAM> m_keysUp;
+
 		void RegisterWindowClass();
 		void Create(int width, int height);
 		void Destroy();

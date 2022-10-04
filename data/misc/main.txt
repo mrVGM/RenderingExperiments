@@ -4,16 +4,24 @@ let utils = require("utils.txt");
 let wnd = api.window();
 wnd.create(600, 400);
 
-let dragCrt = func() {
+let windowLoopCrt = func() {
 	if (wnd.isAlive() == 0) {
 		print("Window closed!");
 		wnd = none;
 		return;
 	}
-	wnd.drag();
-	timeout(dragCrt, 0);
+	wnd.windowLoop();
+	timeout(windowLoopCrt, 0);
 };
-dragCrt();
+windowLoopCrt();
+
+wnd.setKeyDownHandler(func(x) {
+	print(x.keyDown);
+});
+
+wnd.setKeyUpHandler(func(x) {
+	print(x.keyUp);
+});
 
 let device = api.device();
 let swapChain = api.swapChain();
