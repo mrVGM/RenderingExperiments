@@ -48,59 +48,6 @@ let updateCam = func(camBuff) {
 	camBuff.copyData(mat);
 };
 
-let cube = require("primitives/cube.txt");
-let cubeVerts = none;
-let instance = none;
-
-let loadGeometry = func(onReady) {
-	let callReady = func() {
-		if (cubeVerts == none || instance == none) {
-			return;
-		}
-
-		onReady();
-	};
-
-	cube(device, func(verts) {
-		cubeVerts = verts;
-		callReady();
-	});
-
-	let instanceData = [];
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(0);
-	instanceData.push(math.cos(math.PI / 8));
-	instanceData.push(-math.sin(math.PI / 8));
-	instanceData.push(0);
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(1);
-	instanceData.push(1);
-
-	instanceData.push(0);
-	instanceData.push(-1);
-	instanceData.push(0);
-	instanceData.push(math.cos(math.PI / 8));
-	instanceData.push(-math.sin(math.PI / 8));
-	instanceData.push(0);
-	instanceData.push(0);
-	instanceData.push(1);
-	instanceData.push(1);
-	instanceData.push(1);
-
-	let instanceBB = resources.bufferBuilder();
-	instanceBB.upload(1);
-	instanceBB.setSize(4 * instanceData.length);
-	instanceBB.setStride(40);
-	instanceBB.build(device, func(buff) {
-		instance = buff;
-		instance.copyData(instanceData);
-
-		callReady();
-	});
-};
-
 let resources = require("resources/resourceUtils.txt");
 
 let gBuffer = none;
@@ -116,9 +63,6 @@ let theMaterial = none;
 
 let startRendMat = func() {
 	print("start render mat");
-
-	theMaterial.setObject(cubeVerts);
-	theMaterial.setInstanceBuffer(instance);
 
 	let fence = api.fence();
 	fence.create(device);
@@ -177,7 +121,7 @@ try {
 	});
 
 	let getMat = func() {
-		if (cubeVerts == none || gBuffer == none || sceneLoaded == 0) {
+		if (gBuffer == none || sceneLoaded == 0) {
 			return;
 		}
 		updateCam(gBuffer.camBuffer);
@@ -185,11 +129,6 @@ try {
 
 		startRendMat();
 	};
-
-	loadGeometry(func() {
-		print("Geometry Loaded!");
-		getMat();
-	});
 
 	loadGBuff(device, wnd.width(), wnd.height(), func(gBuff) {
 		gBuffer = gBuff;
