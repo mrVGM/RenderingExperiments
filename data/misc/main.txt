@@ -4,6 +4,9 @@ let utils = require("utils.txt");
 let wnd = api.window();
 wnd.create(600, 400);
 
+let inputManager = require("inputManager.txt");
+inputManager.init(wnd);
+
 let windowLoopCrt = func() {
 	if (wnd.isAlive() == 0) {
 		print("Window closed!");
@@ -14,14 +17,6 @@ let windowLoopCrt = func() {
 	timeout(windowLoopCrt, 0);
 };
 windowLoopCrt();
-
-wnd.setKeyDownHandler(func(x) {
-	print(x.keyDown);
-});
-
-wnd.setKeyUpHandler(func(x) {
-	print(x.keyUp);
-});
 
 let device = api.device();
 let swapChain = api.swapChain();
@@ -35,12 +30,8 @@ let generalInit = func() {
 };
 
 let cam = api.aux.camera();
-let offset = 0;
-
-let updateCam = func(camBuff) {
-	offset = offset + 0.01;
-
-	let pos = math.vector3(5 * math.cos(offset), offset, 5 * math.sin(offset));
+let initCamera = func(camBuff) {
+	let pos = math.vector3(0, 0, -5);
 	let target = math.vector3(0, 0, 0);
 
 	let aspect = wnd.width() / wnd.height();
@@ -50,6 +41,36 @@ let updateCam = func(camBuff) {
 	cam.setNearPlane(0.1);
 	cam.setFarPlane(10000);
 	cam.setFOV(60);
+
+	let camData = cam.getMVPMatrix();
+	utils.foreach(pos, func(x) {
+		camData.push(x);
+	});
+
+	camBuff.copyData(camData);
+};
+
+let lastTick = none;
+let camSpeed = 5;
+let updateCam = func(camBuff) {
+	let n = now();
+	if (lastTick == none) {
+		lastTick = n;
+	}
+	let dt = n - lastTick;
+	lastTick = n;
+
+	let f = math.multiply(dt * camSpeed * inputManager.moveForward, cam.getForward());
+	let r = math.multiply(dt * camSpeed * inputManager.moveRight, cam.getRight());
+
+	let offset = math.addVectors(f, r);
+
+	let pos = cam.getPos();
+	pos = math.addVectors(pos, offset);
+	let target = math.vector3(0, 0, 0);
+
+	cam.setPosition(pos);
+	cam.setTarget(target);
 
 	let camData = cam.getMVPMatrix();
 	utils.foreach(pos, func(x) {
@@ -135,7 +156,7 @@ try {
 		if (gBuffer == none || sceneLoaded == 0) {
 			return;
 		}
-		updateCam(gBuffer.camBuffer);
+		initCamera(gBuffer.camBuffer);
 		theMaterial = prepMaterial();
 
 		startRendMat();

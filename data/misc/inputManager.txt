@@ -1,0 +1,40 @@
+let inputManager = {};
+
+inputManager.init = func(wnd) {
+	inputManager.moveForward = 0;
+	inputManager.moveRight = 0;
+
+	wnd.setKeyDownHandler(func(x) {
+		if (x.keyDown == 65) {
+			inputManager.moveRight = -1;
+		}
+		if (x.keyDown == 68) {
+			inputManager.moveRight = 1;
+		}
+
+		if (x.keyDown == 87) {
+			inputManager.moveForward = 1;
+		}
+		if (x.keyDown == 83) {
+			inputManager.moveForward = -1;
+		}
+	});
+
+	wnd.setKeyUpHandler(func(x) {
+		if (x.keyUp == 65) {
+			inputManager.moveRight = 0;
+		}
+		if (x.keyUp == 68) {
+			inputManager.moveRight = 0;
+		}
+
+		if (x.keyUp == 87) {
+			inputManager.moveForward = 0;
+		}
+		if (x.keyUp == 83) {
+			inputManager.moveForward = 0;
+		}
+	});
+};
+
+export = inputManager;

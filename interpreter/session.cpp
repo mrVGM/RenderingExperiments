@@ -344,6 +344,16 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	m_callbackCallCodeParsed = m_parser.Parse(m_callbackCallCode);
 
 	m_beginning = std::chrono::system_clock::now();
+
+	Value now = CreateNativeFunc(1, [](Value scope) {
+		std::chrono::time_point now = std::chrono::system_clock::now();
+		auto nanosecs = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+		long long cnt = nanosecs.time_since_epoch().count();
+
+		return Value(static_cast<double>(cnt) / 1000000000.0);
+	});
+
+	scope->BindValue("now", now);
 }
 
 interpreter::Session::~Session()
