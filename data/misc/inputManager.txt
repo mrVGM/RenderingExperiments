@@ -3,6 +3,8 @@ let inputManager = {};
 inputManager.init = func(wnd) {
 	inputManager.moveForward = 0;
 	inputManager.moveRight = 0;
+	inputManager.aimRight = 0;
+	inputManager.aimUp = 0;
 
 	wnd.setKeyDownHandler(func(x) {
 		if (x.keyDown == 65) {
@@ -17,6 +19,19 @@ inputManager.init = func(wnd) {
 		}
 		if (x.keyDown == 83) {
 			inputManager.moveForward = -1;
+		}
+
+		if (x.keyDown == 37) {
+			inputManager.aimRight = 1;
+		}
+		if (x.keyDown == 39) {
+			inputManager.aimRight = -1;
+		}
+		if (x.keyDown == 38) {
+			inputManager.aimUp = 1;
+		}
+		if (x.keyDown == 40) {
+			inputManager.aimUp = -1;
 		}
 	});
 
@@ -33,6 +48,19 @@ inputManager.init = func(wnd) {
 		}
 		if (x.keyUp == 83) {
 			inputManager.moveForward = 0;
+		}
+
+		if (x.keyUp == 37) {
+			inputManager.aimRight = 0;
+		}
+		if (x.keyUp == 39) {
+			inputManager.aimRight = 0;
+		}
+		if (x.keyUp == 38) {
+			inputManager.aimUp = 0;
+		}
+		if (x.keyUp == 40) {
+			inputManager.aimUp = 0;
 		}
 	});
 };

@@ -50,8 +50,14 @@ let initCamera = func(camBuff) {
 	camBuff.copyData(camData);
 };
 
+let pi = math.PI;
+
 let lastTick = none;
 let camSpeed = 5;
+let camRotationSpeed = 2;
+let azimuth = pi / 2;
+let altitude = 0;
+
 let updateCam = func(camBuff) {
 	let n = now();
 	if (lastTick == none) {
@@ -67,7 +73,22 @@ let updateCam = func(camBuff) {
 
 	let pos = cam.getPos();
 	pos = math.addVectors(pos, offset);
-	let target = math.vector3(0, 0, 0);
+
+	azimuth = azimuth + dt * inputManager.aimRight * camRotationSpeed;
+	altitude = altitude + dt * inputManager.aimUp * camRotationSpeed;
+
+	let lower = -pi / 2 + pi / 10;
+	let upper = pi / 2 - pi / 10;
+
+	if (altitude < lower) {
+		altitude = lower;
+	}
+	if (altitude > upper) {
+		altitude = upper;
+	}
+
+	let aim = math.vector3(math.cos(azimuth) * math.cos(altitude), math.sin(altitude), math.sin(azimuth) * math.cos(altitude));
+	let target = math.addVectors(pos, aim);
 
 	cam.setPosition(pos);
 	cam.setTarget(target);
