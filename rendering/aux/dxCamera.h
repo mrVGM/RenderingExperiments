@@ -21,6 +21,9 @@ namespace rendering
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		DirectX::XMMATRIX GetMVPMatrix() const;
+		
+		DirectX::XMVECTOR GetForwardVector() const;
+		DirectX::XMVECTOR GetRightVector() const;
 	public:
 	};
 }

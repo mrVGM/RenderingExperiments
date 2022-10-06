@@ -149,6 +149,62 @@ return Value();
 		return Value::FromList(matrixCoefs);
 	});
 
+	Value& getForward = GetOrCreateProperty(nativeObject, "getForward");
+	getForward = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
+
+		DirectX::XMVECTOR fwd = self->GetForwardVector();
+		std::list<Value> tmp;
+		tmp.push_back(Value(DirectX::XMVectorGetX(fwd)));
+		tmp.push_back(Value(DirectX::XMVectorGetY(fwd)));
+		tmp.push_back(Value(DirectX::XMVectorGetZ(fwd)));
+
+		return Value::FromList(tmp);
+	});
+
+	Value& getRight = GetOrCreateProperty(nativeObject, "getRight");
+	getRight = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
+
+		DirectX::XMVECTOR right = self->GetRightVector();
+		std::list<Value> tmp;
+		tmp.push_back(Value(DirectX::XMVectorGetX(right)));
+		tmp.push_back(Value(DirectX::XMVectorGetY(right)));
+		tmp.push_back(Value(DirectX::XMVectorGetZ(right)));
+
+		return Value::FromList(tmp);
+	});
+
+	Value& getPos = GetOrCreateProperty(nativeObject, "getPos");
+	getPos = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
+
+		DirectX::XMVECTOR pos = self->m_position;
+		std::list<Value> tmp;
+		tmp.push_back(Value(DirectX::XMVectorGetX(pos)));
+		tmp.push_back(Value(DirectX::XMVectorGetY(pos)));
+		tmp.push_back(Value(DirectX::XMVectorGetZ(pos)));
+
+		return Value::FromList(tmp);
+	});
+
+	Value& getTarget = GetOrCreateProperty(nativeObject, "getTarget");
+	getTarget = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
+
+		DirectX::XMVECTOR target = self->m_position;
+		std::list<Value> tmp;
+		tmp.push_back(Value(DirectX::XMVectorGetX(target)));
+		tmp.push_back(Value(DirectX::XMVectorGetY(target)));
+		tmp.push_back(Value(DirectX::XMVectorGetZ(target)));
+
+		return Value::FromList(tmp);
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -201,5 +257,22 @@ DirectX::XMMATRIX rendering::DXCamera::GetMVPMatrix() const
 
 	return project * view * translate;
 }
+
+DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
+{
+	DirectX::XMVECTOR res =  DirectX::XMVectorSubtract(m_target, m_position);
+	res = DirectX::XMVector3Normalize(res);
+	return res;
+}
+
+DirectX::XMVECTOR rendering::DXCamera::GetRightVector() const
+{
+	DirectX::XMVECTOR up = DirectX::XMVectorSet(0, 1, 0, 0);
+	DirectX::XMVECTOR fwd = GetForwardVector();
+	DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, fwd);
+
+	return DirectX::XMVector3Normalize(right);
+}
+
 
 #undef THROW_ERROR
