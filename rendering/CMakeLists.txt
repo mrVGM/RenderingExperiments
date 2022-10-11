@@ -61,6 +61,8 @@ add_library (Rendering
 	"deferred/gBuffer.cpp"
 	"deferred/dxLitPassCL.h"
 	"deferred/dxLitPassCL.cpp"
+	"deferred/dxCloudMatCL.h"
+	"deferred/dxCloudMatCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
