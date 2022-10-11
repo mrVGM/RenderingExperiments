@@ -35,6 +35,8 @@
 #include "deferred/gBuffer.h"
 #include "deferred/dxLitPassCL.h"
 
+#include "deferred/dxCloudMatCL.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -211,6 +213,11 @@ namespace rendering
 		deferred.SetProperty("litMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			deferred::DXLitMatCL* litMat = new deferred::DXLitMatCL();
 			return NativeObject::Create(litMat);
+		}));
+
+		deferred.SetProperty("cloudMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			deferred::DXCloudMatCL* cloudMat = new deferred::DXCloudMatCL();
+			return NativeObject::Create(cloudMat);
 		}));
 
 #pragma endregion

@@ -1,0 +1,52 @@
+let createCloudMaterial = func(device, shadersFile, gBuffer) {
+	let gBuff = gBuffer;
+	let camBuff = gBuffer.camBuffer;
+
+	let shaderCode = readFile(shadersFile);
+
+	let vertexShader = api.vertexShader();
+	vertexShader.compile(shaderCode);
+
+	let pixelShader = api.pixelShader();
+	pixelShader.compile(shaderCode);
+
+	let object = none;
+	let instanceBuffer = none;
+
+	let setObject = func(obj) {
+		object = obj;
+	};
+	let setInstanceBuffer = func(instanceBuff) {
+		instanceBuffer = instanceBuff;
+	};
+	
+	let cloudMat = api.deferred.cloudMatCL();
+	cloudMat.create(device, vertexShader, pixelShader, camBuff);
+
+	let fence = api.fence();
+	fence.create(device);
+	let signal = 0;
+
+	let render = func(swapChain, commandQueue, onReady) {
+
+		let fe = api.fenceEvent();
+		fe.create();
+
+		fe.wait(fence, signal, func(arg) {
+			signal = signal + 1;
+			onReady();
+		});
+
+		cloudMat.populate(swapChain, object.vertex, object.index, instanceBuffer, gBuffer);
+		cloudMat.execute(commandQueue, fence, signal);
+	};
+
+	let res = {};
+	res.setObject = setObject;
+	res.setInstanceBuffer = setInstanceBuffer;
+	res.render = render;
+
+	return res;
+};
+
+export = createCloudMaterial;

@@ -21,6 +21,24 @@ scene.addObject = func(position, rotation, scale) {
 	});
 };
 
+scene.addCloudObject = func(position, rotation, scale) {
+	if (scene.cloudInstanceData == none) {
+		scene.cloudInstanceData = [];
+	}
+
+	utils.foreach(position, func(x) {
+		scene.cloudInstanceData.push(x);
+	});
+
+	utils.foreach(rotation, func(x) {
+		scene.cloudInstanceData.push(x);
+	});
+
+	utils.foreach(scale, func(x) {
+		scene.cloudInstanceData.push(x);
+	});
+};
+
 let loadCube = func(device, onReady) {
 	let prepCube = require("primitives/cube.txt");
 	prepCube(device, func(x) {
@@ -40,6 +58,21 @@ let loadInstanceBuff = func(device, onReady) {
 	instanceBB.build(device, func(buff) {
 		scene.instanceBuff = buff;
 		scene.instanceBuff.copyData(instanceData);
+
+		onReady();
+	});
+};
+
+let loadCloudInstanceBuff = func(device, onReady) {
+	let instanceData = scene.cloudInstanceData;
+
+	let instanceBB = resources.bufferBuilder();
+	instanceBB.upload(1);
+	instanceBB.setSize(4 * instanceData.length);
+	instanceBB.setStride(40);
+	instanceBB.build(device, func(buff) {
+		scene.cloudInstanceBuff = buff;
+		scene.cloudInstanceBuff.copyData(instanceData);
 
 		onReady();
 	});
@@ -100,12 +133,14 @@ scene.addLight = func(position, color, intensity) {
 scene.load = func(device, onReady) {
 	let cubeLoaded = 0;
 	let instanceBuffLoaded = 0;
+	let cloudInstanceBuffLoaded = 0;
 	let lightsBuffLoaded = 0;
 	let lightsConstantBuffLoaded = 0;
 
 	let callReady = func() {
 		if (cubeLoaded == 0 ||
 			instanceBuffLoaded == 0 ||
+			cloudInstanceBuffLoaded == 0 ||
 			lightsBuffLoaded == 0 ||
 			lightsConstantBuffLoaded == 0) {
 
@@ -121,6 +156,11 @@ scene.load = func(device, onReady) {
 
 	loadInstanceBuff(device, func() {
 		instanceBuffLoaded = 1;
+		callReady();
+	});
+
+	loadCloudInstanceBuff(device, func() {
+		cloudInstanceBuffLoaded = 1;
 		callReady();
 	});
 
@@ -141,6 +181,17 @@ scene.getObjects = func() {
 	let tmp = {};
 	tmp.geometry = scene.primitives.cube;
 	tmp.instances = scene.instanceBuff;
+
+	res.push(tmp);
+	return res;
+};
+
+scene.getCloudObjects = func() {
+	let res = [];
+
+	let tmp = {};
+	tmp.geometry = scene.primitives.cube;
+	tmp.instances = scene.cloudInstanceBuff;
 
 	res.push(tmp);
 	return res;

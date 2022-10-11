@@ -112,20 +112,44 @@ let prepMaterial = func() {
 	return material;
 };
 
+let prepCloudMaterial = func() {
+	let createMaterial = require("materials/cloudMaterial.txt");
+	let material = createMaterial(device, "cloud.hlsl", gBuffer);
+	return material;
+};
+
 let theMaterial = none;
+let cloudMaterial = none;
+
+let renderClouds = func(objects, onReady) {
+	let counter = 0;
+	utils.foreach(objects, func(x) {
+		counter = counter + 1;
+
+		cloudMaterial.setObject(x.geometry);
+		cloudMaterial.setInstanceBuffer(x.instances);
+		cloudMaterial.render(swapChain, commandQueue, func() {
+			counter = counter - 1;
+			if (counter == 0) {
+				onReady();
+			}
+		});
+	});
+};
 
 let startRendMat = func() {
-	print("start render mat");
-
 	let fence = api.fence();
 	fence.create(device);
 
 	let index = 1;
 
-	let render = func() {
+	let render = func() {		
 		if (wnd.isAlive() == 0) {
 			return;
 		}
+
+		let objects = scene.getObjects();
+		let clouds = scene.getCloudObjects();
 
 		let fe = api.fenceEvent();
 		fe.create();
@@ -133,14 +157,14 @@ let startRendMat = func() {
 		fe.wait(fence, index, func(arg) {
 			index = index + 1;
 
-			swapChain.present();
-			render();
+			renderClouds(clouds, func() {
+				swapChain.present();
+				render();
+			});
 		});
 
 		swapChain.updateCurrentFrameIndex();
 		litPass.executeStart(commandQueue, fence, 0);
-
-		let objects = scene.getObjects();
 
 		utils.foreach(objects, func(x) {
 			theMaterial.setObject(x.geometry);
@@ -165,6 +189,8 @@ try {
 	let loadGBuff = require("gBuffer.txt");
 
 	scene.addObject(math.vector3(0,0,0), math.vector(1,0,0,0), math.vector3(1,1,1));
+	scene.addCloudObject(math.vector3(0.5,0.5,0.5), math.vector(1,0,0,0), math.vector3(1,1,1));
+
 	scene.addLight(math.vector3(0,5,0), math.vector3(1,1,1), 10);
 	scene.addLight(math.vector3(5,0,0), math.vector3(1,1,1), 10);
 	let sceneLoaded = 0;
@@ -179,6 +205,7 @@ try {
 		}
 		initCamera(gBuffer.camBuffer);
 		theMaterial = prepMaterial();
+		cloudMaterial = prepCloudMaterial();
 
 		startRendMat();
 	};
