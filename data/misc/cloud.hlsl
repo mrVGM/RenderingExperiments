@@ -1,7 +1,7 @@
 cbuffer MVCMatrix : register(b0)
 {
     float4x4 m_matrix;
-    float m_padding[48];
+    float3 m_camPos;
 };
 
 struct PSInput
@@ -40,14 +40,17 @@ PSInput VSMain(
     float3 scaledPos = objectScale * position;
 
     float4 posQ = float4(0, scaledPos);
+    float4 normalQ = float4(0, normal);
+
     float4 conjRot = conjugateQuat(objectRotation);
 
     float4 rotatedPos = multiplyQuat(objectRotation, multiplyQuat(posQ, conjRot));
+    float4 rotatedNormal = multiplyQuat(objectRotation, multiplyQuat(normalQ, conjRot));
 
     float3 pos = float3(rotatedPos.y, rotatedPos.z, rotatedPos.w);
     result.position = mul(m_matrix, float4(objectPosition + pos, 1));
     result.world_position = float4(position, 1);
-    result.normal = float4(normal, 1);
+    result.normal = float4(rotatedNormal.y, rotatedNormal.z, rotatedNormal.w, 1);
     result.uv = uv;
 
     return result;
