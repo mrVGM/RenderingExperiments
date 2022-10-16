@@ -114,7 +114,12 @@ let prepMaterial = func() {
 
 let prepCloudMaterial = func() {
 	let createMaterial = require("materials/cloudMaterial.txt");
-	let material = createMaterial(device, "cloud.hlsl", gBuffer);
+	let material = none;
+	try {
+		material = createMaterial(device, "cloud.hlsl", gBuffer);
+	} catch(e) {
+		print(e);
+	}
 	return material;
 };
 

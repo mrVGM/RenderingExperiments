@@ -4,12 +4,21 @@ cbuffer MVCMatrix : register(b0)
     float3 m_camPos;
 };
 
+struct CubeWall
+{
+    float3 m_origin;
+    float3 m_right;
+    float3 m_forward;
+    float3 m_up;
+    float3 m_axisScale;
+};
+
 struct PSInput
 {
     float4 position         : SV_POSITION;
     float4 world_position   : WORLD_POSITION;
-    float4 normal           : NORMAL;
-    float2 uv               : UV;
+
+    CubeWall cube_walls[6]  : CUBE_WALLS;
 };
 
 float4 multiplyQuat(float4 q1, float4 q2)
@@ -36,6 +45,58 @@ float3 rotateVector(float3 v, float4 rotation)
     return float3(rotatedVQ.y, rotatedVQ.z, rotatedVQ.w);
 }
 
+void generateCubeWalls(
+    float3 position,
+    float4 rotation,
+    float3 scale,
+    out CubeWall walls[6]
+)
+{
+    float3 xRotated = rotateVector(float3(1, 0, 0), rotation);
+    float3 yRotated = rotateVector(float3(0, 1, 0), rotation);
+    float3 zRotated = rotateVector(float3(0, 0, 1), rotation);
+
+    walls[0].m_origin = position + xRotated;
+    walls[0].m_right = zRotated;
+    walls[0].m_forward = yRotated;
+    walls[0].m_up = xRotated;
+    walls[0].m_axisScale = float3(scale.z, scale.y, scale.x);
+
+    walls[1].m_origin = position - xRotated;
+    walls[1].m_right = -zRotated;
+    walls[1].m_forward = yRotated;
+    walls[1].m_up = -xRotated;
+    walls[1].m_axisScale = float3(scale.z, scale.y, scale.x);
+
+
+
+    walls[2].m_origin = position + zRotated;
+    walls[2].m_right = -xRotated;
+    walls[2].m_forward = yRotated;
+    walls[2].m_up = zRotated;
+    walls[2].m_axisScale = float3(scale.x, scale.y, scale.z);
+
+    walls[3].m_origin = position - zRotated;
+    walls[3].m_right = xRotated;
+    walls[3].m_forward = yRotated;
+    walls[3].m_up = -zRotated;
+    walls[3].m_axisScale = float3(scale.x, scale.y, scale.z);
+
+
+
+    walls[4].m_origin = position + yRotated;
+    walls[4].m_right = xRotated;
+    walls[4].m_forward = zRotated;
+    walls[4].m_up = yRotated;
+    walls[4].m_axisScale = float3(scale.x, scale.z, scale.y);
+
+    walls[5].m_origin = position - yRotated;
+    walls[5].m_right = xRotated;
+    walls[5].m_forward = -zRotated;
+    walls[5].m_up = -yRotated;
+    walls[5].m_axisScale = float3(scale.x, scale.z, scale.y);
+}
+
 PSInput VSMain(
     float3 position : POSITION,
     float3 normal : NORMAL,
@@ -47,19 +108,73 @@ PSInput VSMain(
     PSInput result;
     float3 scaledPos = objectScale * position;
     float3 rotatedPos = rotateVector(scaledPos, objectRotation);
-    float3 rotatedNormal = rotateVector(normal, objectRotation);
 
     float3 pos = objectPosition + rotatedPos;
     result.position = mul(m_matrix, float4(pos, 1));
 
     result.world_position = float4(pos, 1);
-    result.normal = float4(rotatedNormal, 1);
-    result.uv = uv;
+
+    generateCubeWalls(objectPosition, objectRotation, objectScale, result.cube_walls);
 
     return result;
 }
 
-float4 PSMain(float4 position : SV_POSITION, float4 worldPosition : WORLD_POSITION, float4 normal : NORMAL) : SV_TARGET
+bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 position)
 {
-    return float4(1,1,0,1);
+    float3x3 mat = float3x3(wall.m_right, wall.m_forward, wall.m_up);
+    float3x3 invMat = transpose(mat);
+
+    float3 origin = rayOrigin - wall.m_origin;
+    origin = mul(mat, origin);
+    float3 dir = mul(mat, rayDir);
+
+    if (origin.z * dir.z >= 0) {
+        return false;
+    }
+
+    float coef = -origin.z / dir.z;
+    float3 wallPos = origin + coef * dir;
+
+    if (abs(wallPos.x) > wall.m_axisScale.x) {
+        return false;
+    }
+
+    if (abs(wallPos.y) > wall.m_axisScale.y) {
+        return false;
+    }
+
+    position = mul(invMat, wallPos);
+    return true;
+}
+
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    float3 offset = input.world_position - m_camPos;
+    offset = normalize(offset);
+
+    int index = 0;
+    float3 intersects[2];
+
+    for (int i = 0; i < 6; ++i) {
+        float3 pos;
+        if (intersectWall(m_camPos, offset, input.cube_walls[i], pos)) {
+            intersects[index] = pos;
+            index = index + 1;
+        }
+        if (index == 2) {
+            break;
+        }
+    }
+
+    if (index < 2) {
+        return float4(1, 0, 0, 1);
+    }
+    if (index > 2) {
+        return float4(0, 1, 0, 1);
+    }
+
+    float grad = length(intersects[0] - intersects[1]);
+    grad /= 2;
+
+    return float4(grad, grad, grad, 1);
 }
