@@ -35,6 +35,15 @@ float4 conjugateQuat(float4 q)
     return float4(q.x, -q.y, -q.z, -q.w);
 }
 
+float3 rotateVector(float3 v, float4 rotation)
+{
+    float4 vQ = float4(0, v);
+    float4 conjRot = conjugateQuat(rotation);
+    float4 rotatedVQ = multiplyQuat(rotation, multiplyQuat(vQ, conjRot));
+
+    return float3(rotatedVQ.y, rotatedVQ.z, rotatedVQ.w);
+}
+
 PSInput VSMain(
     float3 position : POSITION,
     float3 normal : NORMAL,
@@ -44,21 +53,15 @@ PSInput VSMain(
     float3 objectScale : OBJECT_SCALE)
 {
     PSInput result;
-
     float3 scaledPos = objectScale * position;
+    float3 rotatedPos = rotateVector(scaledPos, objectRotation);
+    float3 rotatedNormal = rotateVector(normal, objectRotation);
 
-    float4 posQ = float4(0, scaledPos);
-    float4 normalQ = float4(0, normal);
+    float3 pos = objectPosition + rotatedPos;
+    result.position = mul(m_matrix, float4(pos, 1));
 
-    float4 conjRot = conjugateQuat(objectRotation);
-
-    float4 rotatedPos = multiplyQuat(objectRotation, multiplyQuat(posQ, conjRot));
-    float4 rotatedNormal = multiplyQuat(objectRotation, multiplyQuat(normalQ, conjRot));
-
-    float3 pos = float3(rotatedPos.y, rotatedPos.z, rotatedPos.w);
-    result.position = mul(m_matrix, float4(objectPosition + pos, 1));
-    result.world_position = float4(position, 1);
-    result.normal = float4(rotatedNormal.y, rotatedNormal.z, rotatedNormal.w, 1);
+    result.world_position = float4(pos, 1);
+    result.normal = float4(rotatedNormal, 1);
     result.uv = uv;
 
     return result;
