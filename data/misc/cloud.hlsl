@@ -143,7 +143,8 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
         return false;
     }
 
-    position = mul(invMat, wallPos);
+    position = mul(invMat, wallPos) + wall.m_origin;
+
     return true;
 }
 
@@ -153,12 +154,12 @@ float4 PSMain(PSInput input) : SV_TARGET
     offset = normalize(offset);
 
     int index = 0;
-    float3 intersects[2];
+    float3 hits[2];
 
     for (int i = 0; i < 6; ++i) {
         float3 pos;
         if (intersectWall(m_camPos, offset, input.cube_walls[i], pos)) {
-            intersects[index] = pos;
+            hits[index] = pos;
             index = index + 1;
         }
         if (index == 2) {
@@ -173,7 +174,7 @@ float4 PSMain(PSInput input) : SV_TARGET
         return float4(0, 1, 0, 1);
     }
 
-    float grad = length(intersects[0] - intersects[1]);
+    float grad = length(hits[0] - hits[1]);
     grad /= 2;
 
     return float4(grad, grad, grad, 1);
