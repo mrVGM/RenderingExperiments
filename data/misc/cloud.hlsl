@@ -153,7 +153,7 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return p_texture.Sample(p_sampler, input.world_position);
+    //return p_texture.Sample(p_sampler, input.world_position);
 
     float3 offset = input.world_position - m_camPos;
     offset = normalize(offset);
@@ -182,5 +182,15 @@ float4 PSMain(PSInput input) : SV_TARGET
     float grad = length(hits[0] - hits[1]);
     grad /= 2;
 
-    return float4(grad, grad, grad, 1);
+    float density = 0;
+    for (int i = 0; i <= 4; ++i) {
+        float c = (float)i / 4;
+        float3 curTestPoint = (1 - c) * hits[0] + c * hits[1];
+        float curDensity = p_texture.Sample(p_sampler, curTestPoint).x;
+
+        density += curDensity;
+    }
+    float transmittance = exp(-density);
+
+    return float4(1, 1, 1, transmittance);
 }
