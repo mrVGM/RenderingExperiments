@@ -59,13 +59,13 @@ void generateCubeWalls(
     float3 yRotated = rotateVector(float3(0, 1, 0), rotation);
     float3 zRotated = rotateVector(float3(0, 0, 1), rotation);
 
-    walls[0].m_origin = position + xRotated;
+    walls[0].m_origin = position + scale.x * xRotated;
     walls[0].m_right = zRotated;
     walls[0].m_forward = yRotated;
     walls[0].m_up = xRotated;
     walls[0].m_axisScale = float3(scale.z, scale.y, scale.x);
 
-    walls[1].m_origin = position - xRotated;
+    walls[1].m_origin = position - scale.x * xRotated;
     walls[1].m_right = -zRotated;
     walls[1].m_forward = yRotated;
     walls[1].m_up = -xRotated;
@@ -73,13 +73,13 @@ void generateCubeWalls(
 
 
 
-    walls[2].m_origin = position + zRotated;
+    walls[2].m_origin = position + scale.z * zRotated;
     walls[2].m_right = -xRotated;
     walls[2].m_forward = yRotated;
     walls[2].m_up = zRotated;
     walls[2].m_axisScale = float3(scale.x, scale.y, scale.z);
 
-    walls[3].m_origin = position - zRotated;
+    walls[3].m_origin = position - scale.z * zRotated;
     walls[3].m_right = xRotated;
     walls[3].m_forward = yRotated;
     walls[3].m_up = -zRotated;
@@ -87,13 +87,13 @@ void generateCubeWalls(
 
 
 
-    walls[4].m_origin = position + yRotated;
+    walls[4].m_origin = position + scale.y * yRotated;
     walls[4].m_right = xRotated;
     walls[4].m_forward = zRotated;
     walls[4].m_up = yRotated;
     walls[4].m_axisScale = float3(scale.x, scale.z, scale.y);
 
-    walls[5].m_origin = position - yRotated;
+    walls[5].m_origin = position - scale.y * yRotated;
     walls[5].m_right = xRotated;
     walls[5].m_forward = -zRotated;
     walls[5].m_up = -yRotated;
@@ -153,9 +153,9 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
 
 float sampleDensity(float3 pos)
 {
-    float densityThreshold = 0.4;
-    float densityMultiplier = 1.2;
-    float3 uvw = 1 * pos;
+    float densityThreshold = 0.2;
+    float densityMultiplier = 0.3;
+    float3 uvw = 0.1 * pos;
     float density = max(0, p_texture.Sample(p_sampler, uvw).x - densityThreshold);
     density *= densityMultiplier;
     return density;
@@ -163,8 +163,6 @@ float sampleDensity(float3 pos)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    //return p_texture.Sample(p_sampler, input.world_position);
-
     float3 offset = input.world_position - m_camPos;
     offset = normalize(offset);
 
@@ -192,15 +190,29 @@ float4 PSMain(PSInput input) : SV_TARGET
     float grad = length(hits[0] - hits[1]);
     grad /= 2;
 
+    float coefs[2];
+    coefs[0] = dot(hits[0] - m_camPos, offset);
+    coefs[1] = dot(hits[1] - m_camPos, offset);
+
+    float minCoef = min(coefs[0], coefs[1]);
+    float maxCoef = max(coefs[0], coefs[1]);
+
+    float step = 0.1;
+    int maxSteps = 10;
+
     float density = 0;
-    for (int i = 0; i <= 4; ++i) {
-        float c = (float)i / 4;
-        float3 curTestPoint = (1 - c) * hits[0] + c * hits[1];
+
+    int stepsMade = 0;
+    float curCoef = minCoef;
+    while (curCoef <= maxCoef && stepsMade < maxSteps) {
+        float3 curTestPoint = curCoef * offset + m_camPos;
         float curDensity = sampleDensity(curTestPoint);
-
         density += curDensity;
-    }
-    float transmittance = exp(-density);
 
-    return float4(1, 1, 1, 1-transmittance);
+        curCoef += step;
+        stepsMade += 1;
+    }
+
+    float transmittance = exp(-density);
+    return float4(1, 1, 1, (1-transmittance));
 }
