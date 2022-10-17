@@ -70,7 +70,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 5, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 6, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCloudMatCL* self = static_cast<DXCloudMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -114,6 +114,12 @@ return Value();
         Value w = gBufferValue.GetProperty("width");
         Value h = gBufferValue.GetProperty("height");
 
+        Value worlyDescHeapValue = scope.GetProperty("param5");
+        DXDescriptorHeap* worlyDescHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(worlyDescHeapValue));
+        if (!worlyDescHeap) {
+            THROW_EXCEPTION("Please supply Worly Descriptor heap!")
+        }
+
         CD3DX12_VIEWPORT viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w.GetNum()), static_cast<float>(h.GetNum()));
         CD3DX12_RECT scissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(w.GetNum()), static_cast<LONG>(h.GetNum()));
 
@@ -132,6 +138,7 @@ return Value();
             instanceBuffer->GetBuffer(),
             instanceBuffer->GetBufferWidth(),
             instanceBuffer->GetStride(),
+            worlyDescHeap->GetHeap(),
             error);
 
         if (!res) {
@@ -210,11 +217,31 @@ bool rendering::deferred::DXCloudMatCL::Create(
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+
+        D3D12_STATIC_SAMPLER_DESC sampler = {};
+        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.MipLODBias = 0;
+        sampler.MaxAnisotropy = 0;
+        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        sampler.MinLOD = 0.0f;
+        sampler.MaxLOD = D3D12_FLOAT32_MAX;
+        sampler.ShaderRegister = 0;
+        sampler.RegisterSpace = 0;
+        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+
+        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
         rootParameters[0].InitAsConstantBufferView(0, 0);
+        rootParameters[1].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(1, rootParameters, 0, nullptr, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(2, rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -291,6 +318,7 @@ bool rendering::deferred::DXCloudMatCL::Populate(
     ID3D12Resource* instanceBuffer,
     int instanceBufferSize,
     int instanceBufferStride,
+    ID3D12DescriptorHeap* worlyDescHeap,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -308,8 +336,11 @@ bool rendering::deferred::DXCloudMatCL::Populate(
         "Can't reset Command List!")
 
     // Set necessary state.
+    m_commandList->SetDescriptorHeaps(1, &worlyDescHeap);
+
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootDescriptorTable(1, worlyDescHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
@@ -340,7 +371,6 @@ bool rendering::deferred::DXCloudMatCL::Populate(
     indexBufferView.SizeInBytes = indexBufferSize;
 
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
     m_commandList->IASetVertexBuffers(0, 2, vertexBufferViews);
     m_commandList->IASetIndexBuffer(&indexBufferView);
 

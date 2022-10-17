@@ -126,6 +126,8 @@ let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 };
 
 let prepareData = func(device, texSize, onReady) {
+	print(1);
+
 	let compute = api.worly.textureCompute();
 	let srvBuffSize = compute.getSRVBufferSize();
 	let srvBuffStride = compute.getSRVBufferStride();

@@ -1,4 +1,4 @@
-let createCloudMaterial = func(device, shadersFile, gBuffer) {
+let createCloudMaterial = func(device, shadersFile, gBuffer, worlyData) {
 	let gBuff = gBuffer;
 	let camBuff = gBuffer.camBuffer;
 
@@ -27,6 +27,16 @@ let createCloudMaterial = func(device, shadersFile, gBuffer) {
 	fence.create(device);
 	let signal = 0;
 
+	let descriptors = [];
+	let texDesc = {};
+	texDesc.type = "srv_tex";
+	texDesc.texture = worlyData.getUAVTex();
+
+	descriptors.push(texDesc);
+
+	let descHeap = api.descriptorHeap();
+	descHeap.create(device, descriptors);
+
 	let render = func(swapChain, commandQueue, onReady) {
 
 		let fe = api.fenceEvent();
@@ -37,7 +47,7 @@ let createCloudMaterial = func(device, shadersFile, gBuffer) {
 			onReady();
 		});
 
-		cloudMat.populate(swapChain, object.vertex, object.index, instanceBuffer, gBuffer);
+		cloudMat.populate(swapChain, object.vertex, object.index, instanceBuffer, gBuffer, descHeap);
 		cloudMat.execute(commandQueue, fence, signal);
 	};
 

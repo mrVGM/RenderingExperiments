@@ -116,7 +116,7 @@ let prepCloudMaterial = func() {
 	let createMaterial = require("materials/cloudMaterial.txt");
 	let material = none;
 	try {
-		material = createMaterial(device, "cloud.hlsl", gBuffer);
+		material = createMaterial(device, "cloud.hlsl", gBuffer, worlyData);
 	} catch(e) {
 		print(e);
 	}
@@ -187,6 +187,7 @@ let startRendMat = func() {
 };
 
 let scene = require("scene/scene.txt");
+let worlyData = none;
 
 try {
 	generalInit();
@@ -198,14 +199,27 @@ try {
 
 	scene.addLight(math.vector3(0,5,0), math.vector3(1,1,1), 10);
 	scene.addLight(math.vector3(5,0,0), math.vector3(1,1,1), 10);
+	
 	let sceneLoaded = 0;
 
 	scene.load(device, func() {
 		sceneLoaded = 1;
+		getMat();
+	});
+
+	let worlyPrepared = 0;
+	let computeWorly = require("worlyCompute.txt");
+	computeWorly.prepare(device, 256, func(data) {
+		worlyData = data;
+		worlyData.execute(device, commandQueue, func() {
+			worlyPrepared = 1;
+			print("Worly Prepared!");
+			getMat();
+		});
 	});
 
 	let getMat = func() {
-		if (gBuffer == none || sceneLoaded == 0) {
+		if (gBuffer == none || sceneLoaded == 0 || worlyPrepared == 0) {
 			return;
 		}
 		initCamera(gBuffer.camBuffer);

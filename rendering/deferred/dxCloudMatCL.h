@@ -43,6 +43,7 @@ namespace rendering::deferred
 			ID3D12Resource* instanceBuffer,
 			int instanceBufferSize,
 			int instanceBufferStride,
+			ID3D12DescriptorHeap* worlyDescHeap,
 			std::string& errorMessage);
 
 		bool Execute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);

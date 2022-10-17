@@ -4,6 +4,9 @@ cbuffer MVCMatrix : register(b0)
     float3 m_camPos;
 };
 
+Texture3D p_texture     : register(t0);
+SamplerState p_sampler  : register(s0);
+
 struct CubeWall
 {
     float3 m_origin;
@@ -150,6 +153,8 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
+    return p_texture.Sample(p_sampler, input.world_position);
+
     float3 offset = input.world_position - m_camPos;
     offset = normalize(offset);
 
