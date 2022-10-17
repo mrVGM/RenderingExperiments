@@ -151,6 +151,16 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
     return true;
 }
 
+float sampleDensity(float3 pos)
+{
+    float densityThreshold = 0.4;
+    float densityMultiplier = 1.2;
+    float3 uvw = 1 * pos;
+    float density = max(0, p_texture.Sample(p_sampler, uvw).x - densityThreshold);
+    density *= densityMultiplier;
+    return density;
+}
+
 float4 PSMain(PSInput input) : SV_TARGET
 {
     //return p_texture.Sample(p_sampler, input.world_position);
@@ -186,11 +196,11 @@ float4 PSMain(PSInput input) : SV_TARGET
     for (int i = 0; i <= 4; ++i) {
         float c = (float)i / 4;
         float3 curTestPoint = (1 - c) * hits[0] + c * hits[1];
-        float curDensity = p_texture.Sample(p_sampler, curTestPoint).x;
+        float curDensity = sampleDensity(curTestPoint);
 
         density += curDensity;
     }
     float transmittance = exp(-density);
 
-    return float4(1, 1, 1, transmittance);
+    return float4(1, 1, 1, 1-transmittance);
 }
