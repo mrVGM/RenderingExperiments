@@ -96,7 +96,7 @@ let compileShader = func() {
 let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 
 	compute.create(device, data.shader);
-	compute.populate(data.getConstantBuff(), data.getUAVTex(), data.descHeap, data.texSize, data.texSize, data.texSize);
+	compute.populate(data.getConstantBuff(), data.getUAVTex(), data.descHeap, data.texSize / 16, data.texSize / 16, data.texSize / 4);
 
 	let fence = api.fence();
 	fence.create(device);

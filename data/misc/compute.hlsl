@@ -12,8 +12,6 @@ cbuffer InfoConstantBuff : register(b0)
 {
     int m_texSize;
     int m_srvSize;
-
-    float m_padding[62];
 };
 
 int CoordToIndex(int3 coord)
@@ -79,7 +77,7 @@ void GetNeighbours(int3 coord, out float3 neighbours[27])
     }
 }
 
-[numthreads(1, 1, 1)]
+[numthreads(16, 16, 4)]
 void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
 {
     float3 uvw = float3(DTid);

@@ -32,7 +32,7 @@ return Value();\
 			THROW_EXCEPTION("Please supply heap size!")
 		}
 
-		int size = (int) heapSizeValue.GetNum();
+		UINT64 size = static_cast<UINT64>(heapSizeValue.GetNum());
 		if (size <= 0) {
 			THROW_EXCEPTION("Please supply a valid heap size!")
 		}
