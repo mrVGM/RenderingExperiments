@@ -1,3 +1,5 @@
+let utils = require("utils.txt");
+
 let loadCB = func(device, onReady) {
 	let fence = api.fence();
 	fence.create(device);
@@ -57,6 +59,41 @@ let loadSRVBuff = func(device, buffSize, buffStride, onReady) {
 	heap.create(device, buffSize, heapType);
 	heap.makeResident(fence, 1);
 };
+
+let loadSRVBuffs = func(device, buffSizes, buffStride, onReady) {
+
+	let buffs = [];
+	utils.foreach(buffSizes, func(x) {
+		buffs.push(none);
+	});
+
+	let waiting = buffs.length;
+
+	let callReady = func() {
+		if (waiting == 0) {
+			onReady(buffs);
+		}
+	};
+
+	let loadSingle = func(k) {
+		let s = buffSizes[k];
+
+		loadSRVBuff(device, s, buffStride, func(buff) {
+			buffs[k] = buff;
+			waiting = waiting - 1;
+			callReady();
+		});
+	};
+
+	let index = 0;
+	utils.foreach(buffs, func(x) {
+		loadSingle(index);
+		index = index + 1;
+	});
+};
+
+
+
 
 let loadTex = func(device, texSize, onReady) {
 	let fence = api.fence();
@@ -128,8 +165,6 @@ let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 let prepareData = func(device, texSize, onReady) {
 	let compute = api.worly.textureCompute();
 	let srvBuffSize = compute.getSRVBufferSize();
-	srvBuffSize = srvBuffSize[0];
-
 	let srvBuffStride = compute.getSRVBufferStride();
 
 	let waiting = 3;
@@ -146,10 +181,12 @@ let prepareData = func(device, texSize, onReady) {
 		uavDesc.texture = uavTex;
 		buffs.push(uavDesc);
 
-		let srvDesc = {};
-		srvDesc.type = "srv_buff";
-		srvDesc.buffer = srvBuff;
-		buffs.push(srvDesc);
+		utils.foreach(srvBuff, func(x) {
+			let srvDesc = {};
+			srvDesc.type = "srv_buff";
+			srvDesc.buffer = x;
+			buffs.push(srvDesc);
+		});
 
 		descHeap.create(device, buffs);
 
@@ -179,7 +216,7 @@ let prepareData = func(device, texSize, onReady) {
 
 		compute.setupCB(cBuff, texSize);
 		compute.setupSRVBuff(srvBuff);
-
+		
 		onReady(res);
 	};
 
@@ -192,9 +229,11 @@ let prepareData = func(device, texSize, onReady) {
 		}
 	});
 
-	loadSRVBuff(device, srvBuffSize, srvBuffStride, func(buff) {
+	loadSRVBuffs(device, srvBuffSize, srvBuffStride, func(buffs) {
 		waiting = waiting - 1;
-		srvBuff = buff;
+		srvBuff = buffs;
+
+		print(srvBuff.length);
 
 		if (waiting == 0) {
 			callReady();

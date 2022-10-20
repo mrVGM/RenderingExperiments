@@ -5,8 +5,18 @@ struct SRVBuffElement
     float z;
 };
 
-StructuredBuffer<SRVBuffElement> inData		: register(t0);    // SRV
 RWTexture3D<float4> outData			        : register(u0);    // UAV
+
+StructuredBuffer<SRVBuffElement> inData		: register(t0);    // SRV
+StructuredBuffer<SRVBuffElement> inData2	: register(t1);    // SRV
+StructuredBuffer<SRVBuffElement> inData3	: register(t2);    // SRV
+
+struct NoiseSettings
+{
+    int cells1;
+    int cells2;
+    float blend;
+};
 
 cbuffer InfoConstantBuff : register(b0)
 {

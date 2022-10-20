@@ -15,14 +15,16 @@
 
 namespace
 {
-    static const int SRVSize = 4;
-
+    struct Settings
+    {
+        int m_cells1;
+        int m_cells2;
+        float m_blend;
+    };
     struct ConstantBuffer
     {
         int m_texSize;
-        int m_srvSize;
-
-        float m_padding[62];
+        Settings cells[3];
     };
 
     struct SRVBuffElement
@@ -217,7 +219,7 @@ return Value();
             THROW_EXCEPTION("Please supply a Valid Texture Size!")
         }
         std::string error;
-        bool res = self->SetConstantBuffer(buffer->GetBuffer(), texSize, SRVSize, error);
+        bool res = self->SetConstantBuffer(buffer->GetBuffer(), texSize, error);
 
         if (!res) {
             THROW_EXCEPTION(error)
@@ -230,21 +232,29 @@ return Value();
         Value selfValue = scope.GetProperty("self");
         DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
-        Value bufferValue = scope.GetProperty("param0");
-        DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+        Value buffersValue = scope.GetProperty("param0");
+        std::list<Value> tmp;
+        buffersValue.ToList(tmp);
 
-        if (!buffer) {
-            THROW_EXCEPTION("Please supply a SRV Buffer!")
+        std::list<ID3D12Resource*> buffers;
+
+        for (std::list<Value>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+            DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(*it));
+
+            if (!buffer) {
+                THROW_EXCEPTION("Please supply a SRV Buffer!")
+            }
+            buffers.push_back(buffer->GetBuffer());
         }
 
         std::string error;
-        bool res = self->SetSRVBuffer(buffer->GetBuffer(), SRVSize, error);
+        bool res = self->SetSRVBuffer(buffers, error);
 
         if (!res) {
             THROW_EXCEPTION(error)
         }
         return Value();
-        });
+    });
 
     Value& getSRVBufferSize = GetOrCreateProperty(nativeObject, "getSRVBufferSize");
     getSRVBufferSize = CreateNativeMethod(nativeObject, 0, [](Value scope) {
@@ -300,7 +310,7 @@ bool rendering::DXWorlyTextureComputeCL::Create(
 
         CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
 
         CD3DX12_ROOT_PARAMETER1 rootParameters[ComputeRootParametersCount];
         rootParameters[ComputeRootCBV].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
@@ -451,7 +461,7 @@ bool rendering::DXWorlyTextureComputeCL::ExecutePrepareForPS(ID3D12CommandQueue*
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffer, int texSize, int srvBuffSize, std::string& errorMessage)
+bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffer, int texSize, std::string& errorMessage)
 {
     CD3DX12_RANGE readRange(0, 0);
 
@@ -463,7 +473,15 @@ bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffe
 
         ConstantBuffer cb;
     cb.m_texSize = texSize;
-    cb.m_srvSize = srvBuffSize;
+
+    Settings* currSettings = cb.cells;
+    for (std::list<NoiseSettings>::const_iterator it = m_noiseSettings.begin(); it != m_noiseSettings.end(); ++it) {
+        currSettings->m_cells1 = (*it).m_cells1;
+        currSettings->m_cells2 = (*it).m_cells2;
+        currSettings->m_blend = (*it).m_blend;
+
+        ++currSettings;
+    }
 
     memcpy(dst, &cb, sizeof(ConstantBuffer));
     buffer->Unmap(0, nullptr);
@@ -471,40 +489,49 @@ bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffe
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, int srvBuffSize, std::string& errorMessage)
+bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(std::list<ID3D12Resource*> buffers, std::string& errorMessage)
 {
-    CD3DX12_RANGE readRange(0, 0);
+    std::list<NoiseSettings>::const_iterator noiseSettingsIt = m_noiseSettings.begin();
+    for (std::list<ID3D12Resource*>::iterator it = buffers.begin(); it != buffers.end(); ++it) {
+        NoiseSettings currSettings = *noiseSettingsIt;
+        ++noiseSettingsIt;
 
-    void* dst = nullptr;
+        ID3D12Resource* buffer = *it;
 
-    THROW_ERROR(
-        buffer->Map(0, &readRange, &dst),
-        "Can't map SRV Buffer!")
+        CD3DX12_RANGE readRange(0, 0);
 
-    int arrSize = srvBuffSize * srvBuffSize * srvBuffSize;
-    SRVBuffElement* elements = new SRVBuffElement[arrSize];
+        void* dst = nullptr;
 
-    for (int k = 0; k < srvBuffSize; ++k) {
-        for (int i = 0; i < srvBuffSize; ++i) {
-            for (int j = 0; j < srvBuffSize; ++j) {
-                int index = k * srvBuffSize * srvBuffSize + i * srvBuffSize + j;
-                SRVBuffElement& cur = elements[index];
+        THROW_ERROR(
+            buffer->Map(0, &readRange, &dst),
+            "Can't map SRV Buffer!")
 
-                float randX = (float)rand() / RAND_MAX;
-                float randY = (float)rand() / RAND_MAX;
-                float randZ = (float)rand() / RAND_MAX;
+        int srvBuffSize = currSettings.m_cells1;
+        int arrSize = srvBuffSize * srvBuffSize * srvBuffSize;
+        SRVBuffElement* elements = new SRVBuffElement[arrSize];
 
-                cur.m_x = j + randX;
-                cur.m_y = i + randY;
-                cur.m_z = k + randZ;
+        for (int k = 0; k < srvBuffSize; ++k) {
+            for (int i = 0; i < srvBuffSize; ++i) {
+                for (int j = 0; j < srvBuffSize; ++j) {
+                    int index = k * srvBuffSize * srvBuffSize + i * srvBuffSize + j;
+                    SRVBuffElement& cur = elements[index];
+
+                    float randX = (float)rand() / RAND_MAX;
+                    float randY = (float)rand() / RAND_MAX;
+                    float randZ = (float)rand() / RAND_MAX;
+
+                    cur.m_x = j + randX;
+                    cur.m_y = i + randY;
+                    cur.m_z = k + randZ;
+                }
             }
         }
+
+        memcpy(dst, elements, arrSize * sizeof(SRVBuffElement));
+        buffer->Unmap(0, nullptr);
+
+        delete[] elements;
     }
-
-    memcpy(dst, elements, arrSize * sizeof(SRVBuffElement));
-    buffer->Unmap(0, nullptr);
-
-    delete[] elements;
 
     return true;
 }
@@ -530,9 +557,13 @@ rendering::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
     tmp.m_cells1 = 5;
     tmp.m_cells2 = 13;
     tmp.m_blend = 0.75;
+    m_noiseSettings.push_back(tmp);
 
+    tmp.m_cells1 = 10;
+    tmp.m_cells2 = 13;
+    tmp.m_blend = 0.75;
     m_noiseSettings.push_back(tmp);
-    m_noiseSettings.push_back(tmp);
+
     m_noiseSettings.push_back(tmp);
 }
 

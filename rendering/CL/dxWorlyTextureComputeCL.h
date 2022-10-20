@@ -58,8 +58,8 @@ namespace rendering
 		bool ExecuteCompute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 		bool ExecutePrepareForPS(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 
-		bool SetConstantBuffer(ID3D12Resource* buffer, int texSize, int srvBuffSize, std::string& errorMessage);
-		bool SetSRVBuffer(ID3D12Resource* buffer, int srvBuffSize, std::string& errorMessage);
+		bool SetConstantBuffer(ID3D12Resource* buffer, int texSize, std::string& errorMessage);
+		bool SetSRVBuffer(std::list<ID3D12Resource*> buffers, std::string& errorMessage);
 		void GetSRVBufferSize(std::list<int>& sizes) const;
 		int GetSRVBufferStride() const;
 	public:
