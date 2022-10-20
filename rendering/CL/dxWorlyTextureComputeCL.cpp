@@ -299,13 +299,13 @@ bool rendering::DXWorlyTextureComputeCL::Create(
         }
 
         CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
 
         CD3DX12_ROOT_PARAMETER1 rootParameters[ComputeRootParametersCount];
         rootParameters[ComputeRootCBV].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
-        rootParameters[ComputeRootSRVTable].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-        rootParameters[ComputeRootUAVTable].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[ComputeRootUAVTable].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[ComputeRootSRVTable].InitAsDescriptorTable(1, ranges + 1, D3D12_SHADER_VISIBILITY_ALL);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC computeRootSignatureDesc;
         computeRootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr);
@@ -386,12 +386,12 @@ bool rendering::DXWorlyTextureComputeCL::Populate(
     ID3D12DescriptorHeap* ppHeaps[] = { srvUavHeap };
     m_computeCL->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-    CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(srvUavHeap->GetGPUDescriptorHandleForHeapStart());
-    CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle(srvHandle, 1, m_srvUavDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle(srvUavHeap->GetGPUDescriptorHandleForHeapStart());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(uavHandle, 1, m_srvUavDescriptorSize);
 
     m_computeCL->SetComputeRootConstantBufferView(ComputeRootCBV,constantBuff->GetGPUVirtualAddress());
-    m_computeCL->SetComputeRootDescriptorTable(ComputeRootSRVTable, srvHandle);
     m_computeCL->SetComputeRootDescriptorTable(ComputeRootUAVTable, uavHandle);
+    m_computeCL->SetComputeRootDescriptorTable(ComputeRootSRVTable, srvHandle);
 
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);

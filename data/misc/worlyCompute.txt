@@ -126,8 +126,6 @@ let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 };
 
 let prepareData = func(device, texSize, onReady) {
-	print(1);
-
 	let compute = api.worly.textureCompute();
 	let srvBuffSize = compute.getSRVBufferSize();
 	srvBuffSize = srvBuffSize[0];
@@ -143,15 +141,15 @@ let prepareData = func(device, texSize, onReady) {
 		let descHeap = api.descriptorHeap();
 		
 		let buffs = [];
-		let srvDesc = {};
-		srvDesc.type = "srv_buff";
-		srvDesc.buffer = srvBuff;
-		buffs.push(srvDesc);
-
 		let uavDesc = {};
 		uavDesc.type = "uav_tex";
 		uavDesc.texture = uavTex;
 		buffs.push(uavDesc);
+
+		let srvDesc = {};
+		srvDesc.type = "srv_buff";
+		srvDesc.buffer = srvBuff;
+		buffs.push(srvDesc);
 
 		descHeap.create(device, buffs);
 
