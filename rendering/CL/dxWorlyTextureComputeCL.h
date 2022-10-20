@@ -7,6 +7,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
+#include <list>
 
 namespace rendering
 {
@@ -19,6 +20,15 @@ namespace rendering
 			ComputeRootUAVTable,
 			ComputeRootParametersCount
 		};
+
+		struct NoiseSettings
+		{
+			int m_cells1;
+			int m_cells2;
+			float m_blend;
+		};
+
+		std::list<NoiseSettings> m_noiseSettings;
 
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
@@ -50,8 +60,10 @@ namespace rendering
 
 		bool SetConstantBuffer(ID3D12Resource* buffer, int texSize, int srvBuffSize, std::string& errorMessage);
 		bool SetSRVBuffer(ID3D12Resource* buffer, int srvBuffSize, std::string& errorMessage);
-		int GetSRVBufferSize() const;
+		void GetSRVBufferSize(std::list<int>& sizes) const;
 		int GetSRVBufferStride() const;
 	public:
+
+		DXWorlyTextureComputeCL();
 	};
 }

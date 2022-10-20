@@ -251,7 +251,15 @@ return Value();
         Value selfValue = scope.GetProperty("self");
         DXWorlyTextureComputeCL* self = static_cast<DXWorlyTextureComputeCL*>(NativeObject::ExtractNativeObject(selfValue));
 
-        return Value(self->GetSRVBufferSize());
+        std::list<int> sizes;
+        self->GetSRVBufferSize(sizes);
+
+        std::list<Value> sizeValues;
+        for (std::list<int>::const_iterator it = sizes.begin(); it != sizes.end(); ++it) {
+            sizeValues.push_back(Value(*it));
+        }
+
+        return Value::FromList(sizeValues);
     });
 
     Value& getSRVBufferStride = GetOrCreateProperty(nativeObject, "getSRVBufferStride");
@@ -501,14 +509,31 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(ID3D12Resource* buffer, in
     return true;
 }
 
-int rendering::DXWorlyTextureComputeCL::GetSRVBufferSize() const
+void rendering::DXWorlyTextureComputeCL::GetSRVBufferSize(std::list<int>& sizes) const
 {
-    return SRVSize * SRVSize * SRVSize * GetSRVBufferStride();
+    for (std::list<NoiseSettings>::const_iterator it = m_noiseSettings.begin(); it != m_noiseSettings.end(); ++it) {
+        const NoiseSettings& cur = *it;
+
+        int s = cur.m_cells1 + cur.m_cells2;
+        sizes.push_back(s * s * s * GetSRVBufferStride());
+    }
 }
 
 int rendering::DXWorlyTextureComputeCL::GetSRVBufferStride() const
 {
     return sizeof(SRVBuffElement);
+}
+
+rendering::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
+{
+    NoiseSettings tmp;
+    tmp.m_cells1 = 5;
+    tmp.m_cells2 = 13;
+    tmp.m_blend = 0.75;
+
+    m_noiseSettings.push_back(tmp);
+    m_noiseSettings.push_back(tmp);
+    m_noiseSettings.push_back(tmp);
 }
 
 #undef THROW_ERROR

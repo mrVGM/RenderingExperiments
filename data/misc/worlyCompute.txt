@@ -10,7 +10,7 @@ let loadCB = func(device, onReady) {
 		buff.init(buffSize);
 		buff.place(device, heap, 0, 0);
 		
-		onReady(heap, buff);
+		onReady(buff);
 	};
 
 	let fe = api.fenceEvent();
@@ -40,7 +40,7 @@ let loadSRVBuff = func(device, buffSize, buffStride, onReady) {
 		buff.setStride(buffStride);
 		buff.place(device, heap, 0, 0);
 		
-		onReady(heap, buff);
+		onReady(buff);
 	};
 
 	let fe = api.fenceEvent();
@@ -69,7 +69,7 @@ let loadTex = func(device, texSize, onReady) {
 
 	let placeTex = func() {
 		tex.place(device, heap, 0);
-		onReady(heap, tex);
+		onReady(tex);
 	};
 
 	let fe = api.fenceEvent();
@@ -130,14 +130,13 @@ let prepareData = func(device, texSize, onReady) {
 
 	let compute = api.worly.textureCompute();
 	let srvBuffSize = compute.getSRVBufferSize();
+	srvBuffSize = srvBuffSize[0];
+
 	let srvBuffStride = compute.getSRVBufferStride();
 
 	let waiting = 3;
-	let srvHeap = none;
 	let srvBuff = none;
-	let cbHeap = none;
 	let cBuff = none;
-	let uavHeap = none;
 	let uavTex = none;
 
 	let createDescHeap = func() {
@@ -186,9 +185,8 @@ let prepareData = func(device, texSize, onReady) {
 		onReady(res);
 	};
 
-	loadCB(device, func(heap, buff) {
+	loadCB(device, func(buff) {
 		waiting = waiting - 1;
-		cbHeap = heap;
 		cBuff = buff;
 
 		if (waiting == 0) {
@@ -196,9 +194,8 @@ let prepareData = func(device, texSize, onReady) {
 		}
 	});
 
-	loadSRVBuff(device, srvBuffSize, srvBuffStride, func(heap, buff) {
+	loadSRVBuff(device, srvBuffSize, srvBuffStride, func(buff) {
 		waiting = waiting - 1;
-		srvHeap = heap;
 		srvBuff = buff;
 
 		if (waiting == 0) {
@@ -206,9 +203,8 @@ let prepareData = func(device, texSize, onReady) {
 		}
 	});
 
-	loadTex(device, texSize, func(heap, tex) {
+	loadTex(device, texSize, func(tex) {
 		waiting = waiting - 1;
-		uavHeap = heap;
 		uavTex = tex;
 
 		if (waiting == 0) {
