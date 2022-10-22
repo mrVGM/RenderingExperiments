@@ -506,23 +506,35 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(std::list<ID3D12Resource*>
             buffer->Map(0, &readRange, &dst),
             "Can't map SRV Buffer!")
 
-        int srvBuffSize = currSettings.m_cells1;
-        int arrSize = srvBuffSize * srvBuffSize * srvBuffSize;
+        int sizes[2] = { currSettings.m_cells1, currSettings.m_cells2 };
+        int arrSize = sizes[0] * sizes[0] * sizes[0] + sizes[1] * sizes[1] * sizes[1];
         SRVBuffElement* elements = new SRVBuffElement[arrSize];
 
-        for (int k = 0; k < srvBuffSize; ++k) {
-            for (int i = 0; i < srvBuffSize; ++i) {
-                for (int j = 0; j < srvBuffSize; ++j) {
-                    int index = k * srvBuffSize * srvBuffSize + i * srvBuffSize + j;
-                    SRVBuffElement& cur = elements[index];
+        for (int i = 0; i < 2; ++i) {
+            int srvBuffSize = sizes[i];
+            int offset = 0;
+            
+            {
+                int index = i - 1;
+                if (index >= 0) {
+                    offset = sizes[index] * sizes[index] * sizes[index];
+                }
+            }
 
-                    float randX = (float)rand() / RAND_MAX;
-                    float randY = (float)rand() / RAND_MAX;
-                    float randZ = (float)rand() / RAND_MAX;
+            for (int k = 0; k < srvBuffSize; ++k) {
+                for (int i = 0; i < srvBuffSize; ++i) {
+                    for (int j = 0; j < srvBuffSize; ++j) {
+                        int index = k * srvBuffSize * srvBuffSize + i * srvBuffSize + j;
+                        SRVBuffElement& cur = elements[offset + index];
 
-                    cur.m_x = j + randX;
-                    cur.m_y = i + randY;
-                    cur.m_z = k + randZ;
+                        float randX = (float)rand() / RAND_MAX;
+                        float randY = (float)rand() / RAND_MAX;
+                        float randZ = (float)rand() / RAND_MAX;
+
+                        cur.m_x = j + randX;
+                        cur.m_y = i + randY;
+                        cur.m_z = k + randZ;
+                    }
                 }
             }
         }
@@ -541,8 +553,9 @@ void rendering::DXWorlyTextureComputeCL::GetSRVBufferSize(std::list<int>& sizes)
     for (std::list<NoiseSettings>::const_iterator it = m_noiseSettings.begin(); it != m_noiseSettings.end(); ++it) {
         const NoiseSettings& cur = *it;
 
-        int s = cur.m_cells1 + cur.m_cells2;
-        sizes.push_back(s * s * s * GetSRVBufferStride());
+        int s1 = cur.m_cells1;
+        int s2 = cur.m_cells2;
+        sizes.push_back((s1 * s1 * s1 + s2 * s2 * s2) * GetSRVBufferStride());
     }
 }
 
