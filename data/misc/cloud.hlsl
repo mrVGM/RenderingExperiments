@@ -156,7 +156,7 @@ float sampleDensity(float3 pos)
     float densityThreshold = 0.2;
     float densityMultiplier = 0.3;
     float3 uvw = 0.1 * pos;
-    float density = max(0, p_texture.Sample(p_sampler, uvw).x - densityThreshold);
+    float density = max(0, p_texture.Sample(p_sampler, uvw).r - densityThreshold);
     density *= densityMultiplier;
     return density;
 }

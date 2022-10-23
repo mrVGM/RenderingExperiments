@@ -577,6 +577,9 @@ rendering::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
     tmp.m_blend = 0.75;
     m_noiseSettings.push_back(tmp);
 
+    tmp.m_cells1 = 6;
+    tmp.m_cells2 = 18;
+    tmp.m_blend = 0.5;
     m_noiseSettings.push_back(tmp);
 }
 
