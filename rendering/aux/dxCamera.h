@@ -13,6 +13,12 @@ namespace rendering
 	{
 		ID3D12Resource* m_camBuff = nullptr;
 
+		float m_angleSpeed = 40;
+		float m_moveSpeed = 1;
+
+		float m_azimuth = 90;
+		float m_altitude = 0;
+
 		float m_fov = 60;
 		float m_aspect = 1;
 

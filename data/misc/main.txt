@@ -45,6 +45,8 @@ let initCamera = func(camBuff) {
 	cam.setCamBuff(camBuff);
 	api.app_context.inputHandler = cam;
 
+	return;
+
 	let camData = cam.getMVPMatrix();
 	utils.foreach(pos, func(x) {
 		camData.push(x);
@@ -179,7 +181,7 @@ let startRendMat = func() {
 			theMaterial.setInstanceBuffer(x.instances);
 			theMaterial.render(swapChain, commandQueue);
 		});
-		updateCam(gBuffer.camBuffer);
+		#updateCam(gBuffer.camBuffer);
 
 
 		litPass.populateEnd(swapChain, gBuffer, scene.lightsBuff, scene.lightsConstantBuff);

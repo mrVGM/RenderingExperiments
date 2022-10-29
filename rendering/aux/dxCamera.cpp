@@ -2,8 +2,10 @@
 
 #include "nativeFunc.h"
 #include "dxBuffer.h"
+#include "d3dx12.h"
 
 #include <list>
+#include <corecrt_math_defines.h>
 
 void rendering::DXCamera::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -288,6 +290,106 @@ DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
 
 void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp)
 {
+	using namespace DirectX;
+
+	float right = 0;
+	float forward = 0;
+	float aimRight = 0;
+	float aimUp = 0;
+
+	for (std::list<WPARAM>::const_iterator it = keysDown.begin(); it != keysDown.end(); ++it) {
+		WPARAM x = *it;
+		if (x == 65) {
+			right = -1;
+		}
+		if (x == 68) {
+			right = 1;
+		}
+
+		if (x == 87) {
+			forward = 1;
+		}
+		if (x == 83) {
+			forward = -1;
+		}
+
+		if (x == 37) {
+			aimRight = 1;
+		}
+		if (x == 39) {
+			aimRight = -1;
+		}
+		if (x == 38) {
+			aimUp = 1;
+		}
+		if (x == 40) {
+			aimUp = -1;
+		}
+	}
+
+	keysDown.clear();
+	keysUp.clear();
+
+	m_azimuth += dt * m_angleSpeed * aimRight;
+	while (m_azimuth >= 360) {
+		m_azimuth -= 360;
+	}
+	while (m_azimuth < 0) {
+		m_azimuth += 360;
+	}
+
+	m_altitude += dt * m_angleSpeed * aimUp;
+	if (m_altitude > 80) {
+		m_altitude = 80;
+	}
+
+	if (m_altitude < -80) {
+		m_altitude = -80;
+	}
+
+
+	float azimuth = M_PI * m_azimuth / 180.0;
+	float altitude = M_PI * m_altitude / 180.0;
+	
+	XMVECTOR fwdVector = XMVectorSet(cos(azimuth) * cos(altitude), sin(altitude), sin(azimuth) * cos(altitude), 0);
+	XMVECTOR rightVector = XMVector3Cross(XMVectorSet(0, 1, 0, 0), fwdVector);
+	rightVector = XMVector3Normalize(rightVector);
+
+	XMVECTOR moveVector = XMVectorSet(right, 0, forward, 0);
+	moveVector = XMVector3Normalize(moveVector);
+	moveVector = m_moveSpeed * moveVector;
+	moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
+
+	m_position = DirectX::XMVectorAdd(m_position, moveVector);
+	m_target = DirectX::XMVectorAdd(m_position, fwdVector);
+
+	float matrixCoefs[19];
+	DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(GetMVPMatrix());
+
+	int index = 0;
+	for (int r = 0; r < 4; ++r) {
+		float x = DirectX::XMVectorGetX(mvp.r[r]);
+		float y = DirectX::XMVectorGetY(mvp.r[r]);
+		float z = DirectX::XMVectorGetZ(mvp.r[r]);
+		float w = DirectX::XMVectorGetW(mvp.r[r]);
+
+		matrixCoefs[index++] = x;
+		matrixCoefs[index++] = y;
+		matrixCoefs[index++] = z;
+		matrixCoefs[index++] = w;
+	}
+
+	matrixCoefs[index++] = DirectX::XMVectorGetX(m_position);
+	matrixCoefs[index++] = DirectX::XMVectorGetY(m_position);
+	matrixCoefs[index++] = DirectX::XMVectorGetZ(m_position);
+	
+	CD3DX12_RANGE readRange(0, 0);
+	void* dst = nullptr;
+	if (FAILED(m_camBuff->Map(0, &readRange, &dst))) {
+		return;
+	}
+	memcpy(dst, matrixCoefs, _countof(matrixCoefs) * sizeof(float));
+	m_camBuff->Unmap(0, nullptr);
 }
 
 DirectX::XMVECTOR rendering::DXCamera::GetRightVector() const
