@@ -164,7 +164,7 @@ let startRendMat = func() {
 
 			renderClouds(clouds, func() {
 				swapChain.present();
-				render();
+				wnd.finishDraw();
 			});
 		});
 
@@ -183,7 +183,7 @@ let startRendMat = func() {
 		litPass.executeEnd(commandQueue, fence, index);
 	};
 
-	render();
+	api.app_context.render = func(arg) { render(); };
 };
 
 let scene = require("scene/scene.txt");

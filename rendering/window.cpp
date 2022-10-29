@@ -5,6 +5,7 @@
 #include "api.h"
 
 #include <thread>
+#include <semaphore>
 #include <chrono>
 
 namespace
@@ -15,9 +16,20 @@ namespace
 
 	rendering::Window* m_wnd = nullptr;
 	bool m_windowLoopRunning = true;
+	std::binary_semaphore m_renderSemaphore{ 1 };
 	std::thread* m_windowLoopThread = nullptr;
 
 	std::chrono::system_clock::time_point m_lastTick;
+
+	interpreter::Value GetRenderFunc()
+	{
+		using namespace interpreter;
+
+		Value api = rendering::GetAPI();
+		Value app_context = api.GetProperty("app_context");
+
+		return app_context.GetProperty("render");
+	}
 
 	void WindowLoop()
 	{
@@ -29,13 +41,24 @@ namespace
 		m_lastTick = std::chrono::system_clock::now();
 
 		while (m_windowLoopRunning) {
+			m_renderSemaphore.acquire();
+
 			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 			auto nowNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
 			auto lastTickNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(m_lastTick);
 			long long deltaNN = nowNN.time_since_epoch().count() - lastTickNN.time_since_epoch().count();
-			double dt = deltaNN / 1000000000;
+			double dt = deltaNN / 1000000000.0;
+			m_lastTick = now;
 
 			wnd->WindowTick(dt);
+
+			interpreter::Value renderFunc = GetRenderFunc();
+			if (renderFunc.IsNone()) {
+				m_renderSemaphore.release();
+			}
+			else {
+				interpreter::utils::RunCallback(renderFunc, interpreter::Value());
+			}
 		}
 	}
 }
@@ -291,6 +314,12 @@ return Value();
 		}
 
 		keyUpHandler = handler;
+		return Value();
+	});
+
+	Value& finishDraw = GetOrCreateProperty(nativeObject, "finishDraw");
+	finishDraw = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
+		m_renderSemaphore.release();
 		return Value();
 	});
 
