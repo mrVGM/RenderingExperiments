@@ -2,11 +2,13 @@
 
 #include "nativeObject.h"
 
+#include "inputHandler.h"
+
 #include <DirectXMath.h>
 
 namespace rendering
 {
-	class DXCamera : public interpreter::INativeObject
+	class DXCamera : public interpreter::INativeObject, public InputHandler
 	{
 		float m_fov = 60;
 		float m_aspect = 1;
@@ -25,5 +27,6 @@ namespace rendering
 		DirectX::XMVECTOR GetForwardVector() const;
 		DirectX::XMVECTOR GetRightVector() const;
 	public:
+		void HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp) override;
 	};
 }

@@ -3,6 +3,7 @@
 #include "nativeFunc.h"
 #include "utils.h"
 #include "api.h"
+#include "aux/inputHandler.h"
 
 #include <thread>
 #include <semaphore>
@@ -29,6 +30,21 @@ namespace
 		Value app_context = api.GetProperty("app_context");
 
 		return app_context.GetProperty("render");
+	}
+
+	rendering::InputHandler* GetInputHandler()
+	{
+		using namespace interpreter;
+
+		Value api = rendering::GetAPI();
+		Value app_context = api.GetProperty("app_context");
+
+		Value inputHandlerValue =  app_context.GetProperty("inputHandler");
+		if (inputHandlerValue.IsNone()) {
+			return nullptr;
+		}
+
+		return dynamic_cast<rendering::InputHandler*>(NativeObject::ExtractNativeObject(inputHandlerValue));
 	}
 
 	void WindowLoop()
@@ -163,6 +179,13 @@ void rendering::Window::WindowTick(double dt)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	InputHandler* inputHandler = GetInputHandler();
+	if (!inputHandler) {
+		return;
+	}
+
+	inputHandler->HandleInput(dt, m_keysDown, m_keysUp);
 }
 
 void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)

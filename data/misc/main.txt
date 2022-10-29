@@ -42,6 +42,8 @@ let initCamera = func(camBuff) {
 	cam.setFarPlane(10000);
 	cam.setFOV(60);
 
+	api.app_context.inputHandler = cam;
+
 	let camData = cam.getMVPMatrix();
 	utils.foreach(pos, func(x) {
 		camData.push(x);

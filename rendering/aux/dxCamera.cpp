@@ -265,6 +265,10 @@ DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
 	return res;
 }
 
+void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp)
+{
+}
+
 DirectX::XMVECTOR rendering::DXCamera::GetRightVector() const
 {
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0, 1, 0, 0);
