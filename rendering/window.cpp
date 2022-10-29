@@ -3,11 +3,29 @@
 #include "nativeFunc.h"
 #include "utils.h"
 
+#include <thread>
+
 namespace
 {
 	static bool m_classRegistered = false;
 	const wchar_t* m_className = L"MyWindow";
 	bool m_created = false;
+
+	rendering::Window* m_wnd = nullptr;
+	bool m_windowLoopRunning = true;
+	std::thread* m_windowLoopThread = nullptr;
+
+	void WindowLoop()
+	{
+		rendering::Window* wnd = m_wnd;
+		m_wnd = nullptr;
+
+		wnd->Create();
+
+		while (m_windowLoopRunning) {
+			wnd->WindowTick();
+		}
+	}
 }
 
 void rendering::Window::RegisterWindowClass()
@@ -90,6 +108,25 @@ rendering::Window::Window()
 rendering::Window::~Window()
 {
 	Destroy();
+
+	if (m_windowLoopThread) {
+		m_windowLoopRunning = false;
+		m_windowLoopThread->join();
+		delete m_windowLoopThread;
+		m_windowLoopThread = nullptr;
+	}
+}
+
+void rendering::Window::WindowTick()
+{
+	MSG msg;
+	while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+		if (!GetMessage(&msg, NULL, 0, 0)) {
+			break;
+		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 }
 
 void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
@@ -101,6 +138,10 @@ return Value();
 	using namespace interpreter;
 
 	interpreter::Value create = interpreter::CreateNativeMethod(nativeObject, 2, [](interpreter::Value scope) {
+		if (m_created) {
+			THROW_EXCEPTION("Window already created!")
+		}
+
 		interpreter::Value self = scope.GetProperty("self");
 		interpreter::NativeObject* obj = static_cast<interpreter::NativeObject*>(self.GetManagedValue());
 
@@ -123,7 +164,16 @@ return Value();
 		wnd.m_width = static_cast<UINT>(width.GetNum());
 		wnd.m_height = static_cast<UINT>(height.GetNum());
 
-		wnd.Create();
+		if (m_windowLoopThread) {
+			m_windowLoopRunning = false;
+			m_windowLoopThread->join();
+			delete m_windowLoopThread;
+			m_windowLoopThread = nullptr;
+		}
+
+		m_wnd = &wnd;
+		m_windowLoopRunning = true;
+		m_windowLoopThread = new std::thread(WindowLoop);
 		return interpreter::Value();
 	});
 
@@ -237,9 +287,6 @@ return Value();
 
 void rendering::Window::Create()
 {
-	if (m_created) {
-		return;
-	}
 	m_created = true;
 
 	DWORD dwStyle = WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
@@ -266,6 +313,8 @@ void rendering::Window::Create()
 void rendering::Window::Destroy()
 {
 	if (m_hwnd != NULL) {
+		m_windowLoopRunning = false;
+
 		DestroyWindow(m_hwnd);
 		m_hwnd = nullptr;
 	}

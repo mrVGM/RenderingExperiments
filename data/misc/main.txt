@@ -16,7 +16,7 @@ let windowLoopCrt = func() {
 	wnd.windowLoop();
 	timeout(windowLoopCrt, 0);
 };
-windowLoopCrt();
+#windowLoopCrt();
 
 let device = api.device();
 let swapChain = api.swapChain();

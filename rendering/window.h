@@ -14,7 +14,6 @@ namespace rendering
 		std::list<WPARAM> m_keysUp;
 
 		void RegisterWindowClass();
-		void Create();
 		void Destroy();
 
 		static LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -27,5 +26,8 @@ namespace rendering
 		UINT m_height;
 		Window();
 		~Window();
+
+		void Create();
+		void WindowTick();
 	};
 }
