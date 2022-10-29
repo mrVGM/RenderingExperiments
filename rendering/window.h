@@ -28,6 +28,6 @@ namespace rendering
 		~Window();
 
 		void Create();
-		void WindowTick();
+		void WindowTick(double dt);
 	};
 }

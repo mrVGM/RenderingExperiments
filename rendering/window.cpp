@@ -2,8 +2,10 @@
 
 #include "nativeFunc.h"
 #include "utils.h"
+#include "api.h"
 
 #include <thread>
+#include <chrono>
 
 namespace
 {
@@ -15,6 +17,8 @@ namespace
 	bool m_windowLoopRunning = true;
 	std::thread* m_windowLoopThread = nullptr;
 
+	std::chrono::system_clock::time_point m_lastTick;
+
 	void WindowLoop()
 	{
 		rendering::Window* wnd = m_wnd;
@@ -22,8 +26,16 @@ namespace
 
 		wnd->Create();
 
+		m_lastTick = std::chrono::system_clock::now();
+
 		while (m_windowLoopRunning) {
-			wnd->WindowTick();
+			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+			auto nowNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+			auto lastTickNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(m_lastTick);
+			long long deltaNN = nowNN.time_since_epoch().count() - lastTickNN.time_since_epoch().count();
+			double dt = deltaNN / 1000000000;
+
+			wnd->WindowTick(dt);
 		}
 	}
 }
@@ -117,8 +129,9 @@ rendering::Window::~Window()
 	}
 }
 
-void rendering::Window::WindowTick()
+void rendering::Window::WindowTick(double dt)
 {
+	using namespace interpreter;
 	MSG msg;
 	while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 		if (!GetMessage(&msg, NULL, 0, 0)) {

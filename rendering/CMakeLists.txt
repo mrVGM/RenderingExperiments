@@ -63,6 +63,7 @@ add_library (Rendering
 	"deferred/dxLitPassCL.cpp"
 	"deferred/dxCloudMatCL.h"
 	"deferred/dxCloudMatCL.cpp"
+	"aux/inputHandler.h"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

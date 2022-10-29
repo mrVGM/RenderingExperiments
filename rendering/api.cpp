@@ -50,6 +50,9 @@ namespace rendering
 
 		m_api = interpreter::utils::GetEmptyObject();
 
+		m_api.SetProperty("app_context", interpreter::utils::GetEmptyObject());
+		Value app_context = m_api.GetProperty("app_context");
+
 #pragma region Base Objects
 		m_api.SetProperty("window", interpreter::CreateNativeFunc(0, [](Value scope) {
 			Window* wnd = new Window();
