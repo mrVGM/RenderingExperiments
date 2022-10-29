@@ -123,7 +123,7 @@ return Value();
 		wnd.m_width = static_cast<UINT>(width.GetNum());
 		wnd.m_height = static_cast<UINT>(height.GetNum());
 
-		wnd.Create(width.GetNum(), height.GetNum());
+		wnd.Create();
 		return interpreter::Value();
 	});
 
@@ -235,7 +235,7 @@ return Value();
 }
 
 
-void rendering::Window::Create(int width, int height)
+void rendering::Window::Create()
 {
 	if (m_created) {
 		return;
@@ -248,8 +248,8 @@ void rendering::Window::Create(int width, int height)
 	RECT windowRect;
 	windowRect.left = 50;
 	windowRect.top = 50;
-	windowRect.right = windowRect.left + width;
-	windowRect.bottom = windowRect.top + height;
+	windowRect.right = windowRect.left + m_width;
+	windowRect.bottom = windowRect.top + m_height;
 
 	AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
