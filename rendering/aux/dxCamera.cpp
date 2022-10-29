@@ -1,6 +1,7 @@
 #include "aux/dxCamera.h"
 
 #include "nativeFunc.h"
+#include "dxBuffer.h"
 
 #include <list>
 
@@ -203,6 +204,26 @@ return Value();
 		tmp.push_back(Value(DirectX::XMVectorGetZ(target)));
 
 		return Value::FromList(tmp);
+	});
+
+	Value& camBuff = GetOrCreateProperty(nativeObject, "camBuff");
+	
+	Value& setCamBuff = GetOrCreateProperty(nativeObject, "setCamBuff");
+	setCamBuff = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value camBuffValue = scope.GetProperty("param0");
+		DXBuffer* camBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(camBuffValue));
+
+		if (!camBuffer) {
+			THROW_EXCEPTION("Please supply a cam buffer!")
+		}
+
+		camBuff = camBuffValue;
+		self->m_camBuff = camBuffer->GetBuffer();
+
+		return Value();
 	});
 
 #undef THROW_EXCEPTION

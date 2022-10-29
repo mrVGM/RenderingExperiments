@@ -4,12 +4,15 @@
 
 #include "inputHandler.h"
 
+#include <d3d12.h>
 #include <DirectXMath.h>
 
 namespace rendering
 {
 	class DXCamera : public interpreter::INativeObject, public InputHandler
 	{
+		ID3D12Resource* m_camBuff = nullptr;
+
 		float m_fov = 60;
 		float m_aspect = 1;
 
