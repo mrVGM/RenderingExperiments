@@ -61,7 +61,6 @@ let loadTex = func(device, texSize, onReady) {
 	texBB.setHeight(texSize);
 	texBB.setDepth(texSize);
 
-	print("HELLO");
 	texBB.build(device, onReady);
 };
 
@@ -174,8 +173,6 @@ let prepareData = func(device, texSize, onReady) {
 	loadSRVBuffs(device, srvBuffSize, srvBuffStride, func(buffs) {
 		waiting = waiting - 1;
 		srvBuff = buffs;
-
-		print(srvBuff.length);
 
 		if (waiting == 0) {
 			callReady();
