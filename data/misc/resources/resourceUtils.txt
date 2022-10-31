@@ -46,6 +46,7 @@ let bufferBuilder = func() {
 			type = "UPLOAD";
 		}
 
+		heap.setHeapBufferType("buffer");
 		heap.create(device, size, type);
 		heap.makeResident(fence, 1);
 	};
@@ -83,7 +84,7 @@ let textureBuilder = func() {
 
 	let res = {};
 	res.allowUA = func(x) {
-		allowAU = x;
+		allowUA = x;
 	};
 
 	res.setWidth = func(x) {
@@ -153,7 +154,12 @@ let textureBuilder = func() {
 		let type = "DEFAULT";
 		let size = tex.getAllocationSize(device);
 
+		heap.setHeapBufferType("texture");
+		if (rtv == 1 || ds == 1) {
+			heap.setHeapBufferType("rtvds");
+		}
 		heap.create(device, size, type);
+
 		heap.makeResident(fence, 1);
 	};
 

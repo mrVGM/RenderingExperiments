@@ -1,63 +1,24 @@
 let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
 
 let loadCB = func(device, onReady) {
-	let fence = api.fence();
-	fence.create(device);
-	
-	let buffSize = 256;
-	let buff = api.buffer();
-	let heap = api.heap();
 
-	let initBuffer = func() {
-		buff.init(buffSize);
-		buff.place(device, heap, 0, 0);
-		
-		onReady(buff);
-	};
+	let constBB = resources.bufferBuilder();
+	constBB.upload(1);
+	constBB.setSize(256);
+	constBB.setStride(256);
 
-	let fe = api.fenceEvent();
-	fe.create();
-	fe.wait(fence, 1, func(arg) {
-		try {
-			initBuffer();
-		} catch(e) {
-			print(e);
-		}
-	});
-
-	let heapType = "UPLOAD";
-	heap.create(device, buffSize, heapType);
-	heap.makeResident(fence, 1);
+	constBB.build(device, onReady);
 };
 
 let loadSRVBuff = func(device, buffSize, buffStride, onReady) {
-	let fence = api.fence();
-	fence.create(device);
+	
+	let srvBB = resources.bufferBuilder();
+	srvBB.upload(1);
+	srvBB.setSize(buffSize);
+	srvBB.setStride(buffStride);
 
-	let buff = api.buffer();
-	let heap = api.heap();
-
-	let initBuffer = func() {
-		buff.init(buffSize);
-		buff.setStride(buffStride);
-		buff.place(device, heap, 0, 0);
-		
-		onReady(buff);
-	};
-
-	let fe = api.fenceEvent();
-	fe.create();
-	fe.wait(fence, 1, func(arg) {
-		try {
-			initBuffer();
-		} catch(e) {
-			print(e);
-		}
-	});
-
-	let heapType = "UPLOAD";
-	heap.create(device, buffSize, heapType);
-	heap.makeResident(fence, 1);
+	srvBB.build(device, onReady);
 };
 
 let loadSRVBuffs = func(device, buffSizes, buffStride, onReady) {
@@ -92,35 +53,16 @@ let loadSRVBuffs = func(device, buffSizes, buffStride, onReady) {
 	});
 };
 
-
-
-
 let loadTex = func(device, texSize, onReady) {
-	let fence = api.fence();
-	fence.create(device);
-	
-	let tex = api.texture();
-	tex.init3D(texSize, texSize, texSize, 1);
+	let texBB = resources.textureBuilder();
+	texBB.setDim(3);
+	texBB.allowUA(1);
+	texBB.setWidth(texSize);
+	texBB.setHeight(texSize);
+	texBB.setDepth(texSize);
 
-	let heap = api.heap();
-
-	let placeTex = func() {
-		tex.place(device, heap, 0);
-		onReady(tex);
-	};
-
-	let fe = api.fenceEvent();
-	fe.create();
-	fe.wait(fence, 1, func(arg) {
-		try {
-			placeTex();
-		} catch(e) {
-			print(e);
-		}
-	});
-
-	heap.create(device, tex.getAllocationSize(device), "DEFAULT");
-	heap.makeResident(fence, 1);
+	print("HELLO");
+	texBB.build(device, onReady);
 };
 
 let compileShader = func() {

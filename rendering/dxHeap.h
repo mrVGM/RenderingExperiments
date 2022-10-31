@@ -14,6 +14,7 @@ namespace rendering
 	class DXHeap : public interpreter::INativeObject
 	{
 		std::string m_heapType;
+		std::string m_heapBufferType;
 
 		virtual void InitProperties(interpreter::NativeObject& nativeObject);
 

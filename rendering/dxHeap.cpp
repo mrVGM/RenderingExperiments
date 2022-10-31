@@ -70,6 +70,20 @@ return Value();\
 			D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_CREATE_NOT_ZEROED |
 			D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_CREATE_NOT_RESIDENT;
 
+		if (heap->m_heapBufferType == "buffer") {
+			desc.Flags = desc.Flags | D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
+		}
+		if (heap->m_heapBufferType == "texture") {
+			desc.Flags = desc.Flags | D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+		}
+		if (heap->m_heapBufferType == "rtvds") {
+			desc.Flags = desc.Flags | D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES;
+		}
+
+		if (heap->m_heapBufferType.empty()) {
+			bool t = true;
+		}
+
 		
 		std::string error;
 		bool res = heap->Init(*device, desc, error);
@@ -129,6 +143,21 @@ return Value();\
 		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
 
 		return Value(heap->m_heapType);
+	});
+
+	Value& setHeapBufferType = GetOrCreateProperty(nativeObject, "setHeapBufferType");
+	setHeapBufferType = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXHeap* heap = static_cast<DXHeap*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value heapBufferTypeValue = scope.GetProperty("param0");
+		if (heapBufferTypeValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply Heap Buffer Type!")
+		}
+
+		heap->m_heapBufferType = heapBufferTypeValue.GetString();
+
+		return Value();
 	});
 
 #undef THROW_EXCEPTION
@@ -206,3 +235,14 @@ rendering::DXHeap::~DXHeap()
 }
 
 #undef THROW_ERROR
+
+/*
+D3D12 ERROR : ID3D12Device::CreateHeap : D3D12_HEAP_FLAGS has invalid flag combinations set.
+The following flags may not all be set simultaneously.
+Exactly one must be left unset, or all may be left unset when the adapter supports D3D12_RESOURCE_HEAP_TIER_2
+or creating a heap in conjunction with
+D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER : D3D12_FEATURE_DATA_D3D12_OPTIONS::ResourceHeapTier = D3D12_RESOURCE_HEAP_TIER_1,
+D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER = 0, D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES = 0,
+D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES = 0, and D3D12_HEAP_FLAG_DENY_BUFFERS = 0.
+[STATE_CREATION ERROR #631: CREATEHEAP_INVALIDMISCFLAGS]
+*/
