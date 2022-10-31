@@ -1,4 +1,4 @@
-#include "aux/dxCamera.h"
+#include "helper/dxCamera.h"
 
 #include "nativeFunc.h"
 #include "dxBuffer.h"

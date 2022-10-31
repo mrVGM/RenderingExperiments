@@ -51,8 +51,8 @@ add_library (Rendering
 	"dxCopyCommandQueue.cpp"
 	"deferred/dxLitMatCL.h"
 	"deferred/dxLitMatCL.cpp"
-	"aux/dxCamera.h"
-	"aux/dxCamera.cpp"
+	"helper/dxCamera.h"
+	"helper/dxCamera.cpp"
 	"primitives/cube.h"
 	"primitives/cube.cpp"
 	"CL/dxPlainCL.h"
@@ -63,7 +63,7 @@ add_library (Rendering
 	"deferred/dxLitPassCL.cpp"
 	"deferred/dxCloudMatCL.h"
 	"deferred/dxCloudMatCL.cpp"
-	"aux/inputHandler.h"
+	"helper/inputHandler.h"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

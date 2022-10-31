@@ -26,7 +26,7 @@
 
 #include "deferred/dxLitMatCL.h"
 
-#include "aux/dxCamera.h"
+#include "helper/dxCamera.h"
 
 #include "primitives/cube.h"
 

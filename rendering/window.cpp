@@ -3,7 +3,7 @@
 #include "nativeFunc.h"
 #include "utils.h"
 #include "api.h"
-#include "aux/inputHandler.h"
+#include "helper/inputHandler.h"
 
 #include <thread>
 #include <semaphore>
