@@ -254,6 +254,13 @@ try {
 	cloudBB.setStride(256);
 	cloudBB.build(device, func(buff) {
 		cloudSettingsBuff = buff;
+		let settings = [];
+		settings.push(-1);
+		settings.push(0.4);
+		settings.push(2);
+		settings.push(0.1);
+		cloudSettingsBuff.copyData(settings);
+
 		getMat();
 	});
 

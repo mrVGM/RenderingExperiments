@@ -4,6 +4,14 @@ cbuffer MVCMatrix : register(b0)
     float3 m_camPos;
 };
 
+cbuffer CloudSettings : register(b1)
+{
+    float cs_DensityOffset;
+    float cs_DensityThreshold;
+    float cs_DensityMultiplier;
+    float cs_UVWFactor;
+};
+
 Texture3D p_texture     : register(t0);
 SamplerState p_sampler  : register(s0);
 
@@ -155,9 +163,9 @@ float sampleDensity(float3 pos)
 {
     float densityThreshold = 0.4;
     float densityMultiplier = 2;
-    float3 uvw = 0.1 * pos;
-    float density = max(0, (1 - p_texture.Sample(p_sampler, uvw).r) - densityThreshold);
-    density *= densityMultiplier;
+    float3 uvw = cs_UVWFactor * pos;
+    float density = max(0, (1 - p_texture.Sample(p_sampler, uvw).r) - cs_DensityThreshold);
+    density *= cs_DensityMultiplier;
     return density;
 }
 
@@ -187,8 +195,6 @@ float4 PSMain(PSInput input) : SV_TARGET
         return float4(0, 1, 0, 1);
     }
 
-    float densityOffset = -1;
-
     float totalDensity = 0;
     for (int i = 0; i <= 4; ++i) {
         float coef = (float)i / 4.0;
@@ -198,37 +204,8 @@ float4 PSMain(PSInput input) : SV_TARGET
         totalDensity += density;
     }
 
-    totalDensity += densityOffset;
+    totalDensity += cs_DensityOffset;
     totalDensity = max(0, totalDensity);
 
     return float4(1, 1, 1, 1 - exp(-totalDensity));
-
-    float grad = length(hits[0] - hits[1]);
-    grad /= 2;
-
-    float coefs[2];
-    coefs[0] = dot(hits[0] - m_camPos, offset);
-    coefs[1] = dot(hits[1] - m_camPos, offset);
-
-    float minCoef = min(coefs[0], coefs[1]);
-    float maxCoef = max(coefs[0], coefs[1]);
-
-    float step = 0.1;
-    int maxSteps = 10;
-
-    float density = 0;
-
-    int stepsMade = 0;
-    float curCoef = minCoef;
-    while (curCoef <= maxCoef && stepsMade < maxSteps) {
-        float3 curTestPoint = curCoef * offset + m_camPos;
-        float curDensity = sampleDensity(curTestPoint);
-        density += curDensity;
-
-        curCoef += step;
-        stepsMade += 1;
-    }
-
-    float transmittance = exp(-density);
-    return float4(1, 1, 1, (1-transmittance));
 }
