@@ -195,6 +195,18 @@ let scene = require("scene/scene.txt");
 let worlyData = none;
 let cloudSettingsBuff = none;
 
+
+let settingsReader = api.aux.cloudSettingReader();
+let readSettings = func() {
+	let rawData = readFile("cloudSettings.txt");
+	let settingsData = settingsReader.readCloudSettings(rawData);
+
+	cloudSettingsBuff.copyData(settingsData);
+};
+
+api.app_context.readSettings = readSettings;
+
+
 try {
 	generalInit();
 
@@ -254,12 +266,7 @@ try {
 	cloudBB.setStride(256);
 	cloudBB.build(device, func(buff) {
 		cloudSettingsBuff = buff;
-		let settings = [];
-		settings.push(-1);
-		settings.push(0.4);
-		settings.push(2);
-		settings.push(0.1);
-		cloudSettingsBuff.copyData(settings);
+		readSettings();
 
 		getMat();
 	});
@@ -267,12 +274,3 @@ try {
 } catch(e) {
 	print(e);
 }
-
-
-let settingsReader = api.aux.cloudSettingReader();
-api.app_context.readSettings = func() {
-	let rawData = readFile("cloudSettings.txt");
-	let settingsData = settingsReader.readCloudSettings(rawData);
-
-	cloudSettingsBuff.copyData(settingsData);
-};

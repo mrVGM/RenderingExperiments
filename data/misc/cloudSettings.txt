@@ -1,4 +1,18 @@
+cs_WeightR 1
+cs_WeightG 0
+cs_WeightB 0
+
 cs_DensityOffset -1
-cs_DensityThreshold 0.4
-cs_DensityMultiplier 3
-cs_UVWFactor 0.1
+
+cs_DensityThresholdR 0.4
+cs_DensityMultiplierR 2
+cs_UVWFactorR 0.1
+
+cs_DensityThresholdG 0.4
+cs_DensityMultiplierG 2
+cs_UVWFactorG 0.1
+
+cs_DensityThresholdB 0.4
+cs_DensityMultiplierB 2
+cs_UVWFactorB 0.1
+

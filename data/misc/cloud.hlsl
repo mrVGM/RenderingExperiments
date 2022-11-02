@@ -6,10 +6,23 @@ cbuffer MVCMatrix : register(b0)
 
 cbuffer CloudSettings : register(b1)
 {
+    float cs_WeightR;
+    float cs_WeightG;
+    float cs_WeightB;
+
     float cs_DensityOffset;
-    float cs_DensityThreshold;
-    float cs_DensityMultiplier;
-    float cs_UVWFactor;
+
+    float cs_DensityThresholdR;
+    float cs_DensityMultiplierR;
+    float cs_UVWFactorR;
+
+    float cs_DensityThresholdG;
+    float cs_DensityMultiplierG;
+    float cs_UVWFactorG;
+
+    float cs_DensityThresholdB;
+    float cs_DensityMultiplierB;
+    float cs_UVWFactorB;
 };
 
 Texture3D p_texture     : register(t0);
@@ -159,13 +172,27 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
     return true;
 }
 
-float sampleDensity(float3 pos)
+float sampleDensity(int channel, float3 pos)
 {
-    float densityThreshold = 0.4;
-    float densityMultiplier = 2;
-    float3 uvw = cs_UVWFactor * pos;
-    float density = max(0, (1 - p_texture.Sample(p_sampler, uvw).r) - cs_DensityThreshold);
-    density *= cs_DensityMultiplier;
+    float densityThreshold = cs_DensityThresholdR;
+    float densityMultiplier = cs_DensityMultiplierR;
+    float uvwFactor = cs_UVWFactorR;
+
+    if (channel == 1) {
+        densityThreshold = cs_DensityThresholdG;
+        densityMultiplier = cs_DensityMultiplierG;
+        uvwFactor = cs_UVWFactorG;
+    }
+
+    if (channel == 2) {
+        densityThreshold = cs_DensityThresholdB;
+        densityMultiplier = cs_DensityMultiplierB;
+        uvwFactor = cs_UVWFactorB;
+    }
+
+    float3 uvw = uvwFactor * pos;
+    float density = max(0, (1 - p_texture.Sample(p_sampler, uvw).r) - densityThreshold);
+    density *= densityMultiplier;
     return density;
 }
 
@@ -200,8 +227,11 @@ float4 PSMain(PSInput input) : SV_TARGET
         float coef = (float)i / 4.0;
 
         float3 curPoint = (1 - coef) * hits[0] + coef * hits[1];
-        float density = sampleDensity(curPoint);
-        totalDensity += density;
+        float densityR = sampleDensity(0, curPoint);
+        float densityG = sampleDensity(1, curPoint);
+        float densityB = sampleDensity(2, curPoint);
+
+        totalDensity += cs_WeightR * densityR + cs_WeightG * densityG + cs_WeightB * densityB;
     }
 
     totalDensity += cs_DensityOffset;
