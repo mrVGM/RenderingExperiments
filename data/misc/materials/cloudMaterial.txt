@@ -12,12 +12,16 @@ let createCloudMaterial = func(device, shadersFile, gBuffer, worlyData) {
 
 	let object = none;
 	let instanceBuffer = none;
+	let constantBuffer = none;
 
 	let setObject = func(obj) {
 		object = obj;
 	};
 	let setInstanceBuffer = func(instanceBuff) {
 		instanceBuffer = instanceBuff;
+	};
+	let setConstantBuffer = func(constantBuff) {
+		constantBuffer = constantBuff;
 	};
 	
 	let cloudMat = api.deferred.cloudMatCL();
@@ -54,6 +58,7 @@ let createCloudMaterial = func(device, shadersFile, gBuffer, worlyData) {
 	let res = {};
 	res.setObject = setObject;
 	res.setInstanceBuffer = setInstanceBuffer;
+	res.setConstantBuffer = setConstantBuffer;
 	res.render = render;
 
 	return res;

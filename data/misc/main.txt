@@ -193,6 +193,7 @@ let startRendMat = func() {
 
 let scene = require("scene/scene.txt");
 let worlyData = none;
+let cloudSettingsBuff = none;
 
 try {
 	generalInit();
@@ -224,7 +225,10 @@ try {
 	});
 
 	let getMat = func() {
-		if (gBuffer == none || sceneLoaded == 0 || worlyPrepared == 0) {
+		if (gBuffer == none ||
+			sceneLoaded == 0 ||
+			worlyPrepared == 0 ||
+			cloudSettingsBuff == none) {
 			return;
 		}
 		initCamera(gBuffer.camBuffer);
@@ -241,6 +245,15 @@ try {
 		litPass.setupEndCL(device, gBuffer);
 
 		print("GBuffer set up!");
+		getMat();
+	});
+
+	let cloudBB = resources.bufferBuilder();
+	cloudBB.upload(1);
+	cloudBB.setSize(256);
+	cloudBB.setStride(256);
+	cloudBB.build(device, func(buff) {
+		cloudSettingsBuff = buff;
 		getMat();
 	});
 
