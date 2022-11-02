@@ -20,6 +20,7 @@ namespace rendering::deferred
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
 		ID3D12Resource* m_constantBuffer = nullptr;
+		ID3D12Resource* m_settingsConstantBuffer = nullptr;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
@@ -28,6 +29,7 @@ namespace rendering::deferred
 			ID3DBlob* vertexShader,
 			ID3DBlob* pixelShader,
 			ID3D12Resource* constantBuffer,
+			ID3D12Resource* settingsConstantBuffer,
 			std::string& errorMessage);
 		bool Populate(
 			const CD3DX12_VIEWPORT* viewport,

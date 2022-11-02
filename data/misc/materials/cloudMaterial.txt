@@ -1,4 +1,4 @@
-let createCloudMaterial = func(device, shadersFile, gBuffer, worlyData) {
+let createCloudMaterial = func(device, shadersFile, settingsBuffer, gBuffer, worlyData) {
 	let gBuff = gBuffer;
 	let camBuff = gBuffer.camBuffer;
 
@@ -25,7 +25,7 @@ let createCloudMaterial = func(device, shadersFile, gBuffer, worlyData) {
 	};
 	
 	let cloudMat = api.deferred.cloudMatCL();
-	cloudMat.create(device, vertexShader, pixelShader, camBuff);
+	cloudMat.create(device, vertexShader, pixelShader, camBuff, settingsBuffer);
 
 	let fence = api.fence();
 	fence.create(device);

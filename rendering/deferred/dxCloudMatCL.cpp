@@ -22,7 +22,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
     Value& create = GetOrCreateProperty(nativeObject, "create");
-    create = CreateNativeMethod(nativeObject, 4, [](Value scope) {
+    create = CreateNativeMethod(nativeObject, 5, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCloudMatCL* self = static_cast<DXCloudMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -54,12 +54,20 @@ return Value();
             THROW_EXCEPTION("Please supply a Constant Buffer!")
         }
 
+        Value settingsConstantBufferValue = scope.GetProperty("param4");
+        DXBuffer* settingsConstantBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(settingsConstantBufferValue));
+
+        if (!settingsConstantBuffer) {
+            THROW_EXCEPTION("Please supply a Cloud Settings Constant Buffer!")
+        }
+
         std::string error;
         bool res = self->Create(
             &device->GetDevice(),
             vertexShader->GetCompiledShader(),
             pixelShader->GetCompiledShader(),
             constantBuffer->GetBuffer(),
+            settingsConstantBuffer->GetBuffer(),
             error);
 
         if (!res) {
@@ -194,11 +202,13 @@ bool rendering::deferred::DXCloudMatCL::Create(
     ID3DBlob* vertexShader,
     ID3DBlob* pixelShader,
     ID3D12Resource* constantBuffer,
+    ID3D12Resource* settingsConstantBuffer,
     std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
     m_constantBuffer = constantBuffer;
+    m_settingsConstantBuffer = settingsConstantBuffer;
 
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -236,12 +246,13 @@ bool rendering::deferred::DXCloudMatCL::Create(
         CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
 
-        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
         rootParameters[0].InitAsConstantBufferView(0, 0);
         rootParameters[1].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[2].InitAsConstantBufferView(1, 0);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(2, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(3, rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -350,6 +361,7 @@ bool rendering::deferred::DXCloudMatCL::Populate(
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootDescriptorTable(1, worlyDescHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRootConstantBufferView(2, m_settingsConstantBuffer->GetGPUVirtualAddress());
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
