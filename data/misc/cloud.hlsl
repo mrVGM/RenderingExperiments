@@ -191,7 +191,16 @@ float sampleDensity(int channel, float3 pos)
     }
 
     float3 uvw = uvwFactor * pos;
-    float density = max(0, (1 - p_texture.Sample(p_sampler, uvw).r) - densityThreshold);
+    float4 textureColor = p_texture.Sample(p_sampler, uvw);
+    float textureVal = textureColor.r;
+    if (channel == 1) {
+        textureVal = textureColor.g;
+    }
+    if (channel == 2) {
+        textureVal = textureColor.b;
+    }
+
+    float density = max(0, (1 - textureVal) - densityThreshold);
     density *= densityMultiplier;
     return density;
 }
