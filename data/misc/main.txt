@@ -267,3 +267,12 @@ try {
 } catch(e) {
 	print(e);
 }
+
+
+let settingsReader = api.aux.cloudSettingReader();
+api.app_context.readSettings = func() {
+	let rawData = readFile("cloudSettings.txt");
+	let settingsData = settingsReader.readCloudSettings(rawData);
+
+	cloudSettingsBuff.copyData(settingsData);
+};

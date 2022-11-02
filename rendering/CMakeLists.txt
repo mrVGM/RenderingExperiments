@@ -64,6 +64,8 @@ add_library (Rendering
 	"deferred/dxCloudMatCL.h"
 	"deferred/dxCloudMatCL.cpp"
 	"helper/inputHandler.h"
+	"helper/cloudSettingsReader.h"
+	"helper/cloudSettingsReader.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

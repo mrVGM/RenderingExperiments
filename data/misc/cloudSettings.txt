@@ -1,0 +1,4 @@
+cs_DensityOffset -1
+cs_DensityThreshold 0.4
+cs_DensityMultiplier 3
+cs_UVWFactor 0.1

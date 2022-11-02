@@ -37,6 +37,8 @@
 
 #include "deferred/dxCloudMatCL.h"
 
+#include "helper/cloudSettingsReader.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -237,6 +239,11 @@ namespace rendering
 		aux.SetProperty("plainCL", CreateNativeFunc(0, [](Value scope) {
 			DXPlainCL* plainCL = new DXPlainCL();
 			return NativeObject::Create(plainCL);
+		}));
+
+		aux.SetProperty("cloudSettingReader", CreateNativeFunc(0, [](Value scope) {
+			CloudSettingsReader* settingsReader = new CloudSettingsReader();
+			return NativeObject::Create(settingsReader);
 		}));
 #pragma endregion
 	}
