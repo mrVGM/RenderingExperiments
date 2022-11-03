@@ -28,7 +28,24 @@ cbuffer CloudSettings : register(b1)
     float cs_UVWFactorB;
 };
 
+cbuffer LightsInfo : register(b2)
+{
+    float m_numLights;
+    float3 m_ambientLight;
+    float m_ambientIntensity;
+};
+
+struct LightData
+{
+    float3 m_position;
+    float3 m_color;
+    float m_intensity;
+};
+
+
 Texture3D p_texture     : register(t0);
+StructuredBuffer<LightData> m_lights : register(t1);
+
 SamplerState p_sampler  : register(s0);
 
 struct CubeWall

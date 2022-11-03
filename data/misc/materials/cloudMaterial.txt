@@ -1,4 +1,4 @@
-let createCloudMaterial = func(device, shadersFile, settingsBuffer, gBuffer, worlyData) {
+let createCloudMaterial = func(device, shadersFile, settingsBuffer, gBuffer, worlyData, scene) {
 	let gBuff = gBuffer;
 	let camBuff = gBuffer.camBuffer;
 
@@ -51,7 +51,7 @@ let createCloudMaterial = func(device, shadersFile, settingsBuffer, gBuffer, wor
 			onReady();
 		});
 
-		cloudMat.populate(swapChain, object.vertex, object.index, instanceBuffer, gBuffer, descHeap);
+		cloudMat.populate(swapChain, object.vertex, object.index, instanceBuffer, gBuffer, descHeap, scene.lightsConstantBuff, scene.lightsBuff);
 		cloudMat.execute(commandQueue, fence, signal);
 	};
 

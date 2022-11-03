@@ -78,7 +78,7 @@ return Value();
     });
 
     Value& populate = GetOrCreateProperty(nativeObject, "populate");
-    populate = CreateNativeMethod(nativeObject, 6, [](Value scope) {
+    populate = CreateNativeMethod(nativeObject, 8, [](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCloudMatCL* self = static_cast<DXCloudMatCL*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -131,6 +131,21 @@ return Value();
         CD3DX12_VIEWPORT viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(w.GetNum()), static_cast<float>(h.GetNum()));
         CD3DX12_RECT scissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(w.GetNum()), static_cast<LONG>(h.GetNum()));
 
+
+        Value lightsConstantBufferValue = scope.GetProperty("param6");
+        DXBuffer* lightsConstantBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(lightsConstantBufferValue));
+
+        if (!lightsConstantBuffer) {
+            THROW_EXCEPTION("Please supply a Lights Constant Buffer!")
+        }
+
+        Value lightsBufferValue = scope.GetProperty("param7");
+        DXBuffer* lightsBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(lightsBufferValue));
+
+        if (!lightsBuffer) {
+            THROW_EXCEPTION("Please supply a Lights Buffer!")
+        }
+
         std::string error;
         bool res = self->Populate(
             &swapChain->m_viewport,
@@ -147,6 +162,8 @@ return Value();
             instanceBuffer->GetBufferWidth(),
             instanceBuffer->GetStride(),
             worlyDescHeap->GetHeap(),
+            lightsConstantBuffer->GetBuffer(),
+            lightsBuffer->GetBuffer(),
             error);
 
         if (!res) {
@@ -246,13 +263,15 @@ bool rendering::deferred::DXCloudMatCL::Create(
         CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
 
-        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[5];
         rootParameters[0].InitAsConstantBufferView(0, 0);
         rootParameters[1].InitAsDescriptorTable(1, ranges, D3D12_SHADER_VISIBILITY_PIXEL);
         rootParameters[2].InitAsConstantBufferView(1, 0);
+        rootParameters[3].InitAsConstantBufferView(2, 0);
+        rootParameters[4].InitAsShaderResourceView(1, 0);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(3, rootParameters, 1, &sampler, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -339,6 +358,8 @@ bool rendering::deferred::DXCloudMatCL::Populate(
     int instanceBufferSize,
     int instanceBufferStride,
     ID3D12DescriptorHeap* worlyDescHeap,
+    ID3D12Resource* lightsConstantBuffer,
+    ID3D12Resource* lightsBuffer,
     std::string& errorMessage)
 {
     // Command list allocators can only be reset when the associated 
@@ -362,6 +383,8 @@ bool rendering::deferred::DXCloudMatCL::Populate(
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootDescriptorTable(1, worlyDescHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->SetGraphicsRootConstantBufferView(2, m_settingsConstantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootConstantBufferView(3, lightsConstantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootShaderResourceView(4, lightsBuffer->GetGPUVirtualAddress());
 
     m_commandList->RSSetViewports(1, viewport);
     m_commandList->RSSetScissorRects(1, scissorRect);
