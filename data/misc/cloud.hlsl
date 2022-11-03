@@ -192,7 +192,7 @@ bool intersectWall(float3 rayOrigin, float3 rayDir, CubeWall wall, out float3 po
     return true;
 }
 
-float sampleDensity(int channel, float3 pos)
+float sampleDensityChannel(int channel, float3 pos)
 {
     float densityThreshold = cs_DensityThresholdR;
     float densityMultiplier = cs_DensityMultiplierR;
@@ -223,6 +223,73 @@ float sampleDensity(int channel, float3 pos)
     float density = max(0, (1 - textureVal) - densityThreshold);
     density *= densityMultiplier;
     return density;
+}
+
+float sampleDensity(float3 pos)
+{
+    float densityR = sampleDensityChannel(0, pos);
+    float densityG = sampleDensityChannel(1, pos);
+    float densityB = sampleDensityChannel(2, pos);
+
+    float density = cs_WeightR * densityR + cs_WeightG * densityG + cs_WeightB * densityB;
+    return density;
+}
+
+float3 lightMarch(float3 testedPoint, LightData light, CubeWall cubeWalls[6])
+{
+    float3 camRay = testedPoint - m_camPos;
+    camRay = normalize(camRay);
+
+    float3 lightRay = testedPoint - light.m_position;
+    lightRay = normalize(lightRay);
+
+    float3 camHitPoint;
+    float3 lightHitPoint;
+
+    for (int i = 0; i < 6; ++i) {
+        float3 tmp;
+        if (intersectWall(m_camPos, camRay, cubeWalls[i], tmp)) {
+            camHitPoint = tmp;
+            break;
+        }
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        float3 tmp;
+        if (intersectWall(light.m_position, lightRay, cubeWalls[i], tmp)) {
+            lightHitPoint = tmp;
+            break;
+        }
+    }
+
+    float camPath = length(testedPoint - camHitPoint);
+    float lightPath = length(testedPoint - lightHitPoint);
+    float fullPath = camPath + lightPath;
+
+    int steps = ceil(fullPath / cs_SampleStep);
+    steps = min(steps, cs_MaxSampleSteps);
+
+    int camSteps = ceil(steps * camPath / fullPath);
+    int lightSteps = ceil(steps * lightPath / fullPath);
+
+    float totalDensity = 0;
+    for (int i = 0; i < camSteps; ++i) {
+        float coef = (float)i / camSteps;
+        float3 curPoint = (1 - coef) * camHitPoint + coef * testedPoint;
+
+        totalDensity += sampleDensity(curPoint);
+    }
+
+    for (int i = 0; i <= lightSteps; ++i) {
+        float coef = (float)i / lightSteps;
+        float3 curPoint = (1 - coef) * lightHitPoint + coef * testedPoint;
+
+        totalDensity += sampleDensity(curPoint);
+    }
+
+    float intensityFactor = exp(-totalDensity);
+
+    return light.m_intensity* light.m_color;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
@@ -259,16 +326,14 @@ float4 PSMain(PSInput input) : SV_TARGET
     sampleCount = cs_MaxSampleSteps;
 
     float totalDensity = 0;
-    [unroll(100)]
+    [unroll(200)]
     for (int i = 0; i <= sampleCount; ++i) {
         float coef = (float)i / sampleCount;
 
         float3 curPoint = (1 - coef) * hits[0] + coef * hits[1];
-        float densityR = sampleDensity(0, curPoint);
-        float densityG = sampleDensity(1, curPoint);
-        float densityB = sampleDensity(2, curPoint);
+        float density = sampleDensity(curPoint);
 
-        totalDensity += cs_WeightR * densityR + cs_WeightG * densityG + cs_WeightB * densityB;
+        totalDensity += density;
     }
 
     totalDensity += cs_DensityOffset;
