@@ -37,6 +37,9 @@ return Value();
 
 		std::list<Value> m_floats;
 
+		m_floats.push_back(Value(self->m_settingsMap["cs_SampleStep"]));
+		m_floats.push_back(Value(self->m_settingsMap["cs_MaxSampleSteps"]));
+
 		m_floats.push_back(Value(self->m_settingsMap["cs_WeightR"]));
 		m_floats.push_back(Value(self->m_settingsMap["cs_WeightG"]));
 		m_floats.push_back(Value(self->m_settingsMap["cs_WeightB"]));
@@ -63,6 +66,9 @@ return Value();
 
 rendering::CloudSettingsReader::CloudSettingsReader()
 {
+	m_settingsMap.insert(std::pair<std::string, float>("cs_SampleStep", 0.01));
+	m_settingsMap.insert(std::pair<std::string, float>("cs_MaxSampleSteps", 300));
+
 	m_settingsMap.insert(std::pair<std::string, float>("cs_WeightR", 1));
 	m_settingsMap.insert(std::pair<std::string, float>("cs_WeightG", 0));
 	m_settingsMap.insert(std::pair<std::string, float>("cs_WeightB", 0));

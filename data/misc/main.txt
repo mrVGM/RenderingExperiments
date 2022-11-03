@@ -204,8 +204,6 @@ let readSettings = func() {
 	cloudSettingsBuff.copyData(settingsData);
 };
 
-api.app_context.readSettings = readSettings;
-
 
 try {
 	generalInit();
@@ -274,3 +272,13 @@ try {
 } catch(e) {
 	print(e);
 }
+
+
+# TEMP DEBUG UPDATER
+let updateCloudSettings = func() {
+	if (cloudSettingsBuff != none) {
+		readSettings();
+	}
+	timeout(updateCloudSettings, 1000);
+};
+updateCloudSettings();

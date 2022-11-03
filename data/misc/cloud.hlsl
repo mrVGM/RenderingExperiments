@@ -6,6 +6,9 @@ cbuffer MVCMatrix : register(b0)
 
 cbuffer CloudSettings : register(b1)
 {
+    float cs_SampleStep;
+    float cs_MaxSampleSteps;
+
     float cs_WeightR;
     float cs_WeightG;
     float cs_WeightB;
@@ -231,9 +234,17 @@ float4 PSMain(PSInput input) : SV_TARGET
         return float4(0, 1, 0, 1);
     }
 
+    float3 hitsOffset = hits[0] - hits[1];
+    float hitsOffsetDist = length(hitsOffset);
+
+    int sampleCount = ceil(hitsOffsetDist / cs_SampleStep);
+    sampleCount = min(sampleCount, cs_MaxSampleSteps);
+    sampleCount = cs_MaxSampleSteps;
+
     float totalDensity = 0;
-    for (int i = 0; i <= 4; ++i) {
-        float coef = (float)i / 4.0;
+    [unroll(100)]
+    for (int i = 0; i <= sampleCount; ++i) {
+        float coef = (float)i / sampleCount;
 
         float3 curPoint = (1 - coef) * hits[0] + coef * hits[1];
         float densityR = sampleDensity(0, curPoint);
