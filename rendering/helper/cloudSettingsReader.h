@@ -9,9 +9,7 @@ namespace rendering
 {
 	class CloudSettingsReader : public interpreter::INativeObject
 	{
-		std::map<std::string, float> m_settingsMap;
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 	public:
-		CloudSettingsReader();
 	};
 }

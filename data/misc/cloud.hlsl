@@ -6,7 +6,6 @@ cbuffer MVCMatrix : register(b0)
 
 cbuffer CloudSettings : register(b1)
 {
-    float cs_SampleStep;
     float cs_MaxSampleSteps;
 
     float cs_WeightR;
@@ -235,63 +234,6 @@ float sampleDensity(float3 pos)
     return density;
 }
 
-float3 lightMarch(float3 testedPoint, LightData light, CubeWall cubeWalls[6])
-{
-    float3 camRay = testedPoint - m_camPos;
-    camRay = normalize(camRay);
-
-    float3 lightRay = testedPoint - light.m_position;
-    lightRay = normalize(lightRay);
-
-    float3 camHitPoint;
-    float3 lightHitPoint;
-
-    for (int i = 0; i < 6; ++i) {
-        float3 tmp;
-        if (intersectWall(m_camPos, camRay, cubeWalls[i], tmp)) {
-            camHitPoint = tmp;
-            break;
-        }
-    }
-
-    for (int i = 0; i < 6; ++i) {
-        float3 tmp;
-        if (intersectWall(light.m_position, lightRay, cubeWalls[i], tmp)) {
-            lightHitPoint = tmp;
-            break;
-        }
-    }
-
-    float camPath = length(testedPoint - camHitPoint);
-    float lightPath = length(testedPoint - lightHitPoint);
-    float fullPath = camPath + lightPath;
-
-    int steps = ceil(fullPath / cs_SampleStep);
-    steps = min(steps, cs_MaxSampleSteps);
-
-    int camSteps = ceil(steps * camPath / fullPath);
-    int lightSteps = ceil(steps * lightPath / fullPath);
-
-    float totalDensity = 0;
-    for (int i = 0; i < camSteps; ++i) {
-        float coef = (float)i / camSteps;
-        float3 curPoint = (1 - coef) * camHitPoint + coef * testedPoint;
-
-        totalDensity += sampleDensity(curPoint);
-    }
-
-    for (int i = 0; i <= lightSteps; ++i) {
-        float coef = (float)i / lightSteps;
-        float3 curPoint = (1 - coef) * lightHitPoint + coef * testedPoint;
-
-        totalDensity += sampleDensity(curPoint);
-    }
-
-    float intensityFactor = exp(-totalDensity);
-
-    return light.m_intensity* light.m_color;
-}
-
 float4 PSMain(PSInput input) : SV_TARGET
 {
     float3 offset = input.world_position - m_camPos;
@@ -320,20 +262,18 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     float3 hitsOffset = hits[0] - hits[1];
     float hitsOffsetDist = length(hitsOffset);
-
-    int sampleCount = ceil(hitsOffsetDist / cs_SampleStep);
-    sampleCount = min(sampleCount, cs_MaxSampleSteps);
-    sampleCount = cs_MaxSampleSteps;
+    float stepSize = hitsOffsetDist / cs_MaxSampleSteps;
 
     float totalDensity = 0;
+    float stepProgress = stepSize;
     [unroll(200)]
-    for (int i = 0; i <= sampleCount; ++i) {
-        float coef = (float)i / sampleCount;
-
+    while (stepProgress <= hitsOffsetDist) {
+        float coef = stepProgress / hitsOffsetDist;
         float3 curPoint = (1 - coef) * hits[0] + coef * hits[1];
         float density = sampleDensity(curPoint);
+        totalDensity += density * stepSize;
 
-        totalDensity += density;
+        stepProgress += stepSize;
     }
 
     totalDensity += cs_DensityOffset;
