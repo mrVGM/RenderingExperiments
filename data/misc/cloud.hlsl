@@ -8,6 +8,15 @@ cbuffer CloudSettings : register(b1)
 {
     float cs_MaxSampleSteps;
 
+    float cs_LightAbsorptionTowardSun;
+    float cs_DarknessThreshold;
+    float cs_LightAbsorptionThroughCloud;
+
+    float cs_PhaseX;
+    float cs_PhaseY;
+    float cs_PhaseZ;
+    float cs_PhaseW;
+
     float cs_WeightR;
     float cs_WeightG;
     float cs_WeightB;
@@ -234,9 +243,9 @@ float sampleDensity(float3 pos)
     return density;
 }
 
-float4 PSMain(PSInput input) : SV_TARGET
+int cubeHitPoints(float3 origin, float3 target, CubeWall cube_walls[6], out float3 nearHit, out float3 farHit)
 {
-    float3 offset = input.world_position - m_camPos;
+    float3 offset = target - origin;
     offset = normalize(offset);
 
     int index = 0;
@@ -244,7 +253,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     for (int i = 0; i < 6; ++i) {
         float3 pos;
-        if (intersectWall(m_camPos, offset, input.cube_walls[i], pos)) {
+        if (intersectWall(origin, offset, cube_walls[i], pos)) {
             hits[index] = pos;
             index = index + 1;
         }
@@ -252,32 +261,114 @@ float4 PSMain(PSInput input) : SV_TARGET
             break;
         }
     }
+    
+    nearHit = hits[0];
+    farHit = hits[1];
 
     if (index < 2) {
+        return index;
+    }
+
+    if (length(nearHit - origin) > length(farHit - origin)) {
+        float3 tmp = nearHit;
+        nearHit = farHit;
+        farHit = tmp;
+    }
+
+    return index;
+}
+
+#define maxSampleSteps 20
+
+float lightMarch(float3 testPoint, float3 lightPosition, CubeWall cube_walls[6])
+{
+    float3 boundaryPoint;
+    float3 dummy;
+
+    int hits = cubeHitPoints(lightPosition, testPoint, cube_walls, boundaryPoint, dummy);
+
+    float offset = testPoint - boundaryPoint;
+    float offsetDist = length(offset);
+    float stepSize = offsetDist / maxSampleSteps;
+
+    float totalDensity = 0;
+
+    for (int i = 1; i <= maxSampleSteps; ++i) {
+        float coef = (float)i / maxSampleSteps;
+        float3 curPoint = (1 - coef) * boundaryPoint + coef * testPoint;
+
+        float density = sampleDensity(curPoint);
+        totalDensity += density * stepSize;
+    }
+    float transmittance = exp(-totalDensity * cs_LightAbsorptionTowardSun);
+
+    return cs_DarknessThreshold + transmittance * (1 - cs_DarknessThreshold);
+}
+
+float hg(float a, float g)
+{
+    float g2 = g * g;
+    return (1 - g2) / (4 * 3.1415 * pow(1 + g2 - 2 * g * (a), 1.5));
+}
+
+float phase(float a)
+{
+    float blend = 0.5;
+    float hgBlend = hg(a, cs_PhaseX) * (1 - blend) + hg(a, -cs_PhaseY) * blend;
+    return cs_PhaseZ + hgBlend * cs_PhaseW;
+}
+
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    float3 nearPoint;
+    float3 farPoint;
+
+    int numHits = cubeHitPoints(m_camPos, input.world_position, input.cube_walls, nearPoint, farPoint);
+    if (numHits < 2) {
         return float4(1, 0, 0, 1);
     }
-    if (index > 2) {
+    if (numHits > 2) {
         return float4(0, 1, 0, 1);
     }
 
-    float3 hitsOffset = hits[0] - hits[1];
+    float3 hitsOffset = farPoint - nearPoint;
     float hitsOffsetDist = length(hitsOffset);
-    float stepSize = hitsOffsetDist / cs_MaxSampleSteps;
+    float stepSize = hitsOffsetDist / maxSampleSteps;
 
     float totalDensity = 0;
     float stepProgress = stepSize;
-    [unroll(200)]
-    while (stepProgress <= hitsOffsetDist) {
-        float coef = stepProgress / hitsOffsetDist;
-        float3 curPoint = (1 - coef) * hits[0] + coef * hits[1];
-        float density = sampleDensity(curPoint);
-        totalDensity += density * stepSize;
 
+    float transmittance = 1;
+    float lightEnergy = 0;
+
+    for (int i = 1; i <= maxSampleSteps; ++i) {
+        float coef = (float)i / maxSampleSteps;
+        float3 curPoint = (1 - coef) * nearPoint + coef * farPoint;
+        float density = sampleDensity(curPoint);
+
+        float3 lightPos = m_lights[0].m_position;
+
+        float3 viewDir = normalize(curPoint - m_camPos);
+        float3 lightDir = normalize(lightPos - curPoint);
+        float cosAngle = dot(viewDir, lightDir);
+        float phaseVal = phase(cosAngle);
+
+        totalDensity += density * stepSize;
         stepProgress += stepSize;
+
+        float lightTransmittance = lightMarch(curPoint, lightPos, input.cube_walls);
+        lightEnergy += density * stepSize * transmittance * lightTransmittance * phaseVal;
+        transmittance *= exp(-density * stepSize * cs_LightAbsorptionThroughCloud);
+
+        if (transmittance < 0.01) {
+            break;
+        }
     }
 
     totalDensity += cs_DensityOffset;
     totalDensity = max(0, totalDensity);
 
-    return float4(1, 1, 1, 1 - exp(-totalDensity));
+    float3 color = lightEnergy * float3(1,1,1);
+
+    return float4(color, 1 - exp(-totalDensity));
 }

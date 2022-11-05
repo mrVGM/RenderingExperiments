@@ -1,8 +1,17 @@
 cs_MaxSampleSteps 100
 
-cs_WeightR 1
-cs_WeightG 0
-cs_WeightB 0
+cs_LightAbsorptionTowardSun 3
+cs_DarknessThreshold 0.2
+cs_LightAbsorptionThroughCloud 0.8
+
+cs_PhaseX 0
+cs_PhaseY 1
+cs_PhaseZ 1
+cs_PhaseW 0
+
+cs_WeightR 0.4
+cs_WeightG 0.4
+cs_WeightB 0.2
 
 cs_DensityOffset -2
 
@@ -10,11 +19,11 @@ cs_DensityThresholdR 0.3
 cs_DensityMultiplierR 3
 cs_UVWFactorR 0.1
 
-cs_DensityThresholdG 0.6
-cs_DensityMultiplierG 0.1
+cs_DensityThresholdG 0.2
+cs_DensityMultiplierG 3
 cs_UVWFactorG 0.1
 
-cs_DensityThresholdB 0.6
-cs_DensityMultiplierB 0.1
+cs_DensityThresholdB 0.2
+cs_DensityMultiplierB 3
 cs_UVWFactorB 0.1
 
