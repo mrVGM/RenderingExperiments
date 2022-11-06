@@ -1,5 +1,6 @@
 let resources = require("resources/resourceUtils.txt");
 let utils = require("utils.txt");
+let math = require("math.txt");
 
 let scene = {};
 
@@ -22,6 +23,9 @@ scene.addObject = func(position, rotation, scale) {
 };
 
 scene.addCloudObject = func(position, rotation, scale) {
+	let startRotation = math.vector(math.cos(math.PI / 2), -math.sin(math.PI / 2), 0, 0);
+	let rot = math.multiplyQuaternions(rotation, startRotation);
+
 	if (scene.cloudInstanceData == none) {
 		scene.cloudInstanceData = [];
 	}
@@ -30,7 +34,7 @@ scene.addCloudObject = func(position, rotation, scale) {
 		scene.cloudInstanceData.push(x);
 	});
 
-	utils.foreach(rotation, func(x) {
+	utils.foreach(rot, func(x) {
 		scene.cloudInstanceData.push(x);
 	});
 
@@ -42,8 +46,21 @@ scene.addCloudObject = func(position, rotation, scale) {
 let loadCube = func(device, onReady) {
 	let prepCube = require("primitives/cube.txt");
 	prepCube(device, func(x) {
-		scene.primitives = {};
+		if (scene.primitives == none) {
+			scene.primitives = {};
+		}
 		scene.primitives.cube = x;
+		onReady();
+	});
+};
+
+let loadPlane = func(device, onReady) {
+	let prepPlane = require("primitives/plane.txt");
+	prepPlane(device, func(x) {
+		if (scene.primitives == none) {
+			scene.primitives = {};
+		}
+		scene.primitives.plane = x;
 		onReady();
 	});
 };
@@ -132,6 +149,7 @@ scene.addLight = func(position, color, intensity) {
 
 scene.load = func(device, onReady) {
 	let cubeLoaded = 0;
+	let planeLoaded = 0;
 	let instanceBuffLoaded = 0;
 	let cloudInstanceBuffLoaded = 0;
 	let lightsBuffLoaded = 0;
@@ -139,11 +157,11 @@ scene.load = func(device, onReady) {
 
 	let callReady = func() {
 		if (cubeLoaded == 0 ||
+			planeLoaded == 0 ||
 			instanceBuffLoaded == 0 ||
 			cloudInstanceBuffLoaded == 0 ||
 			lightsBuffLoaded == 0 ||
 			lightsConstantBuffLoaded == 0) {
-
 			return;
 		}
 		onReady();
@@ -151,6 +169,11 @@ scene.load = func(device, onReady) {
 
 	loadCube(device, func() {
 		cubeLoaded = 1;
+		callReady();
+	});
+
+	loadPlane(device, func() {
+		planeLoaded = 1;
 		callReady();
 	});
 
@@ -190,7 +213,7 @@ scene.getCloudObjects = func() {
 	let res = [];
 
 	let tmp = {};
-	tmp.geometry = scene.primitives.cube;
+	tmp.geometry = scene.primitives.plane;
 	tmp.instances = scene.cloudInstanceBuff;
 
 	res.push(tmp);

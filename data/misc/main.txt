@@ -1,22 +1,9 @@
 let math = require("math.txt");
 let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
 
 let wnd = api.window();
 wnd.create(600, 400);
-
-let inputManager = require("inputManager.txt");
-inputManager.init(wnd);
-
-let windowLoopCrt = func() {
-	if (wnd.isAlive() == 0) {
-		print("Window closed!");
-		wnd = none;
-		return;
-	}
-	wnd.windowLoop();
-	timeout(windowLoopCrt, 0);
-};
-#windowLoopCrt();
 
 let device = api.device();
 let swapChain = api.swapChain();
@@ -46,67 +33,7 @@ let initCamera = func(camBuff) {
 	api.app_context.inputHandler = cam;
 
 	return;
-
-	let camData = cam.getMVPMatrix();
-	utils.foreach(pos, func(x) {
-		camData.push(x);
-	});
-
-	camBuff.copyData(camData);
 };
-
-let pi = math.PI;
-
-let lastTick = none;
-let camSpeed = 5;
-let camRotationSpeed = 2;
-let azimuth = pi / 2;
-let altitude = 0;
-
-let updateCam = func(camBuff) {
-	let n = now();
-	if (lastTick == none) {
-		lastTick = n;
-	}
-	let dt = n - lastTick;
-	lastTick = n;
-
-	let f = math.multiply(dt * camSpeed * inputManager.moveForward, cam.getForward());
-	let r = math.multiply(dt * camSpeed * inputManager.moveRight, cam.getRight());
-
-	let offset = math.addVectors(f, r);
-
-	let pos = cam.getPos();
-	pos = math.addVectors(pos, offset);
-
-	azimuth = azimuth + dt * inputManager.aimRight * camRotationSpeed;
-	altitude = altitude + dt * inputManager.aimUp * camRotationSpeed;
-
-	let lower = -pi / 2 + pi / 10;
-	let upper = pi / 2 - pi / 10;
-
-	if (altitude < lower) {
-		altitude = lower;
-	}
-	if (altitude > upper) {
-		altitude = upper;
-	}
-
-	let aim = math.vector3(math.cos(azimuth) * math.cos(altitude), math.sin(altitude), math.sin(azimuth) * math.cos(altitude));
-	let target = math.addVectors(pos, aim);
-
-	cam.setPosition(pos);
-	cam.setTarget(target);
-
-	let camData = cam.getMVPMatrix();
-	utils.foreach(pos, func(x) {
-		camData.push(x);
-	});
-
-	camBuff.copyData(camData);
-};
-
-let resources = require("resources/resourceUtils.txt");
 
 let gBuffer = none;
 let litPass = api.deferred.litPass();
@@ -181,8 +108,6 @@ let startRendMat = func() {
 			theMaterial.setInstanceBuffer(x.instances);
 			theMaterial.render(swapChain, commandQueue);
 		});
-		#updateCam(gBuffer.camBuffer);
-
 
 		litPass.populateEnd(swapChain, gBuffer, scene.lightsBuff, scene.lightsConstantBuff);
 		litPass.executeEnd(commandQueue, fence, index);
@@ -211,7 +136,7 @@ try {
 	let loadGBuff = require("gBuffer.txt");
 
 	scene.addObject(math.vector3(0,-100,0), math.vector(math.cos(math.PI / 8), 0, -math.sin(math.PI / 8), 0), math.vector3(1,1,1));
-	scene.addCloudObject(math.vector3(0,2,0), math.vector(1,0,0,0), math.vector3(5,1,5));
+	scene.addCloudObject(math.vector3(0,200,0), math.vector(1, 0, 0, 0), math.vector3(5000,1,5000));
 
 	scene.addLight(math.vector3(0,5,0), math.vector3(1,1,1), 10);
 	scene.addLight(math.vector3(5,0,0), math.vector3(1,1,1), 10);
