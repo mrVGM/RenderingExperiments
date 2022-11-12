@@ -66,6 +66,10 @@ add_library (Rendering
 	"helper/inputHandler.h"
 	"helper/cloudSettingsReader.h"
 	"helper/cloudSettingsReader.cpp"
+	"deferred/dxUnlitMatCL.h"
+	"deferred/dxUnlitMatCL.cpp"
+	"CL/dxClearRTCL.h"
+	"CL/dxClearRTCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

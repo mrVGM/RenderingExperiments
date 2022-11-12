@@ -3,7 +3,7 @@ let utils = require("utils.txt");
 let resources = require("resources/resourceUtils.txt");
 
 let wnd = api.window();
-wnd.create(600, 400);
+wnd.create(1280, 720);
 
 let device = api.device();
 let swapChain = api.swapChain();
@@ -18,8 +18,8 @@ let generalInit = func() {
 
 let cam = api.aux.camera();
 let initCamera = func(camBuff) {
-	let pos = math.vector3(0, 0, -5);
-	let target = math.vector3(0, 0, 0);
+	let pos = math.vector3(0, 2, 0);
+	let target = math.vector3(0, 2, 5);
 
 	let aspect = wnd.width() / wnd.height();
 	cam.setPosition(pos);
@@ -39,8 +39,8 @@ let gBuffer = none;
 let litPass = api.deferred.litPass();
 
 let prepMaterial = func() {
-	let createMaterial = require("materials/litMaterial.txt");
-	let material = createMaterial(device, "cube.hlsl", gBuffer);
+	let createMaterial = require("materials/unlitMaterial.txt");
+	let material = createMaterial(device, "unlit.hlsl", gBuffer.camBuffer);
 	return material;
 };
 
@@ -74,11 +74,22 @@ let renderClouds = func(objects, onReady) {
 	});
 };
 
+let renderUnlits = func(objects) {
+	utils.foreach(objects, func(x) {
+		theMaterial.setObject(x.geometry);
+		theMaterial.setInstanceBuffer(x.instances);
+		theMaterial.render(swapChain, commandQueue);
+	});
+};
+
 let startRendMat = func() {
 	let fence = api.fence();
 	fence.create(device);
 
 	let index = 1;
+
+	let clearRT = api.aux.clearRT();
+	clearRT.create(device);
 
 	let render = func() {		
 		if (wnd.isAlive() == 0) {
@@ -88,29 +99,16 @@ let startRendMat = func() {
 		let objects = scene.getObjects();
 		let clouds = scene.getCloudObjects();
 
-		let fe = api.fenceEvent();
-		fe.create();
-
-		fe.wait(fence, index, func(arg) {
-			index = index + 1;
-
-			renderClouds(clouds, func() {
-				swapChain.present();
-				wnd.finishDraw();
-			});
-		});
-
 		swapChain.updateCurrentFrameIndex();
-		litPass.executeStart(commandQueue, fence, 0);
 
-		utils.foreach(objects, func(x) {
-			theMaterial.setObject(x.geometry);
-			theMaterial.setInstanceBuffer(x.instances);
-			theMaterial.render(swapChain, commandQueue);
+		clearRT.populate(swapChain);
+		clearRT.executeAsync(commandQueue);
+		renderUnlits(objects);
+
+		renderClouds(clouds, func() {
+			swapChain.present();
+			wnd.finishDraw();
 		});
-
-		litPass.populateEnd(swapChain, gBuffer, scene.lightsBuff, scene.lightsConstantBuff);
-		litPass.executeEnd(commandQueue, fence, index);
 	};
 
 	api.app_context.render = func(arg) { render(); };
@@ -135,7 +133,7 @@ try {
 
 	let loadGBuff = require("gBuffer.txt");
 
-	scene.addObject(math.vector3(0,-100,0), math.vector(math.cos(math.PI / 8), 0, -math.sin(math.PI / 8), 0), math.vector3(1,1,1));
+	scene.addObject(math.vector3(0,0,0), math.vector(math.cos(math.PI / 8), 0, -math.sin(math.PI / 8), 0), math.vector3(5000,1,5000));
 	scene.addCloudObject(math.vector3(0,200,0), math.vector(1, 0, 0, 0), math.vector3(5000,1,5000));
 
 	scene.addLight(math.vector3(0,5,0), math.vector3(1,1,1), 10);

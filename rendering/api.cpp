@@ -36,8 +36,11 @@
 #include "deferred/dxLitPassCL.h"
 
 #include "deferred/dxCloudMatCL.h"
+#include "deferred/dxUnlitMatCL.h"
 
 #include "helper/cloudSettingsReader.h"
+
+#include "CL/dxClearRTCL.h"
 
 #include <cmath>
 #include <numbers>
@@ -225,6 +228,11 @@ namespace rendering
 			return NativeObject::Create(cloudMat);
 		}));
 
+		deferred.SetProperty("unlitMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
+			deferred::DXUnlitMatCL* unlitMat = new deferred::DXUnlitMatCL();
+			return NativeObject::Create(unlitMat);
+		}));
+
 #pragma endregion
 
 #pragma region AUX
@@ -244,6 +252,11 @@ namespace rendering
 		aux.SetProperty("cloudSettingReader", CreateNativeFunc(0, [](Value scope) {
 			CloudSettingsReader* settingsReader = new CloudSettingsReader();
 			return NativeObject::Create(settingsReader);
+		}));
+
+		aux.SetProperty("clearRT", CreateNativeFunc(0, [](Value scope) {
+			DXClearRTCL* clearRT = new DXClearRTCL();
+			return NativeObject::Create(clearRT);
 		}));
 #pragma endregion
 	}
