@@ -25,6 +25,7 @@ namespace rendering
 		float m_nearPlane = 0.1;
 		float m_farPlane = 1000;
 
+		float m_sunAngle = 0;
 
 		DirectX::XMVECTOR m_position;
 		DirectX::XMVECTOR m_target;

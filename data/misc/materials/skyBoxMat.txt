@@ -3,10 +3,14 @@ let createSkyBoxMaterial = func(device, shadersFile, camBuff) {
 	let shaderCode = readFile(shadersFile);
 
 	let vertexShader = api.vertexShader();
-	vertexShader.compile(shaderCode);
-
 	let pixelShader = api.pixelShader();
-	pixelShader.compile(shaderCode);
+
+	try {
+		vertexShader.compile(shaderCode);
+		pixelShader.compile(shaderCode);
+	} catch(e) {
+		print(e);
+	}
 
 	let object = none;
 	let instanceBuffer = none;

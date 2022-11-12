@@ -46,7 +46,7 @@ let prepMaterial = func() {
 
 let prepSkyBoxMaterial = func() {
 	let createMaterial = require("materials/skyBoxMat.txt");
-	let material = createMaterial(device, "unlit2.hlsl", gBuffer.camBuffer);
+	let material = createMaterial(device, "sky.hlsl", gBuffer.camBuffer);
 	return material;
 };
 
