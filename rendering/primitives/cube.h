@@ -9,7 +9,7 @@ namespace rendering::primitives
 	class Cube : public interpreter::INativeObject
 	{
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
-		void GenerateVertices() const;
+		void GenerateVertices(bool inverted = false) const;
 	public:
 	};
 }

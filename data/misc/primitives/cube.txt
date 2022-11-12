@@ -3,8 +3,9 @@ let generateVertices = func() {
 
 	let data = {};
 	data.vertexData = cube.getVertices();
-	data.indexData = cube.getIndices();
-	return data;
+	data.indexData = cube.getIndices(0);
+	data.invertedIndexData = cube.getIndices(1);
+	return data; 
 };
 
 let prepareData = func(device, onReady) {
@@ -32,10 +33,16 @@ let prepareData = func(device, onReady) {
 	indexBB.setSize(4 * verts.indexData.length);
 	indexBB.setStride(4);
 
+	let invertedIndexBB = resources.bufferBuilder();
+	invertedIndexBB.upload(0);
+	invertedIndexBB.setSize(4 * verts.invertedIndexData.length);
+	invertedIndexBB.setStride(4);
+
 	let vertexUploadBuff = none;
 	let vertexBuff = none;
 	let indexUploadBuff = none;
 	let indexBuff = none;
+	let invertedIndexBuff = none;
 
 	let copyLeft = 2;
 
@@ -47,6 +54,7 @@ let prepareData = func(device, onReady) {
 		let res = {};
 		res.vertex = vertexBuff;
 		res.index = indexBuff;
+		res.invertedIndex = invertedIndexBuff;
 
 		onReady(res);
 	};
@@ -62,13 +70,16 @@ let prepareData = func(device, onReady) {
 	};
 
 	let copyIndex = func() {
-		if (indexUploadBuff == none || indexBuff == none) {
+		if (indexUploadBuff == none || indexBuff == none || invertedIndexBuff == none) {
 			return;
 		}
-
+		indexUploadBuff.copyIntData(verts.indexData);
 		resources.copyBuffers(device, indexBuff, indexUploadBuff, func() {
-			copyLeft = copyLeft - 1;
-			dataPrepared();
+			indexUploadBuff.copyIntData(verts.invertedIndexData);
+			resources.copyBuffers(device, invertedIndexBuff, indexUploadBuff, func() {
+				copyLeft = copyLeft - 1;
+				dataPrepared();
+			});
 		});
 	};
 
@@ -85,12 +96,16 @@ let prepareData = func(device, onReady) {
 
 	indexUploadBB.build(device, func(buff) {
 		indexUploadBuff = buff;
-		indexUploadBuff.copyIntData(verts.indexData);
 		copyIndex();
 	});
 
 	indexBB.build(device, func(buff) {
 		indexBuff = buff;
+		copyIndex();
+	});
+
+	invertedIndexBB.build(device, func(buff) {
+		invertedIndexBuff = buff;
 		copyIndex();
 	});
 };

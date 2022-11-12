@@ -22,6 +22,24 @@ scene.addObject = func(position, rotation, scale) {
 	});
 };
 
+scene.addSkyBox = func(position, rotation, scale) {
+	if (scene.skyBoxInstanceData == none) {
+		scene.skyBoxInstanceData = [];
+	}
+
+	utils.foreach(position, func(x) {
+		scene.skyBoxInstanceData.push(x);
+	});
+
+	utils.foreach(rotation, func(x) {
+		scene.skyBoxInstanceData.push(x);
+	});
+
+	utils.foreach(scale, func(x) {
+		scene.skyBoxInstanceData.push(x);
+	});
+};
+
 scene.addCloudObject = func(position, rotation, scale) {
 	let startRotation = math.vector(math.cos(math.PI / 2), -math.sin(math.PI / 2), 0, 0);
 	let rot = math.multiplyQuaternions(rotation, startRotation);
@@ -95,6 +113,21 @@ let loadCloudInstanceBuff = func(device, onReady) {
 	});
 };
 
+let loadSkyBoxInstanceBuff = func(device, onReady) {
+	let instanceData = scene.skyBoxInstanceData;
+
+	let instanceBB = resources.bufferBuilder();
+	instanceBB.upload(1);
+	instanceBB.setSize(4 * instanceData.length);
+	instanceBB.setStride(40);
+	instanceBB.build(device, func(buff) {
+		scene.skyBoxInstanceBuff = buff;
+		scene.skyBoxInstanceBuff.copyData(instanceData);
+
+		onReady();
+	});
+};
+
 let loadLights = func(device, onReady) {
 	let lightsBB = resources.bufferBuilder();
 
@@ -152,6 +185,7 @@ scene.load = func(device, onReady) {
 	let planeLoaded = 0;
 	let instanceBuffLoaded = 0;
 	let cloudInstanceBuffLoaded = 0;
+	let skyBoxInstanceBuffLoaded = 0;
 	let lightsBuffLoaded = 0;
 	let lightsConstantBuffLoaded = 0;
 
@@ -160,6 +194,7 @@ scene.load = func(device, onReady) {
 			planeLoaded == 0 ||
 			instanceBuffLoaded == 0 ||
 			cloudInstanceBuffLoaded == 0 ||
+			skyBoxInstanceBuffLoaded == 0 ||
 			lightsBuffLoaded == 0 ||
 			lightsConstantBuffLoaded == 0) {
 			return;
@@ -187,6 +222,11 @@ scene.load = func(device, onReady) {
 		callReady();
 	});
 
+	loadSkyBoxInstanceBuff(device, func() {
+		skyBoxInstanceBuffLoaded = 1;
+		callReady();
+	});
+
 	loadLights(device, func() {
 		lightsBuffLoaded = 1;
 		callReady();
@@ -206,6 +246,14 @@ scene.getObjects = func() {
 	tmp.instances = scene.instanceBuff;
 
 	res.push(tmp);
+	return res;
+};
+
+scene.getSkyBox = func() {
+	let res = {};
+	res.geometry = scene.primitives.cube;
+	res.instances = scene.skyBoxInstanceBuff;
+
 	return res;
 };
 

@@ -8,6 +8,7 @@ namespace
 {
 	static std::list<float> m_vertices;
 	static std::list<int> m_indices;
+	static std::list<int> m_indicesInverted;
 
 	void PushVector(const DirectX::XMVECTOR& vector)
 	{
@@ -55,13 +56,24 @@ return Value();
 		Value selfValue = scope.GetProperty("self");
 		Cube* self = static_cast<Cube*>(NativeObject::ExtractNativeObject(selfValue));
 
+		Value invertedValue = scope.GetProperty("param0");
+		if (invertedValue.GetType() != ScriptingValueType::Number) {
+			THROW_EXCEPTION("Please supply inverted bool!")
+		}
+
+		bool inverted = static_cast<int>(invertedValue.GetNum());
+
 		if (m_indices.size() == 0) {
 			self->GenerateVertices();
 		}
 
 		std::list<Value> tmp;
+		std::list<int>* l = &m_indices;
+		if (inverted) {
+			l = &m_indicesInverted;
+		}
 
-		for (std::list<int>::const_iterator it = m_indices.begin(); it != m_indices.end(); ++it) {
+		for (std::list<int>::const_iterator it = l->begin(); it != l->end(); ++it) {
 			tmp.push_back(Value(*it));
 		}
 
@@ -78,7 +90,7 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-void rendering::primitives::Cube::GenerateVertices() const
+void rendering::primitives::Cube::GenerateVertices(bool inverted) const
 {
 	typedef DirectX::XMVECTOR vec;
 
@@ -278,6 +290,20 @@ void rendering::primitives::Cube::GenerateVertices() const
 		m_indices.push_back(baseIndex + 0);
 		m_indices.push_back(baseIndex + 2);
 		m_indices.push_back(baseIndex + 1);
+	}
+
+	std::list<int>::iterator it = m_indices.begin();
+	while (it != m_indices.end()) {
+		int a = *it;
+		++it;
+		int b = *it;
+		++it;
+		int c = *it;
+		++it;
+
+		m_indicesInverted.push_back(a);
+		m_indicesInverted.push_back(c);
+		m_indicesInverted.push_back(b);
 	}
 }
 

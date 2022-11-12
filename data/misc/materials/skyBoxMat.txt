@@ -1,0 +1,37 @@
+let createSkyBoxMaterial = func(device, shadersFile, camBuff) {
+	
+	let shaderCode = readFile(shadersFile);
+
+	let vertexShader = api.vertexShader();
+	vertexShader.compile(shaderCode);
+
+	let pixelShader = api.pixelShader();
+	pixelShader.compile(shaderCode);
+
+	let object = none;
+	let instanceBuffer = none;
+
+	let setObject = func(obj) {
+		object = obj;
+	};
+	let setInstanceBuffer = func(instanceBuff) {
+		instanceBuffer = instanceBuff;
+	};
+	
+	let skyBoxMat = api.deferred.unlitMatCL();
+	skyBoxMat.create(device, vertexShader, pixelShader, camBuff);
+
+	let render = func(swapChain, commandQueue) {
+		skyBoxMat.populate(swapChain, camBuff, object.vertex, object.invertedIndex, instanceBuffer);
+		skyBoxMat.executeAsync(commandQueue);
+	};
+
+	let res = {};
+	res.setObject = setObject;
+	res.setInstanceBuffer = setInstanceBuffer;
+	res.render = render;
+
+	return res;
+};
+
+export = createSkyBoxMaterial;
