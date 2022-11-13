@@ -23,9 +23,10 @@ namespace rendering
 
 		struct NoiseSettings
 		{
-			int m_cells1;
-			int m_cells2;
-			float m_blend;
+			int m_cells;
+			int m_octaves;
+			float m_persistance;
+			float m_scale;
 		};
 
 		std::list<NoiseSettings> m_noiseSettings;

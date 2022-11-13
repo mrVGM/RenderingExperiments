@@ -61,6 +61,7 @@ struct PSInput
 {
     float4 position         : SV_POSITION;
     float4 world_position   : WORLD_POSITION;
+    float2 uv               : UV;
 };
 
 float4 multiplyQuat(float4 q1, float4 q2)
@@ -101,6 +102,7 @@ PSInput VSMain(
 
     result.position = mul(m_matrix, float4(pos, 1));
     result.world_position = float4(pos, 1);
+    result.uv = uv;
     return result;
 }
 
@@ -162,8 +164,14 @@ float phase(float a)
 
 float4 PSMain(
     float4 position : SV_POSITION,
-    float4 world_position : WORLD_POSITION) : SV_TARGET
+    float4 world_position : WORLD_POSITION,
+    float2 uv : UV) : SV_TARGET
 {
+    /*
+    float grad = p_texture.Sample(p_sampler, float3(uv, 0));
+    return float4(grad, grad, grad, 1);
+    */
+
     const float stepSize = cs_StepSize;
     float transmittance = 0;
     float transmittanceG = 0;
@@ -182,7 +190,8 @@ float4 PSMain(
     float detail = 1 - exp(-transmittanceG);
 
     if (mainShape > 0) {
-        mainShape += 0.3 * detail;
+        mainShape -= 0.3 * detail;
+        mainShape /= 0.7;
         mainShape = clamp(mainShape, 0, 1);
     }
 

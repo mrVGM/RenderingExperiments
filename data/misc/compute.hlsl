@@ -15,28 +15,36 @@ cbuffer InfoConstantBuff : register(b0)
 {
     int m_texSize;
 
-    int m_cells11;
-    int m_cells12;
-    float m_blend1;
+    int m_cells1;
+    int m_octaves1;
+    float m_persistance1;
+    float m_scale1;
 
-    int m_cells21;
-    int m_cells22;
-    float m_blend2;
+    int m_cells2;
+    int m_octaves2;
+    float m_persistance2;
+    float m_scale2;
 
-    int m_cells31;
-    int m_cells32;
-    float m_blend3;
+    int m_cells3;
+    int m_octaves3;
+    float m_persistance3;
+    float m_scale3;
 };
 
-int CoordToIndex(int3 coord, int size, int offset)
+struct FBMSettings
 {
-    return offset + coord.z * size * size + coord.y * size + coord.x;
+    int m_octaves;
+    float m_persistance;
+    float m_scale;
+};
+
+int CoordToIndex(int3 coord, int size)
+{
+    return coord.z * size * size + coord.y * size + coord.x;
 }
 
-int3 IndexToCoord(int index, int size, int offset)
+int3 IndexToCoord(int index, int size)
 {
-    index -= offset;
-
     int col = index % size;
     int row = index % size;
     int plate = index / (size * size);
@@ -44,7 +52,7 @@ int3 IndexToCoord(int index, int size, int offset)
     return int3(col, row, plate);
 }
 
-void GetNeighbours(int3 coord, StructuredBuffer<SRVBuffElement> buff, int size, int offset, out float3 neighbours[27])
+void GetNeighbours(int3 coord, StructuredBuffer<SRVBuffElement> buff, int size, out float3 neighbours[27])
 {
     int3 offsets[27];
 
@@ -84,7 +92,7 @@ void GetNeighbours(int3 coord, StructuredBuffer<SRVBuffElement> buff, int size, 
             cur.z = 0;
         }
 
-        SRVBuffElement curPoint = buff[CoordToIndex(cur, size, offset)];
+        SRVBuffElement curPoint = buff[CoordToIndex(cur, size)];
 
         float3 curCoord = float3(curPoint.x, curPoint.y, curPoint.z);
         float3 localOffset = curCoord - cur;
@@ -93,14 +101,17 @@ void GetNeighbours(int3 coord, StructuredBuffer<SRVBuffElement> buff, int size, 
     }
 }
 
-float SampleWorlyNoise(float3 uvw, StructuredBuffer<SRVBuffElement> buff, int size, int offset)
+float SampleWorlyNoise(float3 uvw, float uvwScale, StructuredBuffer<SRVBuffElement> buff, int size)
 {
     uvw /= m_texSize;
+    uvw *= uvwScale;
+    uvw -= floor(uvw);
+
     float3 gridCoord = uvw * size;
     int3 squareCoord = floor(gridCoord);
 
     float3 neighbours[27];
-    GetNeighbours(squareCoord, buff, size, offset, neighbours);
+    GetNeighbours(squareCoord, buff, size, neighbours);
 
     float minDist = 4;
     for (int i = 0; i < 27; ++i) {
@@ -113,22 +124,47 @@ float SampleWorlyNoise(float3 uvw, StructuredBuffer<SRVBuffElement> buff, int si
     return clamp(minDist, 0, 1);
 }
 
+float SampleFBM(float3 uvw, FBMSettings fbm, StructuredBuffer<SRVBuffElement> buff, int size)
+{
+    float res = 0;
+
+    float scale = 1;
+    float factor = fbm.m_persistance;
+    float totalFactor = 0;
+
+    for (int i = 0; i < fbm.m_octaves; ++i) {
+        float curSample = SampleWorlyNoise(uvw, scale, buff, size);
+        res += factor * curSample;
+
+        totalFactor += factor;
+        scale *= fbm.m_scale;
+        factor *= fbm.m_persistance;
+    }
+
+    return res / totalFactor;
+}
+
 [numthreads(16, 16, 4)]
 void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
 {
     float3 uvw = float3(DTid);
 
-    float noise1Value1 = SampleWorlyNoise(uvw, points1, m_cells11, 0);
-    float noise1Value2 = SampleWorlyNoise(uvw, points1, m_cells12, m_cells11 * m_cells11 * m_cells11);
-    float noise1Value = m_blend1 * noise1Value1 + (1 - m_blend1) * noise1Value2;
 
-    float noise2Value1 = SampleWorlyNoise(uvw, points2, m_cells21, 0);
-    float noise2Value2 = SampleWorlyNoise(uvw, points2, m_cells22, m_cells21 * m_cells21 * m_cells21);
-    float noise2Value = m_blend2 * noise2Value1 + (1 - m_blend2) * noise2Value2;
+    FBMSettings fbm;
+    fbm.m_octaves = m_octaves1;
+    fbm.m_persistance = m_persistance1;
+    fbm.m_scale = m_scale1;
+    float noise1Value = SampleFBM(uvw, fbm, points1, m_cells1);
 
-    float noise3Value1 = SampleWorlyNoise(uvw, points3, m_cells31, 0);
-    float noise3Value2 = SampleWorlyNoise(uvw, points3, m_cells32, m_cells31 * m_cells31 * m_cells31);
-    float noise3Value = m_blend3 * noise3Value1 + (1 - m_blend3) * noise3Value2;
+    fbm.m_octaves = m_octaves2;
+    fbm.m_persistance = m_persistance2;
+    fbm.m_scale = m_scale2;
+    float noise2Value = SampleFBM(uvw, fbm, points2, m_cells2);
+
+    fbm.m_octaves = m_octaves3;
+    fbm.m_persistance = m_persistance3;
+    fbm.m_scale = m_scale3;
+    float noise3Value = SampleFBM(uvw, fbm, points3, m_cells3);
 
     texData[DTid] = float4(noise1Value, noise2Value, noise3Value, 1);
     return;

@@ -22,7 +22,7 @@ cs_UVWFactorR 0.001
 
 cs_DensityThresholdG 0.3
 cs_DensityMultiplierG 0.005
-cs_UVWFactorG 0.005
+cs_UVWFactorG 0.006
 
 cs_DensityThresholdB 0.2
 cs_DensityMultiplierB 3

@@ -17,10 +17,12 @@ namespace
 {
     struct Settings
     {
-        int m_cells1;
-        int m_cells2;
-        float m_blend;
+        int m_cells;
+        int m_octaves;
+        float m_persistance;
+        float m_scale;
     };
+
     struct ConstantBuffer
     {
         int m_texSize;
@@ -476,9 +478,10 @@ bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffe
 
     Settings* currSettings = cb.cells;
     for (std::list<NoiseSettings>::const_iterator it = m_noiseSettings.begin(); it != m_noiseSettings.end(); ++it) {
-        currSettings->m_cells1 = (*it).m_cells1;
-        currSettings->m_cells2 = (*it).m_cells2;
-        currSettings->m_blend = (*it).m_blend;
+        currSettings->m_cells = (*it).m_cells;
+        currSettings->m_octaves = (*it).m_octaves;
+        currSettings->m_persistance = (*it).m_persistance;
+        currSettings->m_scale = (*it).m_scale;
 
         ++currSettings;
     }
@@ -506,38 +509,27 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(std::list<ID3D12Resource*>
             buffer->Map(0, &readRange, &dst),
             "Can't map SRV Buffer!")
 
-        int sizes[2] = { currSettings.m_cells1, currSettings.m_cells2 };
-        int arrSize = sizes[0] * sizes[0] * sizes[0] + sizes[1] * sizes[1] * sizes[1];
+        int size = currSettings.m_cells;
+        int arrSize = size * size * size;
         SRVBuffElement* elements = new SRVBuffElement[arrSize];
 
-        for (int i = 0; i < 2; ++i) {
-            int srvBuffSize = sizes[i];
-            int offset = 0;
-            
-            {
-                int index = i - 1;
-                if (index >= 0) {
-                    offset = sizes[index] * sizes[index] * sizes[index];
-                }
-            }
+        for (int k = 0; k < size; ++k) {
+            for (int i = 0; i < size; ++i) {
+                for (int j = 0; j < size; ++j) {
+                    int index = k * size * size + i * size + j;
+                    SRVBuffElement& cur = elements[index];
 
-            for (int k = 0; k < srvBuffSize; ++k) {
-                for (int i = 0; i < srvBuffSize; ++i) {
-                    for (int j = 0; j < srvBuffSize; ++j) {
-                        int index = k * srvBuffSize * srvBuffSize + i * srvBuffSize + j;
-                        SRVBuffElement& cur = elements[offset + index];
+                    float randX = (float)rand() / RAND_MAX;
+                    float randY = (float)rand() / RAND_MAX;
+                    float randZ = (float)rand() / RAND_MAX;
 
-                        float randX = (float)rand() / RAND_MAX;
-                        float randY = (float)rand() / RAND_MAX;
-                        float randZ = (float)rand() / RAND_MAX;
-
-                        cur.m_x = j + randX;
-                        cur.m_y = i + randY;
-                        cur.m_z = k + randZ;
-                    }
+                    cur.m_x = j + randX;
+                    cur.m_y = i + randY;
+                    cur.m_z = k + randZ;
                 }
             }
         }
+        
 
         memcpy(dst, elements, arrSize * sizeof(SRVBuffElement));
         buffer->Unmap(0, nullptr);
@@ -552,10 +544,8 @@ void rendering::DXWorlyTextureComputeCL::GetSRVBufferSize(std::list<int>& sizes)
 {
     for (std::list<NoiseSettings>::const_iterator it = m_noiseSettings.begin(); it != m_noiseSettings.end(); ++it) {
         const NoiseSettings& cur = *it;
-
-        int s1 = cur.m_cells1;
-        int s2 = cur.m_cells2;
-        sizes.push_back((s1 * s1 * s1 + s2 * s2 * s2) * GetSRVBufferStride());
+        int size = cur.m_cells;
+        sizes.push_back((size * size * size) * GetSRVBufferStride());
     }
 }
 
@@ -567,19 +557,22 @@ int rendering::DXWorlyTextureComputeCL::GetSRVBufferStride() const
 rendering::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
 {
     NoiseSettings tmp;
-    tmp.m_cells1 = 5;
-    tmp.m_cells2 = 13;
-    tmp.m_blend = 0.75;
+    tmp.m_cells = 5;
+    tmp.m_octaves = 4;
+    tmp.m_persistance = 0.75;
+    tmp.m_scale = 2;
     m_noiseSettings.push_back(tmp);
 
-    tmp.m_cells1 = 10;
-    tmp.m_cells2 = 13;
-    tmp.m_blend = 0.75;
+    tmp.m_cells = 10;
+    tmp.m_octaves = 1;
+    tmp.m_persistance = 1;
+    tmp.m_scale = 1;
     m_noiseSettings.push_back(tmp);
 
-    tmp.m_cells1 = 6;
-    tmp.m_cells2 = 18;
-    tmp.m_blend = 0.5;
+    tmp.m_cells = 15;
+    tmp.m_octaves = 1;
+    tmp.m_persistance = 1;
+    tmp.m_scale = 1;
     m_noiseSettings.push_back(tmp);
 }
 
