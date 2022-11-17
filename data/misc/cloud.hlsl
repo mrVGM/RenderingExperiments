@@ -207,12 +207,15 @@ float4 PSMain(
 
     float lightEnergy = 0;
 
+    float cosAngle = dot(viewDir, m_sunPos);
+    float phaseVal = hg(cosAngle, cs_PhaseX);
+
     for (int i = 1; i <= 64; ++i) {
         float3 curPoint = world_position + i * viewDir * stepSize;
         float density = 0.7 * (sampleDensityChannel(0, curPoint) - 0.3 * sampleDensityChannel(1, curPoint));
         transmittance += density * stepSize;
 
-        float lightTr = max(0, cs_lightingFactor * lightTransmittance(curPoint));
+        float lightTr = max(0, cs_lightingFactor * lightTransmittance(curPoint)) * phaseVal;
 
         float tr = max(0, transmittance + cs_DensityOffset);
 

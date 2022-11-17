@@ -19,7 +19,7 @@ cs_LightAbsorptionThroughCloud 0.8
 cs_PhaseX 0
 cs_PhaseY 1
 cs_PhaseZ 1
-cs_PhaseW 0
+cs_PhaseW 1
 
 cs_WeightR 1
 cs_WeightG 0
