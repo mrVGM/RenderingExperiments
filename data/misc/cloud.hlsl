@@ -2,14 +2,17 @@ cbuffer MVCMatrix : register(b0)
 {
     float4x4 m_matrix;
     float3 m_camPos;
-    float dummy;
+    float dummy1;
     float3 m_sunPos;
+    float dummy2;
+    float m_cloudDisplacement;
 };
 
 cbuffer CloudSettings : register(b1)
 {
     float cs_lighting;
     float cs_lightingFactor;
+    float cs_timeScale;
 
     float cs_lightColorR;
     float cs_lightColorG;
@@ -119,7 +122,7 @@ PSInput VSMain(
     return result;
 }
 
-float sampleDensityChannel(int channel, float3 pos)
+float sampleDensityChannel(int channel, float3 pos, float3 displacement)
 {
     float densityThreshold = cs_DensityThresholdR;
     float densityMultiplier = cs_DensityMultiplierR;
@@ -138,7 +141,7 @@ float sampleDensityChannel(int channel, float3 pos)
     }
 
     float3 uvw = uvwFactor * pos;
-    float4 textureColor = p_texture.Sample(p_sampler, uvw);
+    float4 textureColor = p_texture.Sample(p_sampler, uvw + displacement);
     float textureVal = textureColor.r;
     if (channel == 1) {
         textureVal = textureColor.g;
@@ -149,16 +152,6 @@ float sampleDensityChannel(int channel, float3 pos)
 
     float density = max(0, (1 - textureVal) - densityThreshold);
     density *= densityMultiplier;
-    return density;
-}
-
-float sampleDensity(float3 pos)
-{
-    float densityR = sampleDensityChannel(0, pos);
-    float densityG = sampleDensityChannel(1, pos);
-    float densityB = sampleDensityChannel(2, pos);
-
-    float density = cs_WeightR * densityR + cs_WeightG * densityG + cs_WeightB * densityB;
     return density;
 }
 
@@ -180,10 +173,13 @@ float lightTransmittance(float3 pos)
     float stepSize = cs_StepSize;
     float3 sunDir = normalize(m_sunPos);
 
+    float3 displacement1 = float3(cs_timeScale * m_cloudDisplacement, 0, 0);
+    float3 displacement2 = 10 * float3(0, 0, cs_timeScale * m_cloudDisplacement);
+
     float transmittance = 0;
     for (int i = 0; i < 6; ++i) {
         float3 curPoint = pos + i * sunDir * stepSize;
-        float density = 0.7 * (sampleDensityChannel(0, curPoint) - 0.3 * sampleDensityChannel(1, curPoint));
+        float density = 0.7 * (sampleDensityChannel(0, curPoint, displacement1) - 0.3 * sampleDensityChannel(1, curPoint, displacement2));
         transmittance += density * stepSize;
     }
 
@@ -210,9 +206,13 @@ float4 PSMain(
     float cosAngle = dot(viewDir, m_sunPos);
     float phaseVal = hg(cosAngle, cs_PhaseX);
 
+    float3 displacement1 = float3(cs_timeScale * m_cloudDisplacement, 0, 0);
+    float3 displacement2 = float3(0, 0, cs_timeScale * m_cloudDisplacement);
+
+
     for (int i = 1; i <= 64; ++i) {
         float3 curPoint = world_position + i * viewDir * stepSize;
-        float density = 0.7 * (sampleDensityChannel(0, curPoint) - 0.3 * sampleDensityChannel(1, curPoint));
+        float density = 0.7 * (sampleDensityChannel(0, curPoint, displacement1) - 0.3 * sampleDensityChannel(1, curPoint, displacement2));
         transmittance += density * stepSize;
 
         float lightTr = max(0, cs_lightingFactor * lightTransmittance(curPoint)) * phaseVal;

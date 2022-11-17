@@ -27,6 +27,8 @@ namespace rendering
 
 		float m_sunAngle = 0;
 
+		float m_cloudDisplacement = 0;
+
 		DirectX::XMVECTOR m_position;
 		DirectX::XMVECTOR m_target;
 

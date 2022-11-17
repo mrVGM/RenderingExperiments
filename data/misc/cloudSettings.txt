@@ -1,5 +1,6 @@
 cs_lighting 1
 cs_lightingFactor 1
+cs_timeScale 0.01
 
 cs_lightColorR 0.51
 cs_lightColorG 0.8
