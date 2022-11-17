@@ -1,5 +1,16 @@
+cs_lighting 1
+cs_lightingFactor 1
+
+cs_lightColorR 0.51
+cs_lightColorG 0.8
+cs_lightColorB 1
+
+cs_darkColorR 0.8
+cs_darkColorG 0.92
+cs_darkColorB 1
+
 cs_MaxSampleSteps 100
-cs_StepSize 15
+cs_StepSize 5
 
 cs_LightAbsorptionTowardSun 3
 cs_DarknessThreshold 0.2
@@ -14,15 +25,15 @@ cs_WeightR 1
 cs_WeightG 0
 cs_WeightB 0
 
-cs_DensityOffset -0.2
+cs_DensityOffset -0.1
 
 cs_DensityThresholdR 0.5
-cs_DensityMultiplierR 0.01
+cs_DensityMultiplierR 0.08
 cs_UVWFactorR 0.001
 
-cs_DensityThresholdG 0.3
-cs_DensityMultiplierG 0.005
-cs_UVWFactorG 0.006
+cs_DensityThresholdG 0.6
+cs_DensityMultiplierG 0.05
+cs_UVWFactorG 0.001
 
 cs_DensityThresholdB 0.2
 cs_DensityMultiplierB 3

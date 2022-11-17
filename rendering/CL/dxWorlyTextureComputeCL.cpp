@@ -564,9 +564,9 @@ rendering::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
     m_noiseSettings.push_back(tmp);
 
     tmp.m_cells = 10;
-    tmp.m_octaves = 1;
-    tmp.m_persistance = 1;
-    tmp.m_scale = 1;
+    tmp.m_octaves = 3;
+    tmp.m_persistance = 0.5;
+    tmp.m_scale = 2;
     m_noiseSettings.push_back(tmp);
 
     tmp.m_cells = 15;

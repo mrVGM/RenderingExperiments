@@ -2,10 +2,23 @@ cbuffer MVCMatrix : register(b0)
 {
     float4x4 m_matrix;
     float3 m_camPos;
+    float dummy;
+    float3 m_sunPos;
 };
 
 cbuffer CloudSettings : register(b1)
 {
+    float cs_lighting;
+    float cs_lightingFactor;
+
+    float cs_lightColorR;
+    float cs_lightColorG;
+    float cs_lightColorB;
+
+    float cs_darkColorR;
+    float cs_darkColorG;
+    float cs_darkColorB;
+
     float cs_MaxSampleSteps;
     float cs_StepSize;
 
@@ -162,6 +175,21 @@ float phase(float a)
     return cs_PhaseZ + hgBlend * cs_PhaseW;
 }
 
+float lightTransmittance(float3 pos)
+{
+    float stepSize = cs_StepSize;
+    float3 sunDir = normalize(m_sunPos);
+
+    float transmittance = 0;
+    for (int i = 0; i < 6; ++i) {
+        float3 curPoint = pos + i * sunDir * stepSize;
+        float density = 0.7 * (sampleDensityChannel(0, curPoint) - 0.3 * sampleDensityChannel(1, curPoint));
+        transmittance += density * stepSize;
+    }
+
+    return transmittance;
+}
+
 float4 PSMain(
     float4 position : SV_POSITION,
     float4 world_position : WORLD_POSITION,
@@ -177,23 +205,33 @@ float4 PSMain(
     float transmittanceG = 0;
     float3 viewDir = normalize(world_position.xyz - m_camPos);
 
+    float lightEnergy = 0;
+
     for (int i = 1; i <= 64; ++i) {
-        float3 curPoint = world_position + i * viewDir;
-        transmittance += sampleDensityChannel(0, curPoint) * stepSize;
-        transmittanceG += sampleDensityChannel(1, curPoint) * stepSize;
+        float3 curPoint = world_position + i * viewDir * stepSize;
+        float density = 0.7 * (sampleDensityChannel(0, curPoint) - 0.3 * sampleDensityChannel(1, curPoint));
+        transmittance += density * stepSize;
+
+        float lightTr = max(0, cs_lightingFactor * lightTransmittance(curPoint));
+
+        float tr = max(0, transmittance + cs_DensityOffset);
+
+        lightEnergy += (1 - exp(-tr)) * exp(-lightTr) * (1 - exp(-2 * lightTr));
     }
 
     transmittance += cs_DensityOffset;
-    transmittanceG += cs_DensityOffset;
+    transmittance = max(0, transmittance);
 
     float mainShape = 1 - exp(-transmittance);
-    float detail = 1 - exp(-transmittanceG);
 
-    if (mainShape > 0) {
-        mainShape -= 0.3 * detail;
-        mainShape /= 0.7;
-        mainShape = clamp(mainShape, 0, 1);
+    float3 lightColor = float3(cs_lightColorR, cs_lightColorG, cs_lightColorB);
+    float3 darkColor = float3(cs_darkColorR, cs_darkColorG, cs_darkColorB);
+
+    if (cs_lighting <= 0) {
+        lightEnergy = 1;
     }
 
-    return float4(1, 1, 1, mainShape);
+    lightEnergy = clamp(lightEnergy, 0, 1);
+
+    return float4(lightEnergy * lightColor + (1 - lightEnergy) * darkColor, mainShape);
 }

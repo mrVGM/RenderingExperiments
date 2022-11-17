@@ -388,7 +388,9 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	if (m_sunAngle > 180) {
 		m_sunAngle = 0;
 	}
-	float sunDist = 1;
+
+	m_sunAngle = 70;
+	float sunDist = 100000;
 	matrixCoefs[index++] = sunDist * cos(M_PI * m_sunAngle / 180.0);
 	matrixCoefs[index++] = sunDist * sin(M_PI * m_sunAngle / 180.0);
 	matrixCoefs[index++] = 0;
