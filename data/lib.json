@@ -1,55 +1,7 @@
 {
   "files": {
-    "vs": {
-      "path": "shaders/vs.hlsl",
-      "type": "vertex_shader"
-    },
-    "ps": {
-      "path": "shaders/ps.hlsl",
-      "type": "pixel_shader"
-    },
-    "checkers": {
-      "path": "shaders/checkers.hlsl",
-      "type": "pixel_shader"
-    },
-    "hosek_sky": {
-      "path": "shaders/hosek_sky.hlsl",
-      "type": "pixel_shader"
-    },
-    "canvas_vs": {
-      "path": "shaders/canvas_vs.hlsl",
-      "type": "vertex_shader"
-    },
-    "canvas": {
-      "path": "shaders/canvas.hlsl",
-      "type": "pixel_shader"
-    },
-    "lighting": {
-      "path": "shaders/lighting.hlsl",
-      "type": "pixel_shader"
-    },
-    "cs": {
-      "path": "shaders/cs.hlsl",
-      "type": "compute_shader"
-    },
-    "tok_test": {
-      "path": "misc/tok_test.txt",
-      "type": "text_file"
-    },
     "grammar": {
       "path": "misc/grammar.txt",
-      "type": "text_file"
-    },
-    "grammarBin": {
-      "path": "misc/grammar.bin",
-      "type": "bin_file"
-    },
-    "parserTable": {
-      "path": "misc/parserTable.bin",
-      "type": "bin_file"
-    },
-    "testCode": {
-      "path": "misc/test_code.txt",
       "type": "text_file"
     }
   }
