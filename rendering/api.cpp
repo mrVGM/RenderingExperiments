@@ -147,21 +147,6 @@ namespace rendering
 		}));
 #pragma endregion
 
-#pragma region Worly Texture
-		m_api.SetProperty("worly", interpreter::utils::GetEmptyObject());
-		Value worly = m_api.GetProperty("worly");
-
-		worly.SetProperty("textureCompute", interpreter::CreateNativeFunc(0, [](Value scope) {
-			clouds::DXWorlyTextureComputeCL* worlyTextureComputeCL = new clouds::DXWorlyTextureComputeCL();
-			return NativeObject::Create(worlyTextureComputeCL);
-		}));
-
-		worly.SetProperty("displayWorly", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXDisplayWorlyCL* displayWorly = new DXDisplayWorlyCL();
-			return NativeObject::Create(displayWorly);
-		}));
-#pragma endregion
-
 #pragma region Math Functions
 		m_api.SetProperty("math", interpreter::utils::GetEmptyObject());
 		Value math = m_api.GetProperty("math");
@@ -248,11 +233,6 @@ namespace rendering
 		aux.SetProperty("plainCL", CreateNativeFunc(0, [](Value scope) {
 			DXPlainCL* plainCL = new DXPlainCL();
 			return NativeObject::Create(plainCL);
-		}));
-
-		aux.SetProperty("cloudSettingReader", CreateNativeFunc(0, [](Value scope) {
-			clouds::CloudSettingsReader* settingsReader = new clouds::CloudSettingsReader();
-			return NativeObject::Create(settingsReader);
 		}));
 
 		aux.SetProperty("clearRT", CreateNativeFunc(0, [](Value scope) {

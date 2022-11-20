@@ -104,7 +104,7 @@ let execute = func(compute, device, data, graphicsCommandQueue, onReady) {
 };
 
 let prepareData = func(device, texSize, onReady) {
-	let compute = api.worly.textureCompute();
+	let compute = api.clouds.textureCompute();
 	let srvBuffSize = compute.getSRVBufferSize();
 	let srvBuffStride = compute.getSRVBufferStride();
 
