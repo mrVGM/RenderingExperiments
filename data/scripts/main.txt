@@ -40,13 +40,13 @@ let litPass = api.deferred.litPass();
 
 let prepMaterial = func() {
 	let createMaterial = require("materials/unlitMaterial.txt");
-	let material = createMaterial(device, "unlit.hlsl", gBuffer.camBuffer);
+	let material = createMaterial(device, "shaders/unlit.hlsl", gBuffer.camBuffer);
 	return material;
 };
 
 let prepSkyBoxMaterial = func() {
 	let createMaterial = require("materials/skyBoxMat.txt");
-	let material = createMaterial(device, "sky.hlsl", gBuffer.camBuffer);
+	let material = createMaterial(device, "shaders/sky.hlsl", gBuffer.camBuffer);
 	return material;
 };
 
@@ -54,7 +54,7 @@ let prepCloudMaterial = func() {
 	let createMaterial = require("materials/cloudMaterial.txt");
 	let material = none;
 	try {
-		material = createMaterial(device, "cloud.hlsl", cloudSettingsBuff, gBuffer, worlyData, scene);
+		material = createMaterial(device, "shaders/cloud.hlsl", cloudSettingsBuff, gBuffer, worlyData, scene);
 	} catch(e) {
 		print(e);
 	}

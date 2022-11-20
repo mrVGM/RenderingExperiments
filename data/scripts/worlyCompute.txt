@@ -65,7 +65,7 @@ let loadTex = func(device, texSize, onReady) {
 };
 
 let compileShader = func() {
-	let shaderCode = readFile("compute.hlsl");
+	let shaderCode = readFile("shaders/compute.hlsl");
 	let computeShader = api.computeShader();
 	computeShader.compile(shaderCode);
 	return computeShader;

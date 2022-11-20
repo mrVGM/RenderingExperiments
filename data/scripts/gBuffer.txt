@@ -32,7 +32,7 @@ vertexData.push(0);
 let createGBuff = func(device, width, height, onReady) {
 	let resources = require("resources/resourceUtils.txt");
 
-	let shaderCode = readFile("defferedShading.hlsl");
+	let shaderCode = readFile("deprecated/defferedShading.hlsl");
 	let vertexShader = api.vertexShader();
 	vertexShader.compile(shaderCode);
 
