@@ -137,7 +137,7 @@ let cloudSettingsBuff = none;
 
 let settingsReader = api.clouds.cloudSettingReader();
 let readSettings = func() {
-	let rawData = readFile("cloudSettings.txt");
+	let rawData = readFile("clouds/cloudSettings.txt");
 	let settingsData = settingsReader.readCloudSettings(rawData);
 
 	cloudSettingsBuff.copyData(settingsData);
