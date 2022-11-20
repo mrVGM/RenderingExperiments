@@ -8,7 +8,7 @@
 #include <wrl.h>
 #include <string>
 
-namespace rendering::deferred
+namespace rendering
 {
 	class DXCloudMatCL : public interpreter::INativeObject
 	{

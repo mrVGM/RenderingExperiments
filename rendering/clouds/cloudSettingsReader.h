@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-namespace rendering
+namespace rendering::clouds
 {
 	class CloudSettingsReader : public interpreter::INativeObject
 	{

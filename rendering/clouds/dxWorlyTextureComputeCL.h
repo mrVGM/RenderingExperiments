@@ -9,7 +9,7 @@
 #include <string>
 #include <list>
 
-namespace rendering
+namespace rendering::clouds
 {
 	class DXWorlyTextureComputeCL : public interpreter::INativeObject
 	{

@@ -21,7 +21,7 @@
 #include "dxTexture.h"
 #include "dxCopyCL.h"
 
-#include "CL/dxWorlyTextureComputeCL.h"
+#include "clouds/dxWorlyTextureComputeCL.h"
 #include "CL/dxDisplayWorlyCL.h"
 
 #include "deferred/dxLitMatCL.h"
@@ -35,10 +35,11 @@
 #include "deferred/gBuffer.h"
 #include "deferred/dxLitPassCL.h"
 
-#include "deferred/dxCloudMatCL.h"
-#include "deferred/dxUnlitMatCL.h"
+#include "materials/dxCloudMatCL.h"
+#include "materials/dxUnlitMatCL.h"
 
-#include "helper/cloudSettingsReader.h"
+#include "clouds/cloudSettingsReader.h"
+#include "clouds/dxCloudsCamera.h"
 
 #include "CL/dxClearRTCL.h"
 
@@ -151,7 +152,7 @@ namespace rendering
 		Value worly = m_api.GetProperty("worly");
 
 		worly.SetProperty("textureCompute", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXWorlyTextureComputeCL* worlyTextureComputeCL = new DXWorlyTextureComputeCL();
+			clouds::DXWorlyTextureComputeCL* worlyTextureComputeCL = new clouds::DXWorlyTextureComputeCL();
 			return NativeObject::Create(worlyTextureComputeCL);
 		}));
 
@@ -224,12 +225,12 @@ namespace rendering
 		}));
 
 		deferred.SetProperty("cloudMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			deferred::DXCloudMatCL* cloudMat = new deferred::DXCloudMatCL();
+			DXCloudMatCL* cloudMat = new DXCloudMatCL();
 			return NativeObject::Create(cloudMat);
 		}));
 
 		deferred.SetProperty("unlitMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			deferred::DXUnlitMatCL* unlitMat = new deferred::DXUnlitMatCL();
+			DXUnlitMatCL* unlitMat = new DXUnlitMatCL();
 			return NativeObject::Create(unlitMat);
 		}));
 
@@ -250,7 +251,7 @@ namespace rendering
 		}));
 
 		aux.SetProperty("cloudSettingReader", CreateNativeFunc(0, [](Value scope) {
-			CloudSettingsReader* settingsReader = new CloudSettingsReader();
+			clouds::CloudSettingsReader* settingsReader = new clouds::CloudSettingsReader();
 			return NativeObject::Create(settingsReader);
 		}));
 
@@ -259,6 +260,28 @@ namespace rendering
 			return NativeObject::Create(clearRT);
 		}));
 #pragma endregion
+
+#pragma region Clouds
+		m_api.SetProperty("clouds", interpreter::utils::GetEmptyObject());
+		Value clouds = m_api.GetProperty("clouds");
+
+		clouds.SetProperty("camera", CreateNativeFunc(0, [](Value scope) {
+			clouds::DXCloudsCamera* camera = new clouds::DXCloudsCamera();
+			return NativeObject::Create(camera);
+		}));
+
+		clouds.SetProperty("textureCompute", interpreter::CreateNativeFunc(0, [](Value scope) {
+			clouds::DXWorlyTextureComputeCL* worlyTextureComputeCL = new clouds::DXWorlyTextureComputeCL();
+			return NativeObject::Create(worlyTextureComputeCL);
+		}));
+
+		clouds.SetProperty("cloudSettingReader", CreateNativeFunc(0, [](Value scope) {
+			clouds::CloudSettingsReader* settingsReader = new clouds::CloudSettingsReader();
+			return NativeObject::Create(settingsReader);
+		}));
+#pragma endregion
+
+
 	}
 }
 

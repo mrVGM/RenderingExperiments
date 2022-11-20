@@ -1,4 +1,4 @@
-#include "CL/dxWorlyTextureComputeCL.h"
+#include "clouds/dxWorlyTextureComputeCL.h"
 
 #include "nativeFunc.h"
 
@@ -37,7 +37,7 @@ namespace
     };
 }
 
-void rendering::DXWorlyTextureComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::clouds::DXWorlyTextureComputeCL::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -291,7 +291,7 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::DXWorlyTextureComputeCL::Create(
+bool rendering::clouds::DXWorlyTextureComputeCL::Create(
     ID3D12Device* device,
     ID3DBlob* computeShader,
     std::string& errorMessage)
@@ -374,7 +374,7 @@ bool rendering::DXWorlyTextureComputeCL::Create(
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::Populate(
+bool rendering::clouds::DXWorlyTextureComputeCL::Populate(
     ID3D12Resource* constantBuff,
     ID3D12Resource* tex,
     ID3D12DescriptorHeap* srvUavHeap,
@@ -445,7 +445,7 @@ bool rendering::DXWorlyTextureComputeCL::Populate(
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::ExecuteCompute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+bool rendering::clouds::DXWorlyTextureComputeCL::ExecuteCompute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_computeCL.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -454,7 +454,7 @@ bool rendering::DXWorlyTextureComputeCL::ExecuteCompute(ID3D12CommandQueue* comm
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::ExecutePrepareForPS(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
+bool rendering::clouds::DXWorlyTextureComputeCL::ExecutePrepareForPS(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error)
 {
     ID3D12CommandList* ppCommandLists[] = { m_prepareForPixelCL.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -463,7 +463,7 @@ bool rendering::DXWorlyTextureComputeCL::ExecutePrepareForPS(ID3D12CommandQueue*
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffer, int texSize, std::string& errorMessage)
+bool rendering::clouds::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffer, int texSize, std::string& errorMessage)
 {
     CD3DX12_RANGE readRange(0, 0);
 
@@ -492,7 +492,7 @@ bool rendering::DXWorlyTextureComputeCL::SetConstantBuffer(ID3D12Resource* buffe
     return true;
 }
 
-bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(std::list<ID3D12Resource*> buffers, std::string& errorMessage)
+bool rendering::clouds::DXWorlyTextureComputeCL::SetSRVBuffer(std::list<ID3D12Resource*> buffers, std::string& errorMessage)
 {
     std::list<NoiseSettings>::const_iterator noiseSettingsIt = m_noiseSettings.begin();
     for (std::list<ID3D12Resource*>::iterator it = buffers.begin(); it != buffers.end(); ++it) {
@@ -540,7 +540,7 @@ bool rendering::DXWorlyTextureComputeCL::SetSRVBuffer(std::list<ID3D12Resource*>
     return true;
 }
 
-void rendering::DXWorlyTextureComputeCL::GetSRVBufferSize(std::list<int>& sizes) const
+void rendering::clouds::DXWorlyTextureComputeCL::GetSRVBufferSize(std::list<int>& sizes) const
 {
     for (std::list<NoiseSettings>::const_iterator it = m_noiseSettings.begin(); it != m_noiseSettings.end(); ++it) {
         const NoiseSettings& cur = *it;
@@ -549,12 +549,12 @@ void rendering::DXWorlyTextureComputeCL::GetSRVBufferSize(std::list<int>& sizes)
     }
 }
 
-int rendering::DXWorlyTextureComputeCL::GetSRVBufferStride() const
+int rendering::clouds::DXWorlyTextureComputeCL::GetSRVBufferStride() const
 {
     return sizeof(SRVBuffElement);
 }
 
-rendering::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
+rendering::clouds::DXWorlyTextureComputeCL::DXWorlyTextureComputeCL()
 {
     NoiseSettings tmp;
     tmp.m_cells = 5;

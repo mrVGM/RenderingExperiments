@@ -1,4 +1,4 @@
-#include "helper/cloudSettingsReader.h"
+#include "clouds/cloudSettingsReader.h"
 
 #include "nativeFunc.h"
 
@@ -8,7 +8,7 @@
 #include <map>
 #include <list>
 
-void rendering::CloudSettingsReader::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::clouds::CloudSettingsReader::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
