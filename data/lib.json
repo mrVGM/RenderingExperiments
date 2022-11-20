@@ -1,7 +1,7 @@
 {
   "files": {
     "grammar": {
-      "path": "misc/grammar.txt",
+      "path": "scripts/grammar.txt",
       "type": "text_file"
     }
   }
