@@ -164,7 +164,7 @@ try {
 	});
 
 	let worlyPrepared = 0;
-	let computeWorly = require("worlyCompute.txt");
+	let computeWorly = require("clouds/worlyCompute.txt");
 	computeWorly.prepare(device, 512, func(data) {
 		worlyData = data;
 		worlyData.execute(device, commandQueue, func() {
