@@ -1,0 +1,125 @@
+let resources = require("resources/resourceUtils.txt");
+
+let loadConstantBuff = func(device, onReady) {
+	let constantBB = resources.bufferBuilder();
+	constantBB.upload(1);
+	constantBB.setSize(256);
+	constantBB.setStride(256);
+
+	constantBB.build(device, func(buff) {
+		onReady(buff);
+	});
+};
+
+let loadVertexBuff = func(device, onReady) {
+	let uploadBuff = none;
+	let vertexBuff = none;
+
+	let copy = func() {
+		if (uploadBuff == none || vertexBuff == none) {
+			return;
+		}
+
+		resources.copyBuffers(device, vertexBuff, uploadBuff, func() {
+			onReady(vertexBuff);
+		});
+	};
+
+	let vertexUploadBB = resources.bufferBuilder();
+	vertexUploadBB.upload(1);
+	vertexUploadBB.setSize(48);
+	vertexUploadBB.setStride(8);
+
+	let vertexBB = resources.bufferBuilder();
+	vertexBB.upload(0);
+	vertexBB.setSize(48);
+	vertexBB.setStride(8);
+
+	vertexUploadBB.build(device, func(buff) {
+		let data = [];
+		data.push(-1);
+		data.push(-1);
+		data.push(-1);
+		data.push(1);
+		data.push(1);
+		data.push(1);
+
+		data.push(-1);
+		data.push(-1);
+		data.push(1);
+		data.push(1);
+		data.push(1);
+		data.push(-1);
+
+		buff.copyData(data);
+		uploadBuff = buff;
+		copy();
+	});
+
+	vertexBB.build(device, func(buff) {
+		vertexBuff = buff;
+		copy();
+	});
+};
+
+let createCanvasMaterial = func(device, shadersFile, onReady) {
+	let constantBuffer = none;
+	let vertexBuffer = none;
+
+	let mat = api.noise.canvasMat();
+
+	let getRenderFunc = func(swapChain, commandQueue) {
+		let fence = api.fence();
+		fence.create(device);
+		
+		let index = 0;
+		
+		let render = func(renderDone) {
+			let fe = api.fenceEvent();
+			fe.create();
+			fe.wait(fence, index, func(arg) {
+				index = index + 1;
+				renderDone();
+			});
+
+			mat.populate(swapChain, constantBuffer, vertexBuffer);
+			mat.execute(commandQueue, fence, index);
+		};
+
+		return render;
+	};
+
+	let assembleResult = func() {
+		if (constantBuffer == none || vertexBuffer == none) {
+			return;
+		}
+
+		let res = {};
+		res.buffer = constantBuffer;
+		res.getRenderFunc = getRenderFunc;
+		onReady(res);
+	};
+
+	loadConstantBuff(device, func(buff) {
+		constantBuffer = buff;
+		assembleResult();
+	});
+
+	loadVertexBuff(device, func(buff) {
+		vertexBuffer = buff;
+		assembleResult();
+	});
+
+	let shaderCode = readFile(shadersFile);
+
+	let vertexShader = api.vertexShader();
+	vertexShader.compile(shaderCode);
+
+	let pixelShader = api.pixelShader();
+	pixelShader.compile(shaderCode);
+
+
+	mat.create(device, vertexShader, pixelShader);
+};
+
+export = createCanvasMaterial;

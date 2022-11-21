@@ -1,0 +1,51 @@
+let math = require("math.txt");
+let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
+
+let wnd = api.window();
+wnd.create(1280, 720);
+
+let device = api.device();
+let swapChain = api.swapChain();
+let commandQueue = api.commandQueue();
+
+let generalInit = func() {
+	device.create();
+	commandQueue.create(device);
+	swapChain.create(device, wnd, commandQueue);
+	print("General Init!");
+};
+
+generalInit();
+
+let mat = none;
+
+let startRender = func() {
+	let rend = mat.getRenderFunc(swapChain, commandQueue);
+	let clearRT = api.aux.clearRT();
+	
+	let renderLoop = func() {
+		if (wnd.isAlive() == 0) {
+			return;
+		}
+
+		swapChain.updateCurrentFrameIndex();
+		clearRT.create(device);
+		clearRT.populate(swapChain);
+		clearRT.executeAsync(commandQueue);
+
+		rend(func() {
+			swapChain.present();
+			renderLoop();
+		});
+	};
+
+	renderLoop();
+};
+
+let prep = require("noise/canvasMaterial.txt");
+
+prep(device, "shaders/blank.hlsl", func(data) {
+	mat = data;
+	startRender();
+});

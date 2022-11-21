@@ -43,6 +43,8 @@
 
 #include "CL/dxClearRTCL.h"
 
+#include "noise/dxCanvasMatCL.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -261,6 +263,15 @@ namespace rendering
 		}));
 #pragma endregion
 
+#pragma region Noise
+		m_api.SetProperty("noise", interpreter::utils::GetEmptyObject());
+		Value noise = m_api.GetProperty("noise");
+
+		noise.SetProperty("canvasMat", CreateNativeFunc(0, [](Value scope) {
+			noise::DXCanvasMatCL* canvasMat = new noise::DXCanvasMatCL();
+			return NativeObject::Create(canvasMat);
+		}));
+#pragma endregion
 
 	}
 }

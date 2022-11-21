@@ -66,12 +66,13 @@ add_library (Rendering
 	"helper/inputHandler.h"
 	"clouds/cloudSettingsReader.h"
 	"clouds/cloudSettingsReader.cpp"
-	"materials/dxUnlitMatCL.h"
 	"materials/dxUnlitMatCL.cpp"
 	"CL/dxClearRTCL.h"
 	"CL/dxClearRTCL.cpp"
 	"clouds/dxCloudsCamera.h"
 	"clouds/dxCloudsCamera.cpp"
+	"noise/dxCanvasMatCL.h"
+	"noise/dxCanvasMatCL.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
