@@ -45,7 +45,24 @@ let startRender = func() {
 
 let prep = require("noise/canvasMaterial.txt");
 
-prep(device, "shaders/blank.hlsl", func(data) {
+prep(device, "shaders/perlinNoise.hlsl", func(data) {
 	mat = data;
+
+	let buffData = [];
+	buffData.push(0.1);
+	buffData.push(0.1);
+	buffData.push(0.9);
+	buffData.push(0.9);
+
+	let aspect = wnd.width() / wnd.height();
+
+	let factor = 10;
+
+	buffData.push(factor * aspect);
+	buffData.push(factor);
+
+	data.buffer.copyData(buffData);
+
+	print(data.buffer);
 	startRender();
 });
