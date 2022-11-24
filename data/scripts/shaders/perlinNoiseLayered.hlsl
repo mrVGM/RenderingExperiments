@@ -151,7 +151,21 @@ float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
     float factor = m_persistance;
     float totalFactor = 0;
 
-    float n = calcNoise(uvw);
-    return float4(n, n, n, 1);
+    float n = 0;
+
+    for (int i = 0; i < m_octaves; ++i) {
+        float curSample = calcNoise(scale * uvw + 4.3);
+        n += factor * curSample;
+
+        totalFactor += factor;
+        scale *= m_scale;
+        factor *= m_persistance;
+    }
+
+    n /= totalFactor;
+
+    float3 color = 0.5 + 0.5 * cos(6.283185 * (3 * n + float3(0.15, 0, 0)));
+
+    return float4(color, 1);
 }
 
