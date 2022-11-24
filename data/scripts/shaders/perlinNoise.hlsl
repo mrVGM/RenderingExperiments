@@ -136,8 +136,15 @@ float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
     float up    = (1 - smoothY) * upBackX + smoothY * upFrontX;
 
     float h = (1 - smoothZ) * down + smoothZ * up;
-    //h = 1 - h;
+    h += 0.5;
 
-    return float4(h, h, h, 1);
+    h *= 6;
+
+    float4 color = float4(1, 1, 1, 1);
+    if (h - floor(h) < 0.05) {
+        color = float4(0, 0, 0, 1);
+    }
+
+    return color;
 }
 

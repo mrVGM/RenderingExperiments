@@ -22,10 +22,10 @@ let mat = none;
 
 let updateSettings = func() {
 	let buffData = [];
-	buffData.push(0.1);
-	buffData.push(0.1);
-	buffData.push(0.9);
-	buffData.push(0.9);
+	buffData.push(0);
+	buffData.push(0);
+	buffData.push(1);
+	buffData.push(1);
 
 	let aspect = wnd.width() / wnd.height();
 	let factor = 10;
@@ -55,11 +55,11 @@ let startRender = func() {
 		rend(func() {
 			swapChain.present();
 			updateSettings();
-			renderLoop();
+			wnd.finishDraw();
 		});
 	};
 
-	renderLoop();
+	api.app_context.render = func(arg) { renderLoop(); };
 };
 
 let prep = require("noise/canvasMaterial.txt");
