@@ -89,6 +89,15 @@ let createCanvasMaterial = func(device, shadersFile, onReady) {
 		return render;
 	};
 
+	let getAsyncRenderFunc = func(swapChain, commandQueue) {
+		let render = func() {
+			mat.populate(swapChain, constantBuffer, vertexBuffer);
+			mat.executeAsync(commandQueue);
+		};
+
+		return render;
+	};
+
 	let assembleResult = func() {
 		if (constantBuffer == none || vertexBuffer == none) {
 			return;
@@ -97,6 +106,7 @@ let createCanvasMaterial = func(device, shadersFile, onReady) {
 		let res = {};
 		res.buffer = constantBuffer;
 		res.getRenderFunc = getRenderFunc;
+		res.getAsyncRenderFunc = getAsyncRenderFunc;
 		onReady(res);
 	};
 

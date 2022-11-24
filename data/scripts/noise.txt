@@ -19,14 +19,15 @@ let generalInit = func() {
 generalInit();
 
 let mat = none;
+let mat2 = none;
 
 let offset = 0;
 let updateSettings = func() {
 	let buffData = [];
-	buffData.push(0);
-	buffData.push(0);
-	buffData.push(1);
-	buffData.push(1);
+	buffData.push(0.01);
+	buffData.push(0.01);
+	buffData.push(0.49);
+	buffData.push(0.49);
 
 	let aspect = wnd.width() / wnd.height();
 	let factor = 3;
@@ -44,8 +45,34 @@ let updateSettings = func() {
 	offset = offset + 0.001;
 };
 
+let offset2 = 0;
+let updateSettings2 = func() {
+	let buffData = [];
+	buffData.push(0.51);
+	buffData.push(0.01);
+	buffData.push(0.99);
+	buffData.push(0.49);
+
+	let aspect = wnd.width() / wnd.height();
+	let factor = 7;
+
+	buffData.push(factor * aspect);
+	buffData.push(factor);
+
+	buffData.push(offset2);
+
+	mat2.buffer.copyData(buffData);
+	offset2 = offset2 + 0.01;
+};
+
 let startRender = func() {
+	if (mat == none || mat2 == none) {
+		return;
+	}
+
 	let rend = mat.getRenderFunc(swapChain, commandQueue);
+	let rend2 = mat2.getAsyncRenderFunc(swapChain, commandQueue);
+
 	let clearRT = api.aux.clearRT();
 	
 	let renderLoop = func() {
@@ -58,9 +85,11 @@ let startRender = func() {
 		clearRT.populate(swapChain);
 		clearRT.executeAsync(commandQueue);
 
+		rend2();
 		rend(func() {
 			swapChain.present();
 			updateSettings();
+			updateSettings2();
 			wnd.finishDraw();
 		});
 	};
@@ -74,5 +103,12 @@ prep(device, "shaders/perlinNoise.hlsl", func(data) {
 	mat = data;
 
 	updateSettings();
+	startRender();
+});
+
+prep(device, "shaders/perlinNoiseCurves.hlsl", func(data) {
+	mat2 = data;
+
+	updateSettings2();
 	startRender();
 });

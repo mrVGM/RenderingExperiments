@@ -27,7 +27,7 @@ int main(int args, const char** argv)
 	interpreter::ISession& session = interpreter::OpenSession(scriptsDir.string(), std::cout);
 	session.AddGlobalValue("api", rendering::GetAPI());
 
-	const char* mainScript = "main.txt";
+	const char* mainScript = "noise.txt";
 	if (args > 1) {
 		mainScript = argv[1];
 	}
