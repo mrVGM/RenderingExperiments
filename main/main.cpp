@@ -27,7 +27,12 @@ int main(int args, const char** argv)
 	interpreter::ISession& session = interpreter::OpenSession(scriptsDir.string(), std::cout);
 	session.AddGlobalValue("api", rendering::GetAPI());
 
-	session.RunFile("noise.txt");
+	const char* mainScript = "main.txt";
+	if (args > 1) {
+		mainScript = argv[1];
+	}
+
+	session.RunFile(mainScript);
 
 	while (true) {
 		std::cout << "> ";
