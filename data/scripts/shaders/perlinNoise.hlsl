@@ -5,6 +5,10 @@ cbuffer NoiseData : register(b0)
 
     float2 m_factor;
     float m_verticalOffset;
+
+    float m_octaves;
+    float m_persistance;
+    float m_scale;
 };
 
 struct PSInput
@@ -114,37 +118,52 @@ float scalarNoise(float3 pos, int3 vertex)
     return dot(pos - vertex, noiseDir(vertex));
 }
 
-float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
+float calcNoise(float3 uvw)
 {
-    uv *= m_factor;
-    float3 uvw = float3(uv, m_verticalOffset);
     int3 cage_min = floor(uvw);
-    
     float3 uvwNormalized = uvw - cage_min;
 
     float smoothX = smoothstep(uvwNormalized.x);
     float smoothY = smoothstep(uvwNormalized.y);
     float smoothZ = smoothstep(uvwNormalized.z);
 
-    float downBackX     = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 0, 0)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 0, 0));
-    float downFrontX    = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 1, 0)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 1, 0));
+    float downBackX = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 0, 0)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 0, 0));
+    float downFrontX = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 1, 0)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 1, 0));
 
-    float upBackX       = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 0, 1)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 0, 1));
-    float upFrontX      = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 1, 1)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 1, 1));
+    float upBackX = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 0, 1)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 0, 1));
+    float upFrontX = (1 - smoothX) * scalarNoise(uvw, cage_min + int3(0, 1, 1)) + smoothX * scalarNoise(uvw, cage_min + int3(1, 1, 1));
 
-    float down  = (1 - smoothY) * downBackX + smoothY * downFrontX;
-    float up    = (1 - smoothY) * upBackX + smoothY * upFrontX;
+    float down = (1 - smoothY) * downBackX + smoothY * downFrontX;
+    float up = (1 - smoothY) * upBackX + smoothY * upFrontX;
 
     float h = (1 - smoothZ) * down + smoothZ * up;
     h += 0.5;
 
-    h *= 6;
+    return h;
+}
 
-    float4 color = float4(1, 1, 1, 1);
-    if (h - floor(h) < 0.05) {
-        color = float4(0, 0, 0, 1);
+float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
+{
+    uv *= m_factor;
+    float3 uvw = float3(uv, m_verticalOffset);
+    
+    float scale = 1;
+    float factor = m_persistance;
+    float totalFactor = 0;
+
+    float n = 0;
+
+    for (int i = 0; i < m_octaves; ++i) {
+        float curSample = calcNoise(scale * uvw);
+        n += factor * curSample;
+
+        totalFactor += factor;
+        scale *= m_scale;
+        factor *= m_persistance;
     }
 
-    return color;
+    n /= totalFactor;
+
+    return float4(n, n, n, 1);
 }
 

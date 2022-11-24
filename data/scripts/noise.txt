@@ -34,6 +34,11 @@ let updateSettings = func() {
 	buffData.push(factor);
 
 	buffData.push(offset);
+
+	buffData.push(10);
+	buffData.push(0.7);
+	buffData.push(2);
+
 	mat.buffer.copyData(buffData);
 	offset = offset + 0.01;
 };
