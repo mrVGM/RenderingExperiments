@@ -20,6 +20,7 @@ generalInit();
 
 let mat = none;
 let mat2 = none;
+let mat3 = none;
 
 let offset = 0;
 let updateSettings = func() {
@@ -65,13 +66,35 @@ let updateSettings2 = func() {
 	offset2 = offset2 + 0.01;
 };
 
+let offset3 = 0;
+let updateSettings3 = func() {
+	let buffData = [];
+	buffData.push(0.51);
+	buffData.push(0.51);
+	buffData.push(0.99);
+	buffData.push(0.99);
+
+	let aspect = wnd.width() / wnd.height();
+	let factor = 15;
+
+	buffData.push(aspect);
+	buffData.push(1);
+
+	buffData.push(offset3);
+	buffData.push(15);
+
+	mat3.buffer.copyData(buffData);
+	offset3 = offset3 + 0.01;
+};
+
 let startRender = func() {
-	if (mat == none || mat2 == none) {
+	if (mat == none || mat2 == none || mat3 == none) {
 		return;
 	}
 
 	let rend = mat.getRenderFunc(swapChain, commandQueue);
 	let rend2 = mat2.getAsyncRenderFunc(swapChain, commandQueue);
+	let rend3 = mat3.getAsyncRenderFunc(swapChain, commandQueue);
 
 	let clearRT = api.aux.clearRT();
 	
@@ -86,10 +109,12 @@ let startRender = func() {
 		clearRT.executeAsync(commandQueue);
 
 		rend2();
+		rend3();
 		rend(func() {
 			swapChain.present();
 			updateSettings();
 			updateSettings2();
+			updateSettings3();
 			wnd.finishDraw();
 		});
 	};
@@ -110,5 +135,12 @@ prep(device, "shaders/perlinNoiseCurves.hlsl", func(data) {
 	mat2 = data;
 
 	updateSettings2();
+	startRender();
+});
+
+prep(device, "shaders/perlinNoiseCircle.hlsl", func(data) {
+	mat3 = data;
+
+	updateSettings3();
 	startRender();
 });
