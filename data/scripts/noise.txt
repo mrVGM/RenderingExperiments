@@ -20,6 +20,7 @@ generalInit();
 
 let mat = none;
 
+let offset = 0;
 let updateSettings = func() {
 	let buffData = [];
 	buffData.push(0);
@@ -28,7 +29,7 @@ let updateSettings = func() {
 	buffData.push(1);
 
 	let aspect = wnd.width() / wnd.height();
-	let factor = 10;
+	let factor = 3;
 
 	buffData.push(factor * aspect);
 	buffData.push(factor);
@@ -40,7 +41,7 @@ let updateSettings = func() {
 	buffData.push(2);
 
 	mat.buffer.copyData(buffData);
-	offset = offset + 0.01;
+	offset = offset + 0.001;
 };
 
 let startRender = func() {
@@ -68,8 +69,6 @@ let startRender = func() {
 };
 
 let prep = require("noise/canvasMaterial.txt");
-
-let offset = 0;
 
 prep(device, "shaders/perlinNoise.hlsl", func(data) {
 	mat = data;
