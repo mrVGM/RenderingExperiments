@@ -75,8 +75,6 @@ let createRaymarchMaterial = func(device, shadersFile, onReady) {
 		let index = 0;
 		
 		let render = func(renderDone) {
-			print("31231231");
-
 			let fe = api.fenceEvent();
 			fe.create();
 			fe.wait(fence, index, func(arg) {
@@ -123,12 +121,15 @@ let createRaymarchMaterial = func(device, shadersFile, onReady) {
 	});
 
 	let shaderCode = readFile(shadersFile);
-
-	let vertexShader = api.vertexShader();
-	vertexShader.compile(shaderCode);
-
 	let pixelShader = api.pixelShader();
+	let vertexShader = api.vertexShader();
+
+	try{
+	vertexShader.compile(shaderCode);
 	pixelShader.compile(shaderCode);
+	} catch(e) {
+		print(e);
+	}
 
 
 	mat.create(device, vertexShader, pixelShader);

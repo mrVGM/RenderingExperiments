@@ -363,7 +363,7 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 	}
 
-	float settings[16];
+	float settings[20];
 	{
 		DirectX::XMVECTOR fwd = DirectX::XMVectorSubtract(m_target, m_position);
 
@@ -407,6 +407,13 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		settings[index++] = DirectX::XMVectorGetY(upLeft);
 		settings[index++] = DirectX::XMVectorGetZ(upLeft);
 		settings[index++] = DirectX::XMVectorGetW(upLeft);
+		
+		DirectX::XMVECTOR sphere = DirectX::XMVectorSet(0,0,0, 1);
+
+		settings[index++] = DirectX::XMVectorGetX(sphere);
+		settings[index++] = DirectX::XMVectorGetY(sphere);
+		settings[index++] = DirectX::XMVectorGetZ(sphere);
+		settings[index++] = DirectX::XMVectorGetW(sphere);
 	}
 
 	CD3DX12_RANGE readRange(0, 0);
