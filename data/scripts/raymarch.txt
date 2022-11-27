@@ -1,0 +1,76 @@
+let math = require("math.txt");
+let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
+
+let wnd = api.window();
+wnd.create(1280, 720);
+
+let device = api.device();
+let swapChain = api.swapChain();
+let commandQueue = api.commandQueue();
+
+let generalInit = func() {
+	device.create();
+	commandQueue.create(device);
+	swapChain.create(device, wnd, commandQueue);
+	print("General Init!");
+};
+
+let cam = api.raymarching.raymarchCamera();
+let initCamera = func(camBuff) {
+	let pos = math.vector3(0, 2, 0);
+	let target = math.vector3(0, 2, 5);
+
+	let aspect = wnd.width() / wnd.height();
+	cam.setPosition(pos);
+	cam.setTarget(target);
+	cam.setAspect(aspect);
+	cam.setNearPlane(0.1);
+	cam.setFarPlane(10000);
+	cam.setFOV(60);
+
+	cam.setCamBuff(camBuff);
+	api.app_context.inputHandler = cam;
+
+	return;
+};
+
+let mat = none;
+
+generalInit();
+
+let startRender = func() {
+	if (mat == none) {
+		return;
+	}
+
+	let rend = mat.getRenderFunc(swapChain, commandQueue);
+	let clearRT = api.aux.clearRT();
+	clearRT.create(device);
+	
+	let renderLoop = func() {
+		if (wnd.isAlive() == 0) {
+			return;
+		}
+
+		swapChain.updateCurrentFrameIndex();
+		clearRT.populate(swapChain);
+		clearRT.executeAsync(commandQueue);
+
+		rend(func() {
+			swapChain.present();
+			wnd.finishDraw();
+		});
+	};
+
+	api.app_context.render = func(arg) { renderLoop(); };
+};
+
+let prep = require("raymarch/raymarchMaterial.txt");
+
+print("dooooo");
+prep(device, "shaders/raymarch.hlsl", func(data) {
+	mat = data;
+	initCamera(mat.buffer);
+	startRender();
+});
