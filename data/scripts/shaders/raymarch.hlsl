@@ -37,7 +37,7 @@ float mandelbulbSDF(float3 pos)
     float dr = 1;
     float r;
 
-    for (int i = 0; i < 15; ++i) {
+    for (int i = 0; i < 30; ++i) {
         r = length(z);
         if (r > 2) {
             break;
@@ -121,7 +121,8 @@ float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
             float c = (1 + dot(sunDir, normal)) / 2;
             c = max(c, 0.2);
 
-            float3 col = c * float3(1, 1, 0);
+            float n = length(curPos);
+            float3 col = c * (0.5 + 0.5 * cos(6.283185 * (3 * n + float3(0.15, 0, 0))));
 
             return float4(col, 1);
         }

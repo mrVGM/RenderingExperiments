@@ -429,7 +429,7 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		settings[index++] = DirectX::XMVectorGetZ(sphere2);
 		settings[index++] = DirectX::XMVectorGetW(sphere2);
 		
-		DirectX::XMVECTOR mandelbulbPower = DirectX::XMVectorSet(4 * (sin(0.1 * m_tick) + 1), 0, 0, 0);
+		DirectX::XMVECTOR mandelbulbPower = DirectX::XMVectorSet(1.5 * (sin(0.1 * m_tick) + 1) + 5, 0, 0, 0);
 		settings[index++] = DirectX::XMVectorGetX(mandelbulbPower);
 		settings[index++] = DirectX::XMVectorGetY(mandelbulbPower);
 		settings[index++] = DirectX::XMVectorGetZ(mandelbulbPower);
