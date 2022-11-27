@@ -51,7 +51,7 @@ add_library (Rendering
 	"dxCopyCommandQueue.cpp"
 	"deferred/dxLitMatCL.h"
 	"deferred/dxLitMatCL.cpp"
-	"helper/dxCamera.h"
+	"raymarching/dxRayMarchCamera.h"
 	"helper/dxCamera.cpp"
 	"primitives/cube.h"
 	"primitives/cube.cpp"
@@ -73,6 +73,10 @@ add_library (Rendering
 	"clouds/dxCloudsCamera.cpp"
 	"noise/dxCanvasMatCL.h"
 	"noise/dxCanvasMatCL.cpp"
+	"raymarching/dxRayMarchMatCL.h"
+	"raymarching/dxRayMarchMatCL.cpp"
+	"raymarching/dxRayMarchCamera.h"
+	"raymarching/dxRayMarchCamera.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

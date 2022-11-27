@@ -45,6 +45,9 @@
 
 #include "noise/dxCanvasMatCL.h"
 
+#include "raymarching/dxRayMarchMatCL.h"
+#include "raymarching/dxRayMarchCamera.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -270,6 +273,21 @@ namespace rendering
 		noise.SetProperty("canvasMat", CreateNativeFunc(0, [](Value scope) {
 			noise::DXCanvasMatCL* canvasMat = new noise::DXCanvasMatCL();
 			return NativeObject::Create(canvasMat);
+		}));
+#pragma endregion
+
+#pragma region Raymarching
+		m_api.SetProperty("raymarching", interpreter::utils::GetEmptyObject());
+		Value raymarching = m_api.GetProperty("raymarching");
+
+		raymarching.SetProperty("raymarchMat", CreateNativeFunc(0, [](Value scope) {
+			raymarch::DXRayMarchMatCL* raymarchMat = new raymarch::DXRayMarchMatCL();
+			return NativeObject::Create(raymarchMat);
+		}));
+
+		raymarching.SetProperty("raymarchCamera", CreateNativeFunc(0, [](Value scope) {
+			raymarch::DXRayMarchCamera* raymarchCamera = new raymarch::DXRayMarchCamera();
+			return NativeObject::Create(raymarchCamera);
 		}));
 #pragma endregion
 
