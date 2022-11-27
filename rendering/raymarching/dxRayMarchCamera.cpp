@@ -363,7 +363,7 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 	}
 
-	float settings[28];
+	float settings[32];
 	{
 		DirectX::XMVECTOR fwd = DirectX::XMVectorSubtract(m_target, m_position);
 
@@ -428,6 +428,12 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		settings[index++] = DirectX::XMVectorGetY(sphere2);
 		settings[index++] = DirectX::XMVectorGetZ(sphere2);
 		settings[index++] = DirectX::XMVectorGetW(sphere2);
+		
+		DirectX::XMVECTOR mandelbulbPower = DirectX::XMVectorSet(4 * (sin(0.1 * m_tick) + 1), 0, 0, 0);
+		settings[index++] = DirectX::XMVectorGetX(mandelbulbPower);
+		settings[index++] = DirectX::XMVectorGetY(mandelbulbPower);
+		settings[index++] = DirectX::XMVectorGetZ(mandelbulbPower);
+		settings[index++] = DirectX::XMVectorGetW(mandelbulbPower);
 	}
 
 	CD3DX12_RANGE readRange(0, 0);

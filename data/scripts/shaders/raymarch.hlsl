@@ -9,6 +9,8 @@ cbuffer CamInfo : register(b0)
 
     float4 m_sphere;
     float4 m_sphere2;
+
+    float4 m_mandelbulbPower;
 };
 
 struct PSInput
@@ -29,7 +31,7 @@ float smoothMin(float a, float b, float k)
 
 float mandelbulbSDF(float3 pos)
 {
-    float power = 8;
+    float power = m_mandelbulbPower.x;
 
     float3 z = pos;
     float dr = 1;

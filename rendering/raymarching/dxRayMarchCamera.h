@@ -14,7 +14,7 @@ namespace rendering::raymarch
 		ID3D12Resource* m_camBuff = nullptr;
 
 		float m_angleSpeed = 40;
-		float m_moveSpeed = 1;
+		float m_moveSpeed = 0.1;
 
 		float m_azimuth = 90;
 		float m_altitude = 0;
