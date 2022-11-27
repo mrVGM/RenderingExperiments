@@ -44,6 +44,8 @@ let startRender = func() {
 		return;
 	}
 
+	initCamera(mat.buffer);
+
 	let rend = mat.getRenderFunc(swapChain, commandQueue);
 	let clearRT = api.aux.clearRT();
 	clearRT.create(device);
@@ -68,7 +70,6 @@ let startRender = func() {
 
 let prep = require("raymarch/raymarchMaterial.txt");
 
-print("dooooo");
 prep(device, "shaders/raymarch.hlsl", func(data) {
 	mat = data;
 	initCamera(mat.buffer);

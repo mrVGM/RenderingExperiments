@@ -347,67 +347,74 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		m_altitude = -80;
 	}
 
+	{
+		float azimuth = M_PI * m_azimuth / 180.0;
+		float altitude = M_PI * m_altitude / 180.0;
+		XMVECTOR fwdVector = XMVectorSet(cos(azimuth) * cos(altitude), sin(altitude), sin(azimuth) * cos(altitude), 0);
+		XMVECTOR rightVector = XMVector3Cross(XMVectorSet(0, 1, 0, 0), fwdVector);
+		rightVector = XMVector3Normalize(rightVector);
 
-	float azimuth = M_PI * m_azimuth / 180.0;
-	float altitude = M_PI * m_altitude / 180.0;
-	
-	XMVECTOR fwdVector = XMVectorSet(cos(azimuth) * cos(altitude), sin(altitude), sin(azimuth) * cos(altitude), 0);
-	XMVECTOR rightVector = XMVector3Cross(XMVectorSet(0, 1, 0, 0), fwdVector);
-	rightVector = XMVector3Normalize(rightVector);
+		XMVECTOR moveVector = XMVectorSet(right, 0, forward, 0);
+		moveVector = XMVector3Normalize(moveVector);
+		moveVector = m_moveSpeed * moveVector;
+		moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
 
-	XMVECTOR moveVector = XMVectorSet(right, 0, forward, 0);
-	moveVector = XMVector3Normalize(moveVector);
-	moveVector = m_moveSpeed * moveVector;
-	moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
-
-	m_position = DirectX::XMVectorAdd(m_position, moveVector);
-	m_target = DirectX::XMVectorAdd(m_position, fwdVector);
-
-	float matrixCoefs[25];
-	DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(GetMVPMatrix());
-
-	int index = 0;
-	for (int r = 0; r < 4; ++r) {
-		float x = DirectX::XMVectorGetX(mvp.r[r]);
-		float y = DirectX::XMVectorGetY(mvp.r[r]);
-		float z = DirectX::XMVectorGetZ(mvp.r[r]);
-		float w = DirectX::XMVectorGetW(mvp.r[r]);
-
-		matrixCoefs[index++] = x;
-		matrixCoefs[index++] = y;
-		matrixCoefs[index++] = z;
-		matrixCoefs[index++] = w;
+		m_position = DirectX::XMVectorAdd(m_position, moveVector);
+		m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 	}
 
-	matrixCoefs[index++] = DirectX::XMVectorGetX(m_position);
-	matrixCoefs[index++] = DirectX::XMVectorGetY(m_position);
-	matrixCoefs[index++] = DirectX::XMVectorGetZ(m_position);
-	matrixCoefs[index++] = 1;
+	float settings[16];
+	{
+		DirectX::XMVECTOR fwd = DirectX::XMVectorSubtract(m_target, m_position);
 
+		DirectX::XMVECTOR up{ 0, 1, 0, 1 };
+		DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, fwd);
+		up = DirectX::XMVector3Cross(fwd, right);
 
+		fwd = DirectX::XMVector3Normalize(fwd);
+		right = DirectX::XMVector3Normalize(right);
+		up = DirectX::XMVector3Normalize(up);
 
-	m_sunAngle += dt * 3;
-	if (m_sunAngle > 180) {
-		m_sunAngle = 0;
+		float fovRad = DirectX::XMConvertToRadians(m_fov);
+
+		float h = tan(fovRad / 2);
+		float w = m_aspect * h;
+
+		right = w * right;
+		up = h * up;
+
+		int index = 0;
+		settings[index++] = DirectX::XMVectorGetX(m_position);
+		settings[index++] = DirectX::XMVectorGetY(m_position);
+		settings[index++] = DirectX::XMVectorGetZ(m_position);
+		settings[index++] = DirectX::XMVectorGetW(m_position);
+
+		DirectX::XMVECTOR bottomLeft = DirectX::XMVectorAdd(DirectX::XMVectorAdd(m_target, -1 * right), -1 * up);
+		DirectX::XMVECTOR bottomRight = DirectX::XMVectorAdd(bottomLeft, 2 * right);
+		DirectX::XMVECTOR upLeft = DirectX::XMVectorAdd(bottomLeft, 2 * up);
+
+		settings[index++] = DirectX::XMVectorGetX(bottomLeft);
+		settings[index++] = DirectX::XMVectorGetY(bottomLeft);
+		settings[index++] = DirectX::XMVectorGetZ(bottomLeft);
+		settings[index++] = DirectX::XMVectorGetW(bottomLeft);
+
+		settings[index++] = DirectX::XMVectorGetX(bottomRight);
+		settings[index++] = DirectX::XMVectorGetY(bottomRight);
+		settings[index++] = DirectX::XMVectorGetZ(bottomRight);
+		settings[index++] = DirectX::XMVectorGetW(bottomRight);
+
+		settings[index++] = DirectX::XMVectorGetX(upLeft);
+		settings[index++] = DirectX::XMVectorGetY(upLeft);
+		settings[index++] = DirectX::XMVectorGetZ(upLeft);
+		settings[index++] = DirectX::XMVectorGetW(upLeft);
 	}
-
-	m_sunAngle = 70;
-	float sunDist = 100000;
-	matrixCoefs[index++] = sunDist * cos(M_PI * m_sunAngle / 180.0);
-	matrixCoefs[index++] = sunDist * sin(M_PI * m_sunAngle / 180.0);
-	matrixCoefs[index++] = 0;
-	matrixCoefs[index++] = 1;
-	
-	
-	m_cloudDisplacement += dt;
-	matrixCoefs[index++] = m_cloudDisplacement;
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
 	if (FAILED(m_camBuff->Map(0, &readRange, &dst))) {
 		return;
 	}
-	memcpy(dst, matrixCoefs, _countof(matrixCoefs) * sizeof(float));
+	memcpy(dst, settings, _countof(settings) * sizeof(float));
 	m_camBuff->Unmap(0, nullptr);
 }
 
