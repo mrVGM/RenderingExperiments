@@ -363,7 +363,7 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 	}
 
-	float settings[20];
+	float settings[28];
 	{
 		DirectX::XMVECTOR fwd = DirectX::XMVectorSubtract(m_target, m_position);
 
@@ -408,12 +408,26 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 		settings[index++] = DirectX::XMVectorGetZ(upLeft);
 		settings[index++] = DirectX::XMVectorGetW(upLeft);
 		
+		DirectX::XMVECTOR sun = DirectX::XMVectorSet(20,20,0, 1);
+		settings[index++] = DirectX::XMVectorGetX(sun);
+		settings[index++] = DirectX::XMVectorGetY(sun);
+		settings[index++] = DirectX::XMVectorGetZ(sun);
+		settings[index++] = DirectX::XMVectorGetW(sun);
+
+		m_tick += dt;
+
 		DirectX::XMVECTOR sphere = DirectX::XMVectorSet(0,0,0, 1);
+		DirectX::XMVECTOR sphere2 = DirectX::XMVectorSet(3 * sin(m_tick), 0, 0, 0.7);
 
 		settings[index++] = DirectX::XMVectorGetX(sphere);
 		settings[index++] = DirectX::XMVectorGetY(sphere);
 		settings[index++] = DirectX::XMVectorGetZ(sphere);
 		settings[index++] = DirectX::XMVectorGetW(sphere);
+
+		settings[index++] = DirectX::XMVectorGetX(sphere2);
+		settings[index++] = DirectX::XMVectorGetY(sphere2);
+		settings[index++] = DirectX::XMVectorGetZ(sphere2);
+		settings[index++] = DirectX::XMVectorGetW(sphere2);
 	}
 
 	CD3DX12_RANGE readRange(0, 0);

@@ -32,6 +32,8 @@ namespace rendering::raymarch
 		DirectX::XMVECTOR m_position;
 		DirectX::XMVECTOR m_target;
 
+		float m_tick = 0;
+
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		DirectX::XMMATRIX GetMVPMatrix() const;
