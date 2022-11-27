@@ -27,8 +27,37 @@ float smoothMin(float a, float b, float k)
     return -smoothMax(-a, -b, k);
 }
 
+float mandelbulbSDF(float3 pos)
+{
+    float power = 8;
+
+    float3 z = pos;
+    float dr = 1;
+    float r;
+
+    for (int i = 0; i < 15; ++i) {
+        r = length(z);
+        if (r > 2) {
+            break;
+        }
+
+        float theta = acos(z.z / r) * power;
+        float phi = atan2(z.y, z.x) * power;
+        float zr = pow(r, power);
+
+        dr = pow(r, power - 1) * power * dr + 1;
+
+        z = zr * float3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
+        z += pos;
+    }
+
+    return 0.5 * log(r) * r / dr;
+}
+
 float sdf(float3 pos)
 {
+    return mandelbulbSDF(pos);
+
     float s1Dist = length(pos - m_sphere.xyz) - m_sphere.w;
     float s2Dist = length(pos - m_sphere2.xyz) - m_sphere2.w;
 
@@ -79,13 +108,12 @@ float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
 
     float3 curPos = m_camPos;
 
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         curPos += t * dir;
 
         t = sdf(curPos);
 
         if (t < 0.001) {
-
             float3 normal = calcNormal(curPos);
             float3 sunDir = normalize(m_sun.xyz - curPos);
             float c = (1 + dot(sunDir, normal)) / 2;

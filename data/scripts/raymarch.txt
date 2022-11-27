@@ -54,7 +54,7 @@ let startRender = func() {
 		if (wnd.isAlive() == 0) {
 			return;
 		}
-
+		print("reerreer");
 		swapChain.updateCurrentFrameIndex();
 		clearRT.populate(swapChain);
 		clearRT.executeAsync(commandQueue);
