@@ -3,15 +3,17 @@
 #include "nativeObject.h"
 
 #include "d3dx12.h"
+#include "dxRenderer.h"
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <string>
 
+
 namespace rendering
 {
-	class DXSwapChain : public interpreter::INativeObject
+	class DXSwapChain : public interpreter::INativeObject, public ISwapChain
 	{
 		static const UINT FrameCount = 2;
 
@@ -36,10 +38,7 @@ namespace rendering
 		bool Present(std::string& errorMessage);
 		void UpdateCurrentFrameIndex();
 	public:
-		CD3DX12_VIEWPORT m_viewport;
-		CD3DX12_RECT m_scissorRect;
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const;
-		ID3D12Resource* GetCurrentRenderTarget() const;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const override;
+		ID3D12Resource* GetCurrentRenderTarget() const override;
 	};
 }
