@@ -2,8 +2,12 @@
 
 #include "nativeObject.h"
 #include "d3dx12.h"
+#include "IRenderStage.h"
+
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <list>
+#include <string>
 
 namespace rendering
 {
@@ -27,6 +31,12 @@ namespace rendering
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		bool SetupDSVHeap(ID3D12Resource* dsTexture, std::string& errorMessage);
+		
+		std::list<IRenderStage*> m_renderStages;
+
 	public:
+		ID3D12Device* GetDevice() const;
+		ISwapChain* GetISwapChain() const;
+		ID3D12CommandQueue* GetCommandQueue() const;
 	};
 }

@@ -24,7 +24,8 @@ return Value();
 	Value& p_device = GetOrCreateProperty(nativeObject, "device");
 	Value& p_swapChain = GetOrCreateProperty(nativeObject, "swapChain");
 	Value& p_commandQueue = GetOrCreateProperty(nativeObject, "commandQueue");
-	
+	Value& p_renderStages = GetOrCreateProperty(nativeObject, "renderStages");
+
 	Value& setDevice = GetOrCreateProperty(nativeObject, "setDevice");
 	setDevice = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
 		Value selfValue = scope.GetProperty("self");
@@ -100,6 +101,50 @@ return Value();
 		return Value();
 	});
 
+
+	Value& addRenderStage = GetOrCreateProperty(nativeObject, "addRenderStage");
+	addRenderStage = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value renderStageValue = scope.GetProperty("param0");
+		IRenderStage* renderStage = dynamic_cast<IRenderStage*>(NativeObject::ExtractNativeObject(renderStageValue));
+
+		if (!renderStage) {
+			THROW_EXCEPTION("Please supply a Render Stage!")
+		}
+
+		std::list<Value> tmp;
+		if (!p_renderStages.IsNone()) {
+			p_renderStages.ToList(tmp);
+		}
+		tmp.push_back(renderStageValue);
+		p_renderStages = Value::FromList(tmp);
+
+		self->m_renderStages.push_back(renderStage);
+
+		return Value();
+	});
+
+
+	Value& initRenderStages = GetOrCreateProperty(nativeObject, "initRenderStages");
+	initRenderStages = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		for (std::list<IRenderStage*>::iterator it = self->m_renderStages.begin(); it != self->m_renderStages.end(); ++it) {
+			IRenderStage* cur = *it;
+
+			std::string error;
+			bool res = cur->Init(*self, error);
+			if (!res) {
+				THROW_EXCEPTION("Can't Init Render Stages!")
+			}
+		}
+
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -118,6 +163,21 @@ bool rendering::DXRenderer::SetupDSVHeap(ID3D12Resource* dsTexture, std::string&
 
 	m_dsTexture = dsTexture;
 	return true;
+}
+
+ID3D12Device* rendering::DXRenderer::GetDevice() const
+{
+	return m_device;
+}
+
+rendering::ISwapChain* rendering::DXRenderer::GetISwapChain() const
+{
+	return m_swapChain;
+}
+
+ID3D12CommandQueue* rendering::DXRenderer::GetCommandQueue() const
+{
+	return m_commandQueue;
 }
 
 #undef THROW_ERROR

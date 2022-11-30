@@ -85,6 +85,9 @@ add_library (Rendering
 	"scene/dxScene.cpp"
 	"dxRenderer.h"
 	"dxRenderer.cpp"
+	"IRenderStage.h"
+	"renderstage/dxClearRTRS.h"
+	"renderstage/dxClearRTRS.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
