@@ -81,6 +81,8 @@ add_library (Rendering
 	"scene/dxMesh.cpp"
 	"scene/dxMeshRepo.h"
 	"scene/dxMeshRepo.cpp"
+	"scene/dxScene.h"
+	"scene/dxScene.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
