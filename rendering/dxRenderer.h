@@ -21,7 +21,12 @@ namespace rendering
 		ISwapChain* m_swapChain = nullptr;
 		ID3D12CommandQueue* m_commandQueue = nullptr;
 
+		ID3D12Resource* m_dsTexture = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
+
+		bool SetupDSVHeap(ID3D12Resource* dsTexture, std::string& errorMessage);
 	public:
 	};
 }
