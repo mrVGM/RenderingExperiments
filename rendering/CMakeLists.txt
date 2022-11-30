@@ -79,6 +79,8 @@ add_library (Rendering
 	"raymarching/dxRayMarchCamera.cpp"
 	"scene/dxMesh.h"
 	"scene/dxMesh.cpp"
+	"scene/dxMeshRepo.h"
+	"scene/dxMeshRepo.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

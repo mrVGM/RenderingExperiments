@@ -1,4 +1,4 @@
-#include "dxMesh.h"
+#include "scene/dxMesh.h"
 
 #include "d3dx12.h"
 #include "nativeFunc.h"
