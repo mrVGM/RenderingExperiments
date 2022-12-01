@@ -31,6 +31,8 @@ let setup = func(device, onReady) {
 		meshRepo.addMesh("plane", data.mesh);
 
 		scene.addObject("ground", "plane");
+		scene.addObjectMaterial("ground", "default");
+
 		let res = {};
 		res.meshRepo = meshRepo;
 		res.scene = scene;
