@@ -1,0 +1,19 @@
+let setup = func(device, onReady) {
+
+	let plane = require("primitives/plane.txt");
+	let meshRepo = api.scene.meshRepo();
+	let scene = api.scene.scene();
+
+	plane(device, func(data) {
+		meshRepo.addMesh("plane", data.mesh);
+
+		scene.addObject("ground", "plane");
+		let res = {};
+		res.meshRepo = meshRepo;
+		res.scene = scene;
+
+		onReady(res);
+	});
+};
+
+export = setup;
