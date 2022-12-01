@@ -7,17 +7,18 @@ namespace
 {
 	bool m_running = false;
 	std::thread* m_thread = nullptr;
-	std::vector<interpreter::GarbageCollector::ManagedValue*> m_dead;
+	std::list<interpreter::GarbageCollector::ManagedValue*> m_dead;
 
 	void run()
 	{
 		while (m_running) {
+			m_dead.clear();
 			interpreter::GarbageCollector::GetInstance().TakeControl();
 			interpreter::GarbageCollector::GetInstance().CollectGarbage();
 			interpreter::GarbageCollector::GetInstance().ReleaseControl();
 
-			for (int i = 0; i < m_dead.size(); ++i) {
-				delete m_dead[i];
+			for (std::list<interpreter::GarbageCollector::ManagedValue*>::iterator i = m_dead.begin(); i != m_dead.end(); ++i) {
+				delete *i;
 			}
 		}
 	}
@@ -173,7 +174,6 @@ void interpreter::GarbageCollector::CollectGarbage()
 	}
 
 	std::vector<ManagedValue*> alive;
-	m_dead.clear();
 
 	for (int i = 0; i < m_allValues.size(); ++i) {
 		if (m_allValues[i]->m_visited) {
