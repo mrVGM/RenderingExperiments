@@ -2,15 +2,15 @@
 
 #include "nativeObject.h"
 #include "materials/IMaterial.h"
+#include "materials/IMaterialRepo.h"
 
 #include <map>
 #include <string>
 
 namespace rendering::material
 {
-	class DXMaterialRepo : public interpreter::INativeObject
+	class DXMaterialRepo : public interpreter::INativeObject, public IMaterialRepo
 	{
-		std::map<std::string, IMaterial*> m_materials;
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 	public:
 	};

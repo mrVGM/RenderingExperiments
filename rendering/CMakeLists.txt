@@ -93,7 +93,7 @@ add_library (Rendering
 	"materials/IMaterial.h"
 	"materials/dxSimpleUnlitMat.h"
 	"materials/dxSimpleUnlitMat.cpp"
- "scene/IScene.h" "scene/IMeshRepo.h")
+ "scene/IScene.h" "scene/IMeshRepo.h" "materials/IMaterialRepo.h")
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

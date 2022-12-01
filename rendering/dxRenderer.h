@@ -6,6 +6,7 @@
 #include "window.h"
 #include "scene/IScene.h"
 #include "scene/dxMeshRepo.h"
+#include "materials/IMaterialRepo.h"
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -44,6 +45,7 @@ namespace rendering
 		
 		scene::IScene* m_scene = nullptr;
 		scene::IMeshRepo* m_meshRepo = nullptr;
+		material::IMaterialRepo* m_materialRepo = nullptr;
 
 		std::list<IRenderStage*> m_renderStages;
 

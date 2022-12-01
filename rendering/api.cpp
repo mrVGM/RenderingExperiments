@@ -55,6 +55,9 @@
 #include "scene/dxMesh.h"
 #include "scene/dxMeshRepo.h"
 
+#include "materials/dxMaterialRepo.h"
+#include "materials/dxSimpleUnlitMat.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -330,6 +333,22 @@ namespace rendering
 		scene.SetProperty("meshRepo", CreateNativeFunc(0, [](Value scope) {
 			scene::DXMeshRepo* meshRepo = new scene::DXMeshRepo();
 			return NativeObject::Create(meshRepo);
+		}));
+
+#pragma endregion
+
+#pragma region Materials
+		m_api.SetProperty("material", interpreter::utils::GetEmptyObject());
+		Value material = m_api.GetProperty("material");
+
+		material.SetProperty("materialRepo", CreateNativeFunc(0, [](Value scope) {
+			material::DXMaterialRepo* materialRepo = new material::DXMaterialRepo();
+			return NativeObject::Create(materialRepo);
+		}));
+
+		material.SetProperty("simpleUnlitMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXSimpleUnlitMatCL* simpleUnlitMat = new material::DXSimpleUnlitMatCL();
+			return NativeObject::Create(simpleUnlitMat);
 		}));
 
 #pragma endregion

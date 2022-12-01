@@ -10,6 +10,7 @@
 #include "dxBuffer.h"
 #include "scene/dxScene.h"
 #include "scene/dxMeshRepo.h"
+#include "materials/dxMaterialRepo.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -38,7 +39,26 @@ return Value();
 
 	Value& p_scene = GetOrCreateProperty(nativeObject, "scene");
 	Value& p_meshRepo = GetOrCreateProperty(nativeObject, "meshRepo");
+	Value& p_materialRepo = GetOrCreateProperty(nativeObject, "materialRepo");
 	
+	Value& setMaterialRepo = GetOrCreateProperty(nativeObject, "setMaterialRepo");
+	setMaterialRepo = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value materialRepoValue = scope.GetProperty("param0");
+		material::DXMaterialRepo* materialRepo = dynamic_cast<material::DXMaterialRepo*>(NativeObject::ExtractNativeObject(materialRepoValue));
+
+		if (!materialRepo) {
+			THROW_EXCEPTION("Please supply a Material Repo!")
+		}
+
+		p_materialRepo = materialRepoValue;
+		self->m_materialRepo = materialRepo;
+
+		return Value();
+	});
+
 	Value& setScene = GetOrCreateProperty(nativeObject, "setScene");
 	setScene = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
 		Value selfValue = scope.GetProperty("self");
