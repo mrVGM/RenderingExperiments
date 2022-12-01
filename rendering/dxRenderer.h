@@ -21,9 +21,11 @@ namespace rendering
 
 	class DXRenderer : public interpreter::INativeObject
 	{
+		int m_counter = 0;
 		ID3D12Device* m_device = nullptr;
 		ISwapChain* m_swapChain = nullptr;
 		ID3D12CommandQueue* m_commandQueue = nullptr;
+		ID3D12Fence* m_fence = nullptr;
 
 		ID3D12Resource* m_dsTexture = nullptr;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
@@ -38,5 +40,8 @@ namespace rendering
 		ID3D12Device* GetDevice() const;
 		ISwapChain* GetISwapChain() const;
 		ID3D12CommandQueue* GetCommandQueue() const;
+
+		bool Render(std::string& errorMessage);
+		bool Wait(std::string& errorMessage);
 	};
 }

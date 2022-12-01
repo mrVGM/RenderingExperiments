@@ -5,6 +5,7 @@
 #include "dxSwapChain.h"
 #include "dxCommandQueue.h"
 #include "dxTexture.h"
+#include "dxFence.h"
 
 
 #define THROW_ERROR(hRes, error) \
@@ -25,6 +26,7 @@ return Value();
 	Value& p_swapChain = GetOrCreateProperty(nativeObject, "swapChain");
 	Value& p_commandQueue = GetOrCreateProperty(nativeObject, "commandQueue");
 	Value& p_renderStages = GetOrCreateProperty(nativeObject, "renderStages");
+	Value& p_fence = GetOrCreateProperty(nativeObject, "fence");
 
 	Value& setDevice = GetOrCreateProperty(nativeObject, "setDevice");
 	setDevice = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
@@ -145,6 +147,25 @@ return Value();
 		return Value();
 	});
 
+	Value& setFence = GetOrCreateProperty(nativeObject, "setFence");
+	setFence = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value fenceValue = scope.GetProperty("param0");
+		DXFence* fence = dynamic_cast<DXFence*>(NativeObject::ExtractNativeObject(fenceValue));
+
+		if (!fence) {
+			THROW_EXCEPTION("Please supply a fence!")
+		}
+
+		p_fence = fenceValue;
+		self->m_fence = fence->GetFence();
+
+		return Value();
+	});
+
+
 #undef THROW_EXCEPTION
 }
 
@@ -178,6 +199,41 @@ rendering::ISwapChain* rendering::DXRenderer::GetISwapChain() const
 ID3D12CommandQueue* rendering::DXRenderer::GetCommandQueue() const
 {
 	return m_commandQueue;
+}
+
+bool rendering::DXRenderer::Render(std::string& errorMessage)
+{
+	for (std::list<IRenderStage*>::iterator it = m_renderStages.begin(); it != m_renderStages.end(); ++it) {
+		IRenderStage* cur = *it;
+		
+		bool res = cur->Execute(*this, errorMessage);
+		if (!res) {
+			return false;
+		}
+	}
+
+	m_commandQueue->Signal(m_fence, m_counter);
+	return true;
+}
+
+bool rendering::DXRenderer::Wait(std::string& errorMessage)
+{
+	HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	if (!event) {
+		errorMessage = "Can't create fence event!";
+		return false;
+	}
+
+	HRESULT hr = m_fence->SetEventOnCompletion(m_counter, event);
+
+	if (FAILED(hr)) {
+		errorMessage = "Can't attach wait event to the fence!";
+		return false;
+	}
+
+	WaitForSingleObject(event, INFINITE);
+	++m_counter;
+	return true;
 }
 
 #undef THROW_ERROR
