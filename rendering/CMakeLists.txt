@@ -91,6 +91,8 @@ add_library (Rendering
 	"materials/dxMaterialRepo.h"
 	"materials/dxMaterialRepo.cpp"
 	"materials/IMaterial.h"
+	"materials/dxSimpleUnlitMat.h"
+	"materials/dxSimpleUnlitMat.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -31,6 +31,8 @@ namespace rendering
 		ID3D12CommandQueue* m_commandQueue = nullptr;
 		ID3D12Fence* m_fence = nullptr;
 
+		ID3D12Resource* m_camBuffer = nullptr;
+
 		ID3D12Resource* m_dsTexture = nullptr;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
 
@@ -41,9 +43,10 @@ namespace rendering
 		std::list<IRenderStage*> m_renderStages;
 
 	public:
-		ID3D12Device* GetDevice() const;
-		ISwapChain* GetISwapChain() const;
-		ID3D12CommandQueue* GetCommandQueue() const;
+		ID3D12Device* GetDevice();
+		ISwapChain* GetISwapChain();
+		ID3D12CommandQueue* GetCommandQueue();
+		ID3D12Resource* GetCamBuff();
 
 		bool Render(std::string& errorMessage);
 		bool Wait(std::string& errorMessage);

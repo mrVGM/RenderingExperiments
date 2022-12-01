@@ -7,6 +7,7 @@
 #include "dxTexture.h"
 #include "dxFence.h"
 #include "window.h"
+#include "dxBuffer.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -23,6 +24,10 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
 	Value& p_wnd = GetOrCreateProperty(nativeObject, "window");
+
+	Value& p_dsTexture = GetOrCreateProperty(nativeObject, "dsTexture");
+	Value& p_camBuff = GetOrCreateProperty(nativeObject, "camBuff");
+
 	Value& p_device = GetOrCreateProperty(nativeObject, "device");
 	Value& p_swapChain = GetOrCreateProperty(nativeObject, "swapChain");
 	Value& p_commandQueue = GetOrCreateProperty(nativeObject, "commandQueue");
@@ -113,11 +118,31 @@ return Value();
 			THROW_EXCEPTION("Please supply a DS Texture!")
 		}
 
+		p_dsTexture = dsTexValue;
+
 		std::string error;
 		bool res = self->SetupDSVHeap(dsTex->GetTexture(), error);
 		if (!res) {
 			THROW_EXCEPTION(error)
 		}
+
+		return Value();
+	});
+
+	Value& setCamBuff = GetOrCreateProperty(nativeObject, "setCamBuff");
+	setCamBuff = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value camBuffValue = scope.GetProperty("param0");
+		DXBuffer* camBuff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(camBuffValue));
+
+		if (!camBuff) {
+			THROW_EXCEPTION("Please supply a camera buffer!")
+		}
+
+		p_camBuff = camBuffValue;
+		self->m_camBuffer = camBuff->GetBuffer();
 
 		return Value();
 	});
@@ -205,19 +230,24 @@ bool rendering::DXRenderer::SetupDSVHeap(ID3D12Resource* dsTexture, std::string&
 	return true;
 }
 
-ID3D12Device* rendering::DXRenderer::GetDevice() const
+ID3D12Device* rendering::DXRenderer::GetDevice()
 {
 	return m_device;
 }
 
-rendering::ISwapChain* rendering::DXRenderer::GetISwapChain() const
+rendering::ISwapChain* rendering::DXRenderer::GetISwapChain()
 {
 	return m_swapChain;
 }
 
-ID3D12CommandQueue* rendering::DXRenderer::GetCommandQueue() const
+ID3D12CommandQueue* rendering::DXRenderer::GetCommandQueue()
 {
 	return m_commandQueue;
+}
+
+ID3D12Resource* rendering::DXRenderer::GetCamBuff()
+{
+	return m_camBuffer;
 }
 
 bool rendering::DXRenderer::Render(std::string& errorMessage)
