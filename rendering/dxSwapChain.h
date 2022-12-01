@@ -35,9 +35,11 @@ namespace rendering
 			int height,
 			std::string& errorMessage);
 
-		bool Present(std::string& errorMessage);
-		void UpdateCurrentFrameIndex();
+		
 	public:
+		bool Present(std::string& errorMessage) override;
+		void UpdateCurrentFrameIndex() override;
+
 		CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescriptor() const override;
 		ID3D12Resource* GetCurrentRenderTarget() const override;
 	};

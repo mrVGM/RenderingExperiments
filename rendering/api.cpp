@@ -48,6 +48,9 @@
 #include "raymarching/dxRayMarchMatCL.h"
 #include "raymarching/dxRayMarchCamera.h"
 
+#include "dxRenderer.h"
+#include "renderstage/dxClearRTRS.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -291,6 +294,20 @@ namespace rendering
 		}));
 #pragma endregion
 
+#pragma region Renderer
+		m_api.SetProperty("renderer", interpreter::utils::GetEmptyObject());
+		Value renderer = m_api.GetProperty("renderer");
+
+		renderer.SetProperty("renderer", CreateNativeFunc(0, [](Value scope) {
+			DXRenderer* renderer = new DXRenderer();
+			return NativeObject::Create(renderer);
+		}));
+
+		renderer.SetProperty("clearRTRS", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXClearRTRS* clearRT = new renderstage::DXClearRTRS();
+			return NativeObject::Create(clearRT);
+		}));
+#pragma endregion
 	}
 }
 

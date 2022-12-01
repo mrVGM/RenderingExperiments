@@ -1,0 +1,31 @@
+let math = require("math.txt");
+let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
+
+let wnd = api.window();
+wnd.create(1280, 720);
+
+let device = api.device();
+let swapChain = api.swapChain();
+let commandQueue = api.commandQueue();
+let fence = api.fence();
+
+let generalInit = func() {
+	device.create();
+	commandQueue.create(device);
+	swapChain.create(device, wnd, commandQueue);
+	fence.create(device);
+	print("General Init!");
+};
+
+generalInit();
+
+let renderer = api.renderer.renderer();
+
+renderer.setWindow(wnd);
+renderer.setDevice(device);
+renderer.setSwapChain(swapChain);
+renderer.setCommandQueue(commandQueue);
+renderer.setFence(fence);
+
+api.app_context.renderer = renderer;

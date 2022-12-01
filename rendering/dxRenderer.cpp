@@ -6,7 +6,7 @@
 #include "dxCommandQueue.h"
 #include "dxTexture.h"
 #include "dxFence.h"
-
+#include "window.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -22,11 +22,30 @@ void rendering::DXRenderer::InitProperties(interpreter::NativeObject & nativeObj
 scope.SetProperty("exception", Value(error));\
 return Value();
 
+	Value& p_wnd = GetOrCreateProperty(nativeObject, "window");
 	Value& p_device = GetOrCreateProperty(nativeObject, "device");
 	Value& p_swapChain = GetOrCreateProperty(nativeObject, "swapChain");
 	Value& p_commandQueue = GetOrCreateProperty(nativeObject, "commandQueue");
 	Value& p_renderStages = GetOrCreateProperty(nativeObject, "renderStages");
 	Value& p_fence = GetOrCreateProperty(nativeObject, "fence");
+
+	Value& setWindow = GetOrCreateProperty(nativeObject, "setWindow");
+	setWindow = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value wndValue = scope.GetProperty("param0");
+		Window* wnd = dynamic_cast<Window*>(NativeObject::ExtractNativeObject(wndValue));
+
+		if (!wnd) {
+			THROW_EXCEPTION("Please supply a window!")
+		}
+
+		p_wnd = wndValue;
+		self->m_wnd = wnd;
+
+		return Value();
+	});
 
 	Value& setDevice = GetOrCreateProperty(nativeObject, "setDevice");
 	setDevice = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
@@ -203,6 +222,8 @@ ID3D12CommandQueue* rendering::DXRenderer::GetCommandQueue() const
 
 bool rendering::DXRenderer::Render(std::string& errorMessage)
 {
+	m_swapChain->UpdateCurrentFrameIndex();
+
 	for (std::list<IRenderStage*>::iterator it = m_renderStages.begin(); it != m_renderStages.end(); ++it) {
 		IRenderStage* cur = *it;
 		
@@ -210,6 +231,11 @@ bool rendering::DXRenderer::Render(std::string& errorMessage)
 		if (!res) {
 			return false;
 		}
+	}
+
+	bool res = m_swapChain->Present(errorMessage);
+	if (!res) {
+		return false;
 	}
 
 	m_commandQueue->Signal(m_fence, m_counter);
