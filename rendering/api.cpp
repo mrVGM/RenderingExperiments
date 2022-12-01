@@ -51,6 +51,10 @@
 #include "dxRenderer.h"
 #include "renderstage/dxClearRTRS.h"
 
+#include "scene/dxScene.h"
+#include "scene/dxMesh.h"
+#include "scene/dxMeshRepo.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -307,6 +311,27 @@ namespace rendering
 			renderstage::DXClearRTRS* clearRT = new renderstage::DXClearRTRS();
 			return NativeObject::Create(clearRT);
 		}));
+#pragma endregion
+
+#pragma region Scene
+		m_api.SetProperty("scene", interpreter::utils::GetEmptyObject());
+		Value scene = m_api.GetProperty("scene");
+
+		scene.SetProperty("scene", CreateNativeFunc(0, [](Value scope) {
+			scene::DXScene* scene = new scene::DXScene();
+			return NativeObject::Create(scene);
+		}));
+
+		scene.SetProperty("mesh", CreateNativeFunc(0, [](Value scope) {
+			scene::DXMesh* mesh = new scene::DXMesh();
+			return NativeObject::Create(mesh);
+		}));
+
+		scene.SetProperty("meshRepo", CreateNativeFunc(0, [](Value scope) {
+			scene::DXMeshRepo* meshRepo = new scene::DXMeshRepo();
+			return NativeObject::Create(meshRepo);
+		}));
+
 #pragma endregion
 	}
 }
