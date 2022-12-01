@@ -247,7 +247,7 @@ void rendering::scene::DXScene::ConstructInstanceBuffersData()
 	for (std::list<Object3D*>::iterator testIt = objectList.begin(); testIt != objectList.end(); ++testIt) {
 		Object3D* tested = *testIt;
 
-		for (std::list<Object3D*>::iterator processedIt = objectList.begin(); processedIt != objectList.end(); ++processedIt) {
+		for (std::list<Object3D*>::iterator processedIt = objectList.begin(); processedIt != testIt; ++processedIt) {
 			Object3D* processed = *processedIt;
 
 			if (tested->Similar(*processed)) {
