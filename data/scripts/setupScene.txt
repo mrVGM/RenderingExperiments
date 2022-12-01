@@ -1,3 +1,26 @@
+let resources = require("resources/resourceUtils.txt");
+let utils = require("utils.txt");
+
+let loadInstanceBuffer = func(device, buffData, onReady) {
+	let id = buffData.id;
+	let count = buffData.count;
+
+	let stride = 40;
+	let size = count * stride;
+	
+	let bb = resources.bufferBuilder();
+	bb.upload(1);
+	bb.setSize(size);
+	bb.setStride(stride);
+
+	bb.build(device, func(buff) {
+		let res = {};
+		res.id = id;
+		res.buff = buff;
+		onReady(res);
+	});
+};
+
 let setup = func(device, onReady) {
 
 	let plane = require("primitives/plane.txt");
@@ -12,11 +35,25 @@ let setup = func(device, onReady) {
 		res.meshRepo = meshRepo;
 		res.scene = scene;
 
-		let instanceDataList =  scene.getInstanceBuffersData();
+		let instanceDataList = scene.getInstanceBuffersData();
 
-		print(instanceDataList.length);
+		let buffList = [];
 
-		onReady(res);
+		let callReady = func() {
+			if (buffList.length < instanceDataList.length) {
+				return;
+			}
+
+			scene.setInstanceBuffers(buffList);
+			onReady(res);
+		};
+
+		utils.foreach(instanceDataList, func(x) {
+			loadInstanceBuffer(device, x, func(buff) {
+				buffList.push(buff);
+				callReady();
+			});
+		});
 	});
 };
 
