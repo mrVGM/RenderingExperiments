@@ -8,6 +8,8 @@
 #include "dxFence.h"
 #include "window.h"
 #include "dxBuffer.h"
+#include "scene/dxScene.h"
+#include "scene/dxMeshRepo.h"
 
 #define THROW_ERROR(hRes, error) \
 if (FAILED(hRes)) {\
@@ -33,6 +35,45 @@ return Value();
 	Value& p_commandQueue = GetOrCreateProperty(nativeObject, "commandQueue");
 	Value& p_renderStages = GetOrCreateProperty(nativeObject, "renderStages");
 	Value& p_fence = GetOrCreateProperty(nativeObject, "fence");
+
+	Value& p_scene = GetOrCreateProperty(nativeObject, "scene");
+	Value& p_meshRepo = GetOrCreateProperty(nativeObject, "meshRepo");
+	
+	Value& setScene = GetOrCreateProperty(nativeObject, "setScene");
+	setScene = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value sceneValue = scope.GetProperty("param0");
+		scene::DXScene* scene = dynamic_cast<scene::DXScene*>(NativeObject::ExtractNativeObject(sceneValue));
+
+		if (!scene) {
+			THROW_EXCEPTION("Please supply a Scene!")
+		}
+
+		p_scene = sceneValue;
+		self->m_scene = scene;
+
+		return Value();
+	});
+
+	Value& setMeshRepo = GetOrCreateProperty(nativeObject, "setMeshRepo");
+	setMeshRepo = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXRenderer* self = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value meshRepoValue = scope.GetProperty("param0");
+		scene::DXMeshRepo* meshRepo = dynamic_cast<scene::DXMeshRepo*>(NativeObject::ExtractNativeObject(meshRepoValue));
+
+		if (!meshRepo) {
+			THROW_EXCEPTION("Please supply a Mesh Repo!")
+		}
+
+		p_meshRepo = meshRepoValue;
+		self->m_meshRepo = meshRepo;
+
+		return Value();
+	});
 
 	Value& setWindow = GetOrCreateProperty(nativeObject, "setWindow");
 	setWindow = CreateNativeMethod(nativeObject, 1, [&](Value scope) {

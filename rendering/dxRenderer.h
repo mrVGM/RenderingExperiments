@@ -4,6 +4,8 @@
 #include "d3dx12.h"
 #include "IRenderStage.h"
 #include "window.h"
+#include "scene/IScene.h"
+#include "scene/dxMeshRepo.h"
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -40,6 +42,9 @@ namespace rendering
 
 		bool SetupDSVHeap(ID3D12Resource* dsTexture, std::string& errorMessage);
 		
+		scene::IScene* m_scene = nullptr;
+		scene::IMeshRepo* m_meshRepo = nullptr;
+
 		std::list<IRenderStage*> m_renderStages;
 
 	public:
