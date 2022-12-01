@@ -28,4 +28,9 @@ renderer.setSwapChain(swapChain);
 renderer.setCommandQueue(commandQueue);
 renderer.setFence(fence);
 
+let clearRTRS = api.renderer.clearRTRS();
+renderer.addRenderStage(clearRTRS);
+
+renderer.initRenderStages();
+
 api.app_context.renderer = renderer;
