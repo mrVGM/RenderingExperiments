@@ -12,6 +12,10 @@ let setup = func(device, onReady) {
 		res.meshRepo = meshRepo;
 		res.scene = scene;
 
+		let instanceDataList =  scene.getInstanceBuffersData();
+
+		print(instanceDataList.length);
+
 		onReady(res);
 	});
 };
