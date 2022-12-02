@@ -28,13 +28,7 @@ let setup = func(device, onReady) {
 	let meshRepo = api.scene.meshRepo();
 	let scene = api.scene.scene();
 
-	plane(device, func(data) {
-		meshRepo.addMesh("plane", data.mesh);
-
-		scene.addObject("ground", "plane");
-		scene.addObjectMaterial("ground", "default");
-		scene.setObjectScale("ground", math.vector3(1000, 1, 1000));
-
+	let setupInstanceBuffers = func() {
 		let res = {};
 		res.meshRepo = meshRepo;
 		res.scene = scene;
@@ -58,6 +52,26 @@ let setup = func(device, onReady) {
 				callReady();
 			});
 		});
+	};
+
+	let planeMeshLoaded = 0;
+
+	let setupScene = func() {
+		if (planeMeshLoaded == 0) {
+			return;
+		}
+
+		scene.addObject("ground", "plane");
+		scene.addObjectMaterial("ground", "default");
+		scene.setObjectScale("ground", math.vector3(1000, 1, 1000));
+
+		setupInstanceBuffers();
+	};
+
+	plane(device, func(data) {
+		meshRepo.addMesh("plane", data.mesh);
+		planeMeshLoaded = 1;
+		setupScene();
 	});
 };
 
