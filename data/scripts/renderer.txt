@@ -46,6 +46,13 @@ renderer.setCommandQueue(commandQueue);
 renderer.setFence(fence);
 
 
+let clearRT = api.renderer.clearRT();
+let clearDS = api.renderer.clearDS();
+let unlitPass = api.renderer.unlitPass();
+renderer.addRenderStage(clearRT);
+renderer.addRenderStage(clearDS);
+renderer.addRenderStage(unlitPass);
+
 let rendererReady = func() {
 	if (renderer.camBuff == none 
 		|| renderer.scene == none
@@ -53,6 +60,7 @@ let rendererReady = func() {
 		|| renderer.dsTexture == none) {
 		return;
 	}
+	renderer.initRenderStages();
 	api.app_context.renderer = renderer;
 };
 
@@ -85,13 +93,6 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	renderer.setMaterialRepo(materialRepo);
 	rendererReady();
 });
-
-let clearRTRS = api.renderer.clearRTRS();
-let unlitPass = api.renderer.unlitPass();
-renderer.addRenderStage(clearRTRS);
-renderer.addRenderStage(unlitPass);
-
-renderer.initRenderStages();
 
 let scene = require("setupScene.txt");
 

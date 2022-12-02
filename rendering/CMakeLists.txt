@@ -98,6 +98,8 @@ add_library (Rendering
 	"materials/IMaterialRepo.h"
 	"renderstage/dxUnlitPass.h"
 	"renderstage/dxUnlitPass.cpp"
+	"renderstage/dxClearDSRS.h"
+	"renderstage/dxClearDSRS.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

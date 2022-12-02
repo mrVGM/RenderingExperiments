@@ -57,6 +57,7 @@ namespace rendering
 		scene::IScene* GetScene();
 		scene::IMeshRepo* GetMeshRepo();
 		material::IMaterialRepo* GetMaterialRepo();
+		D3D12_CPU_DESCRIPTOR_HANDLE GetDSHandle();
 
 		bool Render(std::string& errorMessage);
 		bool Wait(std::string& errorMessage);

@@ -297,6 +297,17 @@ bool rendering::DXRenderer::SetupDSVHeap(ID3D12Resource* dsTexture, std::string&
 		);
 	}
 
+	{
+		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
+		m_device->CreateDepthStencilView(dsTexture, &depthStencilDesc, dsvHandle);
+	}
+
 	m_dsTexture = dsTexture;
 	return true;
 }
@@ -334,6 +345,11 @@ rendering::scene::IMeshRepo* rendering::DXRenderer::GetMeshRepo()
 rendering::material::IMaterialRepo* rendering::DXRenderer::GetMaterialRepo()
 {
 	return m_materialRepo;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE rendering::DXRenderer::GetDSHandle()
+{
+	return m_dsvHeap.Get()->GetCPUDescriptorHandleForHeapStart();
 }
 
 bool rendering::DXRenderer::Render(std::string& errorMessage)
