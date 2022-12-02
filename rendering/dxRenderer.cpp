@@ -56,6 +56,16 @@ return Value();
 		p_materialRepo = materialRepoValue;
 		self->m_materialRepo = materialRepo;
 
+		for (std::map<std::string, material::IMaterial*>::iterator it = materialRepo->m_materials.begin(); it != materialRepo->m_materials.end(); ++it) {
+			material::IMaterial* cur = it->second;
+
+			std::string error;
+			bool res = cur->Init(*self, error);
+			if (!res) {
+				THROW_EXCEPTION("Can't Init Material!")
+			}
+		}
+
 		return Value();
 	});
 

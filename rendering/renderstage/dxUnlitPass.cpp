@@ -100,7 +100,10 @@ bool rendering::renderstage::DXUnlitPass::Execute(DXRenderer& renderer, std::str
     ID3D12CommandList* ppCommandLists[] = { m_commandListStart.Get(), m_commandListEnd.Get() };
     renderer.GetCommandQueue()->ExecuteCommandLists(1, ppCommandLists);
 
-
+    bool res = RenderMaterials(renderer, errorMessage);
+    if (!res) {
+        return false;
+    }
 
     renderer.GetCommandQueue()->ExecuteCommandLists(1, ppCommandLists + 1);
 

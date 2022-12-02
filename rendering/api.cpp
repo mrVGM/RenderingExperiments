@@ -58,6 +58,8 @@
 #include "materials/dxMaterialRepo.h"
 #include "materials/dxSimpleUnlitMat.h"
 
+#include "renderstage/dxUnlitPass.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -313,6 +315,11 @@ namespace rendering
 		renderer.SetProperty("clearRTRS", CreateNativeFunc(0, [](Value scope) {
 			renderstage::DXClearRTRS* clearRT = new renderstage::DXClearRTRS();
 			return NativeObject::Create(clearRT);
+		}));
+
+		renderer.SetProperty("unlitPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXUnlitPass* unlitPass = new renderstage::DXUnlitPass();
+			return NativeObject::Create(unlitPass);
 		}));
 #pragma endregion
 

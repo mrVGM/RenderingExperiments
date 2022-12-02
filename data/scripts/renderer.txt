@@ -76,10 +76,15 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 });
 
 
+print("dadsad");
+
 let clearRTRS = api.renderer.clearRTRS();
+let unlitPass = api.renderer.unlitPass();
 renderer.addRenderStage(clearRTRS);
+renderer.addRenderStage(unlitPass);
 
 renderer.initRenderStages();
+print("dadsad1111");
 
 let scene = require("setupScene.txt");
 
