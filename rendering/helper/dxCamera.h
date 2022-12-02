@@ -11,6 +11,8 @@ namespace rendering
 {
 	class DXCamera : public interpreter::INativeObject, public InputHandler
 	{
+		float m_airAbsorbtion = 0.01;
+
 		float m_angleSpeed = 40;
 		float m_moveSpeed = 1;
 

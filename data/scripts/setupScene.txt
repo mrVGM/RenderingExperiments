@@ -1,5 +1,6 @@
 let resources = require("resources/resourceUtils.txt");
 let utils = require("utils.txt");
+let math = require("math.txt");
 
 let loadInstanceBuffer = func(device, buffData, onReady) {
 	let id = buffData.id;
@@ -32,6 +33,7 @@ let setup = func(device, onReady) {
 
 		scene.addObject("ground", "plane");
 		scene.addObjectMaterial("ground", "default");
+		scene.setObjectScale("ground", math.vector3(1000, 1, 1000));
 
 		let res = {};
 		res.meshRepo = meshRepo;

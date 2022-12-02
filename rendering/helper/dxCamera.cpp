@@ -329,7 +329,7 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	m_position = DirectX::XMVectorAdd(m_position, moveVector);
 	m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 
-	float matrixCoefs[25];
+	float matrixCoefs[22];
 	DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(GetMVPMatrix());
 
 	int index = 0;
@@ -351,6 +351,9 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	matrixCoefs[index++] = 1;
 
 	m_time += dt;
+	matrixCoefs[index++] = static_cast<float>(m_time);
+	matrixCoefs[index++] = m_airAbsorbtion;
+
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
