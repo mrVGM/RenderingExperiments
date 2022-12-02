@@ -49,7 +49,8 @@ renderer.setFence(fence);
 let rendererReady = func() {
 	if (renderer.camBuff == none 
 		|| renderer.scene == none
-		|| renderer.materialRepo == none) {
+		|| renderer.materialRepo == none
+		|| renderer.dsTexture == none) {
 		return;
 	}
 	api.app_context.renderer = renderer;
@@ -63,6 +64,16 @@ camBB.setStride(256);
 
 camBB.build(device, func(buff) {
 	renderer.setCamBuff(buff);
+	rendererReady();
+});
+
+let dsTexBB = resources.textureBuilder();
+dsTexBB.setWidth(wnd.width());
+dsTexBB.setHeight(wnd.height());
+dsTexBB.setDS(1);
+
+dsTexBB.build(device, func(tex) {
+	renderer.setDSV(tex);
 	rendererReady();
 });
 
