@@ -103,7 +103,10 @@ return Value();
 		++pit;
 		float z = (*pit).GetNum();
 
-		obj.m_transform.m_position = DirectX::XMVectorSet(x,y,z,1);
+		obj.m_transform.m_position[0] = x;
+		obj.m_transform.m_position[1] = y;
+		obj.m_transform.m_position[2] = z;
+
 		return Value();
 	});
 
@@ -141,7 +144,10 @@ return Value();
 		++rit;
 		float w = (*rit).GetNum();
 
-		obj.m_transform.m_rotation = DirectX::XMVectorSet(x, y, z, w);
+		obj.m_transform.m_rotation[0] = x;
+		obj.m_transform.m_rotation[1] = y;
+		obj.m_transform.m_rotation[2] = z;
+		obj.m_transform.m_rotation[3] = w;
 		return Value();
 	});
 
@@ -177,7 +183,10 @@ return Value();
 		++sit;
 		float z = (*sit).GetNum();
 
-		obj.m_transform.m_scale = DirectX::XMVectorSet(x, y, z, 1);
+		obj.m_transform.m_scale[0] = x;
+		obj.m_transform.m_scale[1] = y;
+		obj.m_transform.m_scale[2] = z;
+		
 		return Value();
 	});
 

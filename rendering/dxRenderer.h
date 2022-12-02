@@ -54,6 +54,7 @@ namespace rendering
 		ISwapChain* GetISwapChain();
 		ID3D12CommandQueue* GetCommandQueue();
 		ID3D12Resource* GetCamBuff();
+		scene::IScene* GetScene();
 
 		bool Render(std::string& errorMessage);
 		bool Wait(std::string& errorMessage);

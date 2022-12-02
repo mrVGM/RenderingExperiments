@@ -20,6 +20,23 @@ let generalInit = func() {
 
 generalInit();
 
+let cameraInputHandler = api.aux.camera();
+let initCamera = func() {
+	let pos = math.vector3(0, 2, 0);
+	let target = math.vector3(0, 2, 5);
+
+	let aspect = wnd.width() / wnd.height();
+	cameraInputHandler.setPosition(pos);
+	cameraInputHandler.setTarget(target);
+	cameraInputHandler.setAspect(aspect);
+	cameraInputHandler.setNearPlane(0.1);
+	cameraInputHandler.setFarPlane(10000);
+	cameraInputHandler.setFOV(60);
+
+	api.app_context.inputHandler = cameraInputHandler;
+};
+initCamera();
+
 let renderer = api.renderer.renderer();
 
 renderer.setWindow(wnd);

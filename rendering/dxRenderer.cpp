@@ -311,6 +311,11 @@ ID3D12Resource* rendering::DXRenderer::GetCamBuff()
 	return m_camBuffer;
 }
 
+rendering::scene::IScene* rendering::DXRenderer::GetScene()
+{
+	return m_scene;
+}
+
 bool rendering::DXRenderer::Render(std::string& errorMessage)
 {
 	m_swapChain->UpdateCurrentFrameIndex();

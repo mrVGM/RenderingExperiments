@@ -11,9 +11,9 @@ namespace rendering::scene
 {
 	struct Transform
 	{
-		DirectX::XMVECTOR m_position = DirectX::XMVectorSet(0, 0, 0, 1);
-		DirectX::XMVECTOR m_rotation = DirectX::XMVectorSet(1, 0, 0, 0);
-		DirectX::XMVECTOR m_scale = DirectX::XMVectorSet(1, 1, 1, 1);;
+		float m_position[3] = { 0, 0, 0 };
+		float m_rotation[4] = { 1, 0, 0, 0 };
+		float m_scale[3] = { 1, 1, 1 };
 	};
 
 	struct Object3D

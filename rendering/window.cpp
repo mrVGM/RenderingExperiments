@@ -75,45 +75,30 @@ namespace
 		m_lastTick = std::chrono::system_clock::now();
 
 		while (m_windowLoopRunning) {
-#if true
-			rendering::DXRenderer* renderer = GetRenderer();
-			if (renderer) {
-				std::string error;
-				bool res = renderer->Render(error);
-				if (!res) {
-					return;
-				}
-			}
-#else
-			m_renderSemaphore.acquire();			
-#endif
-
 			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 			auto nowNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
 			auto lastTickNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(m_lastTick);
 			long long deltaNN = nowNN.time_since_epoch().count() - lastTickNN.time_since_epoch().count();
 			double dt = deltaNN / 1000000000.0;
 			m_lastTick = now;
+			
+			rendering::DXRenderer* renderer = GetRenderer();
+			if (!renderer) {
+				continue;
+			}
 
+			std::string error;
+			bool res = renderer->Render(error);
+			if (!res) {
+				return;
+			}
+			
 			wnd->WindowTick(dt);
 
-#if true
-			if (renderer) {
-				std::string error;
-				bool res = renderer->Wait(error);
-				if (!res) {
-					return;
-				}
+			res = renderer->Wait(error);
+			if (!res) {
+				return;
 			}
-#else
-			interpreter::Value renderFunc = GetRenderFunc();
-			if (renderFunc.IsNone()) {
-				m_renderSemaphore.release();
-			}
-			else {
-				interpreter::utils::RunCallback(renderFunc, interpreter::Value());
-			}
-#endif
 		}
 	}
 }

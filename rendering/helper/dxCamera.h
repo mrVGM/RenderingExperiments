@@ -11,8 +11,6 @@ namespace rendering
 {
 	class DXCamera : public interpreter::INativeObject, public InputHandler
 	{
-		ID3D12Resource* m_camBuff = nullptr;
-
 		float m_angleSpeed = 40;
 		float m_moveSpeed = 1;
 
@@ -25,12 +23,10 @@ namespace rendering
 		float m_nearPlane = 0.1;
 		float m_farPlane = 1000;
 
-		float m_sunAngle = 0;
-
-		float m_cloudDisplacement = 0;
-
 		DirectX::XMVECTOR m_position;
 		DirectX::XMVECTOR m_target;
+
+		double m_time = 0;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
