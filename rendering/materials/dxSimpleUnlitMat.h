@@ -18,7 +18,10 @@ namespace rendering::material
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
+		ID3D12Resource* m_curRT = nullptr;
+
 		ID3D12Resource* m_constantBuffer = nullptr;
+
 		ID3DBlob* m_vertexShader = nullptr;
 		ID3DBlob* m_pixelShader = nullptr;
 

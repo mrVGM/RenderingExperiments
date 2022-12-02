@@ -101,12 +101,13 @@ bool rendering::material::DXSimpleUnlitMatCL::Render(
     int indexBufferSize,
     std::string& errorMessage)
 {
-    // Command list allocators can only be reset when the associated 
-    // command lists have finished execution on the GPU; apps should use 
-    // fences to determine GPU execution progress.
-    THROW_ERROR(
-        m_commandAllocator->Reset(),
-        "Can't reset Command Allocator!")
+    if (m_curRT == nullptr || m_curRT != renderer->GetISwapChain()->GetCurrentRenderTarget()) {
+        THROW_ERROR(
+            m_commandAllocator->Reset(),
+            "Can't reset Command Allocator!")
+    }
+
+    m_curRT = renderer->GetISwapChain()->GetCurrentRenderTarget();
 
     // However, when ExecuteCommandList() is called on a particular command 
     // list, that command list can then be reset at any time and must be before 

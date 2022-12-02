@@ -53,9 +53,9 @@ bool rendering::renderstage::DXClearRTRS::Execute(DXRenderer& renderer, std::str
         m_commandAllocator->Reset(),
         "Can't reset Command Allocator!")
 
-        THROW_ERROR(
-            m_commandList->Reset(m_commandAllocator.Get(), nullptr),
-            "Can't reset Command List!")
+    THROW_ERROR(
+        m_commandList->Reset(m_commandAllocator.Get(), nullptr),
+        "Can't reset Command List!")
 
     ID3D12Resource* renderTarget = renderer.GetISwapChain()->GetCurrentRenderTarget();
     {
