@@ -316,6 +316,16 @@ rendering::scene::IScene* rendering::DXRenderer::GetScene()
 	return m_scene;
 }
 
+rendering::scene::IMeshRepo* rendering::DXRenderer::GetMeshRepo()
+{
+	return m_meshRepo;
+}
+
+rendering::material::IMaterialRepo* rendering::DXRenderer::GetMaterialRepo()
+{
+	return m_materialRepo;
+}
+
 bool rendering::DXRenderer::Render(std::string& errorMessage)
 {
 	m_swapChain->UpdateCurrentFrameIndex();
