@@ -75,9 +75,6 @@ bool rendering::renderstage::DXUnlitPass::Execute(DXRenderer& renderer, std::str
         m_commandListStart->ResourceBarrier(1, &barrier);
     }
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = renderer.GetISwapChain()->GetCurrentRTVDescriptor();
-    m_commandListStart->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
     THROW_ERROR(
         m_commandListStart->Close(),
         "Can't close command List Srart!")
