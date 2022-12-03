@@ -91,7 +91,7 @@ let simpleUnlit = require("materials/simpleUnlitMat.txt");
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 2) {
+	if (materialsLoaded < 3) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
@@ -120,6 +120,18 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	mat.constantBuff.copyData(color);
 
 	materialRepo.addMaterial("red", mat);
+	materialsLoaded = setMaterialRepo + 1;
+	setMaterialRepo();
+});
+
+simpleUnlit(device, "shaders/cloudArea.hlsl", func(mat) {
+	let area = [];
+	area.push(10);
+	area.push(0.1);
+	
+	mat.constantBuff.copyData(area);
+
+	materialRepo.addMaterial("cloudArea", mat);
 	materialsLoaded = setMaterialRepo + 1;
 	setMaterialRepo();
 });

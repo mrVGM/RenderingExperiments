@@ -70,12 +70,12 @@ let setup = func(device, onReady) {
 		scene.setObjectScale("ground", math.vector3(1000, 1, 1000));
 
 		scene.addObject("some_cube", "cube");
-		scene.addObjectMaterial("some_cube", "default");
+		scene.addObjectMaterial("some_cube", "cloudArea");
 		scene.setObjectPosition("some_cube", math.vector3(0, 5, 5));
 
-		scene.addObject("another_cube", "cube");
-		scene.addObjectMaterial("another_cube", "red");
-		scene.setObjectPosition("another_cube", math.vector3(0.5, 5.5, 5.5));
+		#scene.addObject("another_cube", "cube");
+		#scene.addObjectMaterial("another_cube", "red");
+		#scene.setObjectPosition("another_cube", math.vector3(0.5, 5.5, 5.5));
 
 		setupInstanceBuffers();
 	};
