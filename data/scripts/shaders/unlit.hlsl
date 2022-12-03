@@ -6,6 +6,11 @@ cbuffer MVCMatrix : register(b0)
     float m_airAbsorbtion;
 };
 
+cbuffer Settings : register(b1)
+{
+    float4 m_color;
+};
+
 struct PSInput
 {
     float4 position         : SV_POSITION;
@@ -65,5 +70,5 @@ float4 PSMain(float4 position : SV_POSITION, float4 worldPosition : WORLD_POSITI
 {
     float dist = length(worldPosition.xyz - m_camPos.xyz);
 
-    return float4(1,1,0,exp(-dist * m_airAbsorbtion));
+    return float4(m_color.xyz ,exp(-dist * m_airAbsorbtion));
 }

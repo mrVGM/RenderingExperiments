@@ -73,6 +73,10 @@ let setup = func(device, onReady) {
 		scene.addObjectMaterial("some_cube", "default");
 		scene.setObjectPosition("some_cube", math.vector3(0, 5, 5));
 
+		scene.addObject("another_cube", "cube");
+		scene.addObjectMaterial("another_cube", "red");
+		scene.setObjectPosition("another_cube", math.vector3(0.5, 5.5, 5.5));
+
 		setupInstanceBuffers();
 	};
 

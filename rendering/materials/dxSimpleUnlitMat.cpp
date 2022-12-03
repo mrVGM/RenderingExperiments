@@ -119,6 +119,7 @@ bool rendering::material::DXSimpleUnlitMatCL::Render(
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, renderer->GetCamBuff()->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootConstantBufferView(1, m_constantBuffer->GetGPUVirtualAddress());
 
     m_commandList->RSSetViewports(1, &renderer->GetISwapChain()->m_viewport);
     m_commandList->RSSetScissorRects(1, &renderer->GetISwapChain()->m_scissorRect);
@@ -189,10 +190,11 @@ bool rendering::material::DXSimpleUnlitMatCL::Init(DXRenderer& renderer, std::st
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        CD3DX12_ROOT_PARAMETER1 rootParameters;
-        rootParameters.InitAsConstantBufferView(0, 0);
+        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+        rootParameters[0].InitAsConstantBufferView(0, 0);
+        rootParameters[1].InitAsConstantBufferView(1, 0);
 
-        rootSignatureDesc.Init_1_1(1, &rootParameters, 0, nullptr, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
