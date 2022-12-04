@@ -183,7 +183,7 @@ float4 PSMain(
         }
     }
 
-    return float4(color, 1);
+    return float4(color, 0.3);
 
     if (intersections == 2) {
         return float4(0, 1, 0, 1);

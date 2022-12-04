@@ -102,7 +102,7 @@ add_library (Rendering
 	"materials/dxCloudMat.cpp"
 	"renderstage/dxCloudPass.h"
 	"renderstage/dxCloudPass.cpp"
-)
+ )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
