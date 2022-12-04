@@ -1,4 +1,4 @@
-#include "materials/dxSimpleUnlitMat.h"
+#include "materials/dxCloudMat.h"
 
 #include "nativeFunc.h"
 
@@ -15,7 +15,7 @@
 #include "deferred/gBuffer.h"
 #include "dxTexture.h"
 
-void rendering::material::DXSimpleUnlitMatCL::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::material::DXCloudMat::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -30,7 +30,7 @@ return Value();
     Value& setConstantBuff = GetOrCreateProperty(nativeObject, "setConstantBuff");
     setConstantBuff = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXSimpleUnlitMatCL* self = static_cast<DXSimpleUnlitMatCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCloudMat* self = static_cast<DXCloudMat*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value constantBuffValue = scope.GetProperty("param0");
         DXBuffer* constantBuff = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(constantBuffValue));
@@ -48,7 +48,7 @@ return Value();
     Value& setShaders = GetOrCreateProperty(nativeObject, "setShaders");
     setShaders = CreateNativeMethod(nativeObject, 2, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
-        DXSimpleUnlitMatCL* self = static_cast<DXSimpleUnlitMatCL*>(NativeObject::ExtractNativeObject(selfValue));
+        DXCloudMat* self = static_cast<DXCloudMat*>(NativeObject::ExtractNativeObject(selfValue));
 
         Value vertexShaderValue = scope.GetProperty("param0");
         DXVertexShader* vertexShader = dynamic_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(vertexShaderValue));
@@ -82,12 +82,12 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-rendering::material::MaterialType rendering::material::DXSimpleUnlitMatCL::GetMaterialType() const
+rendering::material::MaterialType rendering::material::DXCloudMat::GetMaterialType() const
 {
-    return rendering::material::MaterialType::Unlit;
+    return rendering::material::MaterialType::Cloud;
 }
 
-bool rendering::material::DXSimpleUnlitMatCL::Render(
+bool rendering::material::DXCloudMat::Render(
     rendering::DXRenderer* renderer,
     ID3D12Resource* vertexBuffer,
     int vertexBufferSize,
@@ -169,7 +169,7 @@ bool rendering::material::DXSimpleUnlitMatCL::Render(
     return true;
 }
 
-bool rendering::material::DXSimpleUnlitMatCL::Init(DXRenderer& renderer, std::string& errorMessage)
+bool rendering::material::DXCloudMat::Init(DXRenderer& renderer, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
     {

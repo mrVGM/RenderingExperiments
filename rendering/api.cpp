@@ -35,8 +35,8 @@
 #include "deferred/gBuffer.h"
 #include "deferred/dxLitPassCL.h"
 
-#include "materials/dxCloudMatCL.h"
 #include "materials/dxUnlitMatCL.h"
+#include "materials/dxCloudMat.h"
 
 #include "clouds/cloudSettingsReader.h"
 #include "clouds/dxCloudsCamera.h"
@@ -60,6 +60,7 @@
 
 #include "renderstage/dxUnlitPass.h"
 #include "renderstage/dxClearDSRS.h"
+#include "renderstage/dxCloudPass.h"
 
 #include <cmath>
 #include <numbers>
@@ -227,11 +228,6 @@ namespace rendering
 			return NativeObject::Create(litMat);
 		}));
 
-		deferred.SetProperty("cloudMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXCloudMatCL* cloudMat = new DXCloudMatCL();
-			return NativeObject::Create(cloudMat);
-		}));
-
 		deferred.SetProperty("unlitMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXUnlitMatCL* unlitMat = new DXUnlitMatCL();
 			return NativeObject::Create(unlitMat);
@@ -327,6 +323,11 @@ namespace rendering
 			renderstage::DXClearDSRS* clearDS = new renderstage::DXClearDSRS();
 			return NativeObject::Create(clearDS);
 		}));
+
+		renderer.SetProperty("cloudPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXCloudPass* cloudPass = new renderstage::DXCloudPass();
+			return NativeObject::Create(cloudPass);
+		}));
 #pragma endregion
 
 #pragma region Scene
@@ -362,6 +363,11 @@ namespace rendering
 		material.SetProperty("simpleUnlitMat", CreateNativeFunc(0, [](Value scope) {
 			material::DXSimpleUnlitMatCL* simpleUnlitMat = new material::DXSimpleUnlitMatCL();
 			return NativeObject::Create(simpleUnlitMat);
+		}));
+
+		material.SetProperty("cloudMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXCloudMat* cloudMat = new material::DXCloudMat();
+			return NativeObject::Create(cloudMat);
 		}));
 
 #pragma endregion

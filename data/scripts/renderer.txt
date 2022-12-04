@@ -49,9 +49,12 @@ renderer.setFence(fence);
 let clearRT = api.renderer.clearRT();
 let clearDS = api.renderer.clearDS();
 let unlitPass = api.renderer.unlitPass();
+let cloudPass = api.renderer.cloudPass();
+
 renderer.addRenderStage(clearRT);
 renderer.addRenderStage(clearDS);
 renderer.addRenderStage(unlitPass);
+renderer.addRenderStage(cloudPass);
 
 let rendererReady = func() {
 	if (renderer.camBuff == none 
@@ -87,6 +90,7 @@ dsTexBB.build(device, func(tex) {
 
 let materialRepo = api.material.materialRepo();
 let simpleUnlit = require("materials/simpleUnlitMat.txt");
+let cloudMat = require("materials/cloudMat.txt");
 
 
 let materialsLoaded = 0;
@@ -124,7 +128,7 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	setMaterialRepo();
 });
 
-simpleUnlit(device, "shaders/cloudArea.hlsl", func(mat) {
+cloudMat(device, "shaders/cloudArea.hlsl", func(mat) {
 	let area = [];
 	area.push(10);
 	area.push(0.1);

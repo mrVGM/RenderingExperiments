@@ -1,4 +1,4 @@
-#include "renderstage/dxUnlitPass.h"
+#include "renderstage/dxCloudPass.h"
 
 #include "nativeFunc.h"
 
@@ -14,7 +14,7 @@
 
 #include <set>
 
-void rendering::renderstage::DXUnlitPass::InitProperties(interpreter::NativeObject & nativeObject)
+void rendering::renderstage::DXCloudPass::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
 
@@ -31,7 +31,7 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
-bool rendering::renderstage::DXUnlitPass::Init(DXRenderer& renderer, std::string& errorMessage)
+bool rendering::renderstage::DXCloudPass::Init(DXRenderer& renderer, std::string& errorMessage)
 {
     using Microsoft::WRL::ComPtr;
 
@@ -59,7 +59,7 @@ bool rendering::renderstage::DXUnlitPass::Init(DXRenderer& renderer, std::string
     return true;
 }
 
-bool rendering::renderstage::DXUnlitPass::Execute(DXRenderer& renderer, std::string& errorMessage)
+bool rendering::renderstage::DXCloudPass::Execute(DXRenderer& renderer, std::string& errorMessage)
 {
     THROW_ERROR(
         m_commandAllocator->Reset(),
@@ -107,7 +107,7 @@ bool rendering::renderstage::DXUnlitPass::Execute(DXRenderer& renderer, std::str
     return true;
 }
 
-bool rendering::renderstage::DXUnlitPass::RenderMaterials(rendering::DXRenderer& renderer, std::string& errorMessage)
+bool rendering::renderstage::DXCloudPass::RenderMaterials(rendering::DXRenderer& renderer, std::string& errorMessage)
 {
     std::set<int> alreadyRendered;
 
@@ -144,7 +144,7 @@ bool rendering::renderstage::DXUnlitPass::RenderMaterials(rendering::DXRenderer&
                 return false;
             }
 
-            if (materialIt->second->GetMaterialType() == material::MaterialType::Unlit) {
+            if (materialIt->second->GetMaterialType() == material::MaterialType::Cloud) {
                 materials.push_back(materialIt->second);
             }
         }

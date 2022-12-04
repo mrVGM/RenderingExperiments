@@ -61,8 +61,6 @@ add_library (Rendering
 	"deferred/gBuffer.cpp"
 	"deferred/dxLitPassCL.h"
 	"deferred/dxLitPassCL.cpp"
-	"materials/dxCloudMatCL.h"
-	"materials/dxCloudMatCL.cpp"
 	"helper/inputHandler.h"
 	"clouds/cloudSettingsReader.h"
 	"clouds/cloudSettingsReader.cpp"
@@ -100,6 +98,10 @@ add_library (Rendering
 	"renderstage/dxUnlitPass.cpp"
 	"renderstage/dxClearDSRS.h"
 	"renderstage/dxClearDSRS.cpp"
+	"materials/dxCloudMat.h"
+	"materials/dxCloudMat.cpp"
+	"renderstage/dxCloudPass.h"
+	"renderstage/dxCloudPass.cpp"
 )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

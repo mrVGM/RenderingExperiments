@@ -14,6 +14,7 @@ namespace rendering::material
 	{
 		Unlit,
 		Lit,
+		Cloud,
 	};
 
 	class IMaterial
