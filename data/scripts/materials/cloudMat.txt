@@ -2,6 +2,11 @@ let prepNoiseTex = require("compute/noiseTexture.txt");
 
 let prepNoise = func(device, commandQueue, onReady) {
 	prepNoiseTex(device, 128, "shaders/computeNoise.hlsl", func(comp) {
+		let noiseData = [];
+		noiseData.push(128);
+		noiseData.push(10);
+		comp.constantBuffer.copyData(noiseData);
+
 		let fence = api.fence();
 		fence.create(device);
 
@@ -27,7 +32,7 @@ let prepNoise = func(device, commandQueue, onReady) {
 		let computeCommandQueue = api.computeCommandQueue();
 		computeCommandQueue.create(device);
 		comp.executeCompute(computeCommandQueue, fence, 1);
-
+		
 		print("Noise Compute Ready!");
 	});
 };

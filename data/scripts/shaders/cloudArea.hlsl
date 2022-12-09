@@ -160,6 +160,9 @@ float4 PSMain(
     float2 uv : UV,
     Wall walls[6] : WALLS) : SV_TARGET
 {
+    float4 textureColor = p_texture.Sample(p_sampler, float3(uv + 0.5, 0));
+    //return textureColor;
+
     int intersections = 0;
 
     float3 colors[6];
@@ -172,29 +175,40 @@ float4 PSMain(
 
     float3 color = float3(0, 0, 0);
 
-    for (int i = 0; i < 6; ++i) {
-        Wall cur = walls[i];
-        float3 hit;
-        if (intersectWall(cur, m_camPos.xyz, normalize(world_position.xyz - m_camPos.xyz), hit)) {
-            if (intersections == 0) {
-                color = colors[i];
+    float3 hits[2];
+    {
+        for (int i = 0; i < 6; ++i) {
+            Wall cur = walls[i];
+            float3 hit;
+            if (intersectWall(cur, m_camPos.xyz, normalize(world_position.xyz - m_camPos.xyz), hit)) {
+                hits[intersections] = hit;
+                if (intersections == 0) {
+                    color = colors[i];
+                }
+                else {
+                    color = 0.5 * color + 0.5 * colors[i];
+                }
+                intersections += 1;
             }
-            else {
-                color = 0.5 * color + 0.5 * colors[i];
-            }
-            intersections += 1;
         }
     }
 
-    return float4(color, 0.3);
-
-    if (intersections == 2) {
-        return float4(0, 1, 0, 1);
+    if (intersections != 2) {
+        return float4(1, 0, 0, 1);
     }
 
-    if (intersections == 0) {
-        return float4(0, 0, 1, 1);
+    float tr = 0;
+    float stepSize = length(hits[1] - hits[0]) / m_sampleSteps;
+    {
+        [unroll(50)]
+        for (int i = 1; i <= m_sampleSteps; ++i) {
+            float c = i / m_sampleSteps;
+            float3 curPos = (1 - c) * hits[0] + c * hits[1];
+
+            float4 textureColor = p_texture.Sample(p_sampler, curPos);
+            tr += textureColor.x * stepSize;
+        }
     }
 
-    return float4(1, 0, 0, 1);
+    return float4(1, 1, 1, 1 - exp(-tr * 3));
 }

@@ -130,8 +130,8 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 
 cloudMat(device, "shaders/cloudArea.hlsl", commandQueue, func(mat) {
 	let area = [];
-	area.push(10);
-	area.push(0.1);
+	area.push(20);
+	area.push(1.5);
 	
 	mat.constantBuff.copyData(area);
 

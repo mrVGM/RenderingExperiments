@@ -9,7 +9,7 @@ StructuredBuffer<SRVBuffElement> points1	: register(t0);    // SRV
 
 cbuffer InfoConstantBuff : register(b0)
 {
-    int m_texSize;
+    float m_texSize;
 
     float m_factor;
     float m_verticalOffset;
@@ -91,7 +91,10 @@ float3 noiseDir(int3 coord)
 
 float scalarNoise(float3 pos, int3 vertex)
 {
-    return dot(pos - vertex, noiseDir(vertex));
+    float3 localDir = pos - vertex;
+    int factor = min(m_factor, 256);
+    vertex %= factor;
+    return dot(localDir, noiseDir(vertex));
 }
 
 float calcNoise(float3 uvw)
