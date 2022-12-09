@@ -1,0 +1,101 @@
+let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
+
+let loadCB = func(device, onReady) {
+
+	let constBB = resources.bufferBuilder();
+	constBB.upload(1);
+	constBB.setSize(256);
+	constBB.setStride(256);
+
+	constBB.build(device, onReady);
+};
+
+let loadSRVBuff = func(device, buffSize, buffStride, onReady) {
+	
+	let srvBB = resources.bufferBuilder();
+	srvBB.upload(1);
+	srvBB.setSize(buffSize);
+	srvBB.setStride(buffStride);
+
+	srvBB.build(device, onReady);
+};
+
+let loadTex = func(device, texSize, onReady) {
+	let texBB = resources.textureBuilder();
+	texBB.setDim(3);
+	texBB.allowUA(1);
+	texBB.setWidth(texSize);
+	texBB.setHeight(texSize);
+	texBB.setDepth(texSize);
+
+	texBB.build(device, onReady);
+};
+
+let compileShader = func(shaderFile) {
+	let shaderCode = readFile(shaderFile);
+	let computeShader = api.computeShader();
+	computeShader.compile(shaderCode);
+	return computeShader;
+};
+
+let prepareData = func(device, texSize, shaderFile, onReady) {
+	let cBuff = none;
+	let srvBuff = none;
+	let uavTex = none;
+
+	let createDescHeap = func() {
+		let descHeap = api.descriptorHeap();
+		
+		let buffs = [];
+		let uavDesc = {};
+		uavDesc.type = "uav_tex";
+		uavDesc.texture = uavTex;
+		buffs.push(uavDesc);
+
+		let srvDesc = {};
+		srvDesc.type = "srv_buff";
+		srvDesc.buffer = srvBuff;
+		buffs.push(srvDesc);
+
+		descHeap.create(device, buffs);
+		return descHeap;
+	};
+
+	let callReady = func() {
+		if (cBuff == none || srvBuff == none || uavTex == none) {
+			return;
+		}
+
+		let compute = api.compute.noiseTexture();
+		try {
+		let shader = compileShader(shaderFile);
+		compute.create(device, shader);
+		} catch(e) {
+			print(e);
+		}
+		compute.setConstantBuffer(cBuff);
+		compute.setDataBuffer(srvBuff);
+		compute.setTexture(uavTex);
+		compute.setDescriptorHeap(createDescHeap());
+		
+		onReady(compute);
+	};
+
+	loadSRVBuff(device, 256, 256, func(buff) {
+		srvBuff = buff;
+		callReady();
+	});
+
+	loadCB(device, func(buff) {
+		cBuff = buff;
+		callReady();
+	});
+
+	loadTex(device, texSize, func(tex) {
+		uavTex = tex;
+		callReady();
+	});
+};
+
+export = prepareData;

@@ -102,6 +102,8 @@ add_library (Rendering
 	"materials/dxCloudMat.cpp"
 	"renderstage/dxCloudPass.h"
 	"renderstage/dxCloudPass.cpp"
+	"compute/dxNoiseTexture.h"
+	"compute/dxNoiseTexture.cpp"
  )
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -147,3 +147,36 @@ scene(device, func(data) {
 	renderer.setMeshRepo(data.meshRepo);
 	rendererReady();
 });
+
+
+let prepNoiseTex = require("compute/noiseTexture.txt");
+
+prepNoiseTex(device, 128, "shaders/computeNoise.hlsl", func(comp) {
+
+	let fence = api.fence();
+	fence.create(device);
+
+	let prepareForGraphics = func() {
+		let prepFE = api.fenceEvent();
+		prepFE.create();
+		prepFE.wait(fence, 2, func(arg) {
+			print("Noise Texture Prepared for Graphics!");
+		});
+		comp.executePrepareForPS(commandQueue, fence, 2);
+	};
+
+	let fe = api.fenceEvent();
+	fe.create();
+	fe.wait(fence, 1, func(arg) {
+		print("Noise Computed!");
+		prepareForGraphics();
+	});
+
+	comp.populate(128, 128, 128);
+
+	let computeCommandQueue = api.computeCommandQueue();
+	computeCommandQueue.create(device);
+	comp.executeCompute(computeCommandQueue, fence, 1);
+
+	print("Noise Compute Ready!");
+});

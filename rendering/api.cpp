@@ -62,6 +62,8 @@
 #include "renderstage/dxClearDSRS.h"
 #include "renderstage/dxCloudPass.h"
 
+#include "compute/dxNoiseTexture.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -370,6 +372,16 @@ namespace rendering
 			return NativeObject::Create(cloudMat);
 		}));
 
+#pragma endregion
+
+#pragma region Compute
+		m_api.SetProperty("compute", interpreter::utils::GetEmptyObject());
+		Value compute = m_api.GetProperty("compute");
+
+		compute.SetProperty("noiseTexture", CreateNativeFunc(0, [](Value scope) {
+			compute::DXNoiseTexture* noiseTexture = new compute::DXNoiseTexture();
+			return NativeObject::Create(noiseTexture);
+		}));
 #pragma endregion
 	}
 }
