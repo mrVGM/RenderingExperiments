@@ -14,6 +14,9 @@ cbuffer CloudAreaSettings : register(b1)
     float m_cloudAbsorbtion;
 };
 
+Texture3D p_texture     : register(t0);
+SamplerState p_sampler  : register(s0);
+
 struct Wall
 {
     float3 m_origin;

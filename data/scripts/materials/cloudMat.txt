@@ -1,4 +1,38 @@
-let createMat = func(device, shadersFile, onReady) {
+let prepNoiseTex = require("compute/noiseTexture.txt");
+
+let prepNoise = func(device, commandQueue, onReady) {
+	prepNoiseTex(device, 128, "shaders/computeNoise.hlsl", func(comp) {
+		let fence = api.fence();
+		fence.create(device);
+
+		let prepareForGraphics = func() {
+			let prepFE = api.fenceEvent();
+			prepFE.create();
+			prepFE.wait(fence, 2, func(arg) {
+				print("Noise Texture Prepared for Graphics!");
+				onReady(comp);
+			});
+			comp.executePrepareForPS(commandQueue, fence, 2);
+		};
+
+		let fe = api.fenceEvent();
+		fe.create();
+		fe.wait(fence, 1, func(arg) {
+			print("Noise Computed!");
+			prepareForGraphics();
+		});
+
+		comp.populate(128, 128, 128);
+
+		let computeCommandQueue = api.computeCommandQueue();
+		computeCommandQueue.create(device);
+		comp.executeCompute(computeCommandQueue, fence, 1);
+
+		print("Noise Compute Ready!");
+	});
+};
+
+let createMat = func(device, shadersFile, commandQueue, onReady) {
 	let shaderCode = readFile(shadersFile);
 
 	let vertexShader = api.vertexShader();
@@ -20,9 +54,35 @@ let createMat = func(device, shadersFile, onReady) {
 	bb.setSize(256);
 	bb.setStride(256);
 
+	let callReady = func() {
+		if (cloudMat.constantBuff == none || cloudMat.noiseTexture == none) {
+			return;
+		}
+
+		onReady(cloudMat);
+	};
+
 	bb.build(device, func(buff) {
 		cloudMat.setConstantBuff(buff);
-		onReady(cloudMat);
+		callReady();
+	});
+
+	prepNoise(device, commandQueue, func(comp) {
+		let noiseTex = comp.texture;
+
+		cloudMat.setNoiseTexture(noiseTex);
+
+		let descriptors = [];
+		let texDesc = {};
+		texDesc.type = "srv_tex";
+		texDesc.texture = noiseTex;
+		descriptors.push(texDesc);
+		let descHeap = api.descriptorHeap();
+		descHeap.create(device, descriptors);
+		cloudMat.setNoiseTexture(noiseTex);
+		cloudMat.setDescriptionHeap(descHeap);
+
+		callReady();
 	});
 };
 

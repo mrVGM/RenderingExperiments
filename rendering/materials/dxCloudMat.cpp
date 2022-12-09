@@ -14,6 +14,7 @@
 #include "dxFence.h"
 #include "deferred/gBuffer.h"
 #include "dxTexture.h"
+#include "dxDescriptorHeap.h"
 
 void rendering::material::DXCloudMat::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -26,6 +27,44 @@ return Value();
     Value& p_constantBuff = GetOrCreateProperty(nativeObject, "constantBuff");
     Value& p_vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& p_pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
+    Value& p_noiseTexture = GetOrCreateProperty(nativeObject, "noiseTexture");
+    Value& p_descriptionHeap = GetOrCreateProperty(nativeObject, "descriptionHeap");
+
+    Value& setDescriptionHeap = GetOrCreateProperty(nativeObject, "setDescriptionHeap");
+    setDescriptionHeap = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXCloudMat* self = static_cast<DXCloudMat*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value descHeapValue = scope.GetProperty("param0");
+        DXDescriptorHeap* descHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(descHeapValue));
+
+        if (!descHeap) {
+            THROW_EXCEPTION("Please supply Description Heap!")
+        }
+
+        p_descriptionHeap = descHeapValue;
+        self->m_descriptionHeap = descHeap->GetHeap();
+
+        return Value();
+    });
+
+    Value& setNoiseTexture = GetOrCreateProperty(nativeObject, "setNoiseTexture");
+    setNoiseTexture = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXCloudMat* self = static_cast<DXCloudMat*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value noiseTextureValue = scope.GetProperty("param0");
+        DXTexture* noiseTexture = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(noiseTextureValue));
+
+        if (!noiseTexture) {
+            THROW_EXCEPTION("Please supply constant buffer!")
+        }
+
+        p_noiseTexture = noiseTextureValue;
+        self->m_noiseTexture = noiseTexture->GetTexture();
+
+        return Value();
+    });
 
     Value& setConstantBuff = GetOrCreateProperty(nativeObject, "setConstantBuff");
     setConstantBuff = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
@@ -118,8 +157,11 @@ bool rendering::material::DXCloudMat::Render(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetDescriptorHeaps(1, &m_descriptionHeap);
+
     m_commandList->SetGraphicsRootConstantBufferView(0, renderer->GetCamBuff()->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootConstantBufferView(1, m_constantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootDescriptorTable(2, m_descriptionHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, &renderer->GetISwapChain()->m_viewport);
     m_commandList->RSSetScissorRects(1, &renderer->GetISwapChain()->m_scissorRect);
@@ -182,6 +224,21 @@ bool rendering::material::DXCloudMat::Init(DXRenderer& renderer, std::string& er
             featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
 
+        D3D12_STATIC_SAMPLER_DESC sampler = {};
+        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.MipLODBias = 0;
+        sampler.MaxAnisotropy = 0;
+        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        sampler.MinLOD = 0.0f;
+        sampler.MaxLOD = D3D12_FLOAT32_MAX;
+        sampler.ShaderRegister = 0;
+        sampler.RegisterSpace = 0;
+        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
         // Allow input layout and deny uneccessary access to certain pipeline stages.
         D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -189,12 +246,16 @@ bool rendering::material::DXCloudMat::Init(DXRenderer& renderer, std::string& er
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
+        CD3DX12_DESCRIPTOR_RANGE1 range;
+        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
         rootParameters[0].InitAsConstantBufferView(0, 0);
         rootParameters[1].InitAsConstantBufferView(1, 0);
+        rootParameters[2].InitAsDescriptorTable(1, &range);
 
-        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;

@@ -111,7 +111,7 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	mat.constantBuff.copyData(color);
 
 	materialRepo.addMaterial("default", mat);
-	materialsLoaded = setMaterialRepo + 1;
+	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
 });
 
@@ -124,11 +124,11 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	mat.constantBuff.copyData(color);
 
 	materialRepo.addMaterial("red", mat);
-	materialsLoaded = setMaterialRepo + 1;
+	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
 });
 
-cloudMat(device, "shaders/cloudArea.hlsl", func(mat) {
+cloudMat(device, "shaders/cloudArea.hlsl", commandQueue, func(mat) {
 	let area = [];
 	area.push(10);
 	area.push(0.1);
@@ -136,7 +136,7 @@ cloudMat(device, "shaders/cloudArea.hlsl", func(mat) {
 	mat.constantBuff.copyData(area);
 
 	materialRepo.addMaterial("cloudArea", mat);
-	materialsLoaded = setMaterialRepo + 1;
+	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
 });
 
@@ -146,37 +146,4 @@ scene(device, func(data) {
 	renderer.setScene(data.scene);
 	renderer.setMeshRepo(data.meshRepo);
 	rendererReady();
-});
-
-
-let prepNoiseTex = require("compute/noiseTexture.txt");
-
-prepNoiseTex(device, 128, "shaders/computeNoise.hlsl", func(comp) {
-
-	let fence = api.fence();
-	fence.create(device);
-
-	let prepareForGraphics = func() {
-		let prepFE = api.fenceEvent();
-		prepFE.create();
-		prepFE.wait(fence, 2, func(arg) {
-			print("Noise Texture Prepared for Graphics!");
-		});
-		comp.executePrepareForPS(commandQueue, fence, 2);
-	};
-
-	let fe = api.fenceEvent();
-	fe.create();
-	fe.wait(fence, 1, func(arg) {
-		print("Noise Computed!");
-		prepareForGraphics();
-	});
-
-	comp.populate(128, 128, 128);
-
-	let computeCommandQueue = api.computeCommandQueue();
-	computeCommandQueue.create(device);
-	comp.executeCompute(computeCommandQueue, fence, 1);
-
-	print("Noise Compute Ready!");
 });
