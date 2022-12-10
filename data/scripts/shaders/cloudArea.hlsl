@@ -10,6 +10,9 @@ cbuffer MVCMatrix : register(b0)
 
 cbuffer CloudAreaSettings : register(b1)
 {
+    float3 m_lightPosition;
+    float m_lightIntensity;
+
     float m_sampleSteps;
     float m_cloudAbsorbtion;
     float m_densityOffset;

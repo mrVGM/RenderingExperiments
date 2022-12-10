@@ -390,10 +390,10 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	memcpy(dst, matrixCoefs, _countof(matrixCoefs) * sizeof(float));
 	renderer->GetCamBuff()->Unmap(0, nullptr);
 
+	RunUpdaters(dt);
+
 	std::string error;
 	UpdateSceneTransform(renderer, error);
-
-	RunUpdaters(dt);
 }
 
 void rendering::DXCamera::RunUpdaters(double dt)

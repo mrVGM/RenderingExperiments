@@ -58,6 +58,13 @@ void rendering::helper::DXUpdater::Update(double dt)
 
 	Value api = GetAPI();
 	Value appContext = api.GetProperty("app_context");
+
+	Value rendererValue = appContext.GetProperty("renderer");
+	DXRenderer* renderer = nullptr;
+
+	if (!rendererValue.IsNone()) {
+		renderer = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(rendererValue));
+	}
 	
 	std::string rootDir = appContext.GetProperty("root_dir").GetString();
 	std::stringstream ss(data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.txt"));
@@ -71,6 +78,36 @@ void rendering::helper::DXUpdater::Update(double dt)
 
 	m_settingsBuffer->Map(0, &readRange, &dst);
 	float* floatData = reinterpret_cast<float*>(dst);
+
+	ss >> dummy;
+
+	float sunPos[3];
+	ss >> sunPos[0] >> sunPos[1] >> sunPos[2];
+
+	floatData[0] = sunPos[0];
+	floatData[1] = sunPos[1];
+	floatData[2] = sunPos[2];
+	floatData += 3;
+
+	if (renderer) {
+		scene::IScene* scene = renderer->GetScene();
+		std::map<std::string, scene::Object3D>::iterator sunIt = scene->m_objects.find("sun");
+
+		if (sunIt != scene->m_objects.end()) {
+			scene::Object3D& sunObj = sunIt->second;
+
+			sunObj.m_transform.m_position[0] = sunPos[0];
+			sunObj.m_transform.m_position[1] = sunPos[1];
+			sunObj.m_transform.m_position[2] = sunPos[2];
+		}
+	}
+
+	float lightIntensity;
+	ss >> lightIntensity;
+
+	*floatData = lightIntensity;
+	floatData += 1;
+
 	while (ss >> dummy) {
 		ss >> val;
 		*floatData = val;

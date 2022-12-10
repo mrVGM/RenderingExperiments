@@ -1,3 +1,5 @@
+m_lightPosition 5 5 5 1
+
 m_sampleSteps 35
 m_cloudAbsorbtion 1.5
 m_densityOffset 2
