@@ -50,6 +50,7 @@ void rendering::helper::DXUpdater::Update(double dt)
 {
 	using namespace interpreter;
 	m_timeSinceUpdate += dt;
+	m_totalTime += dt;
 	if (m_timeSinceUpdate < m_updateTime) {
 		return;
 	}
@@ -83,6 +84,10 @@ void rendering::helper::DXUpdater::Update(double dt)
 
 	float sunPos[3];
 	ss >> sunPos[0] >> sunPos[1] >> sunPos[2];
+
+	sunPos[0] = 0 + 5 * cos(0.3 * m_totalTime);
+	sunPos[1] = 5 + 5 * sin(0.3 * m_totalTime);
+	sunPos[2] = 5 + 0;
 
 	floatData[0] = sunPos[0];
 	floatData[1] = sunPos[1];

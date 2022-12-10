@@ -11,6 +11,7 @@ namespace rendering::helper
 {
 	class DXUpdater : public interpreter::INativeObject, public IUpdater
 	{
+		double m_totalTime = 0;
 		double m_timeSinceUpdate = 1000;
 		double m_updateTime = 1;
 
