@@ -6,6 +6,10 @@ let prepNoise = func(device, commandQueue, onReady) {
 		let noiseData = [];
 		noiseData.push(texSize);
 		noiseData.push(10);
+		noiseData.push(4);
+		noiseData.push(0.7);
+		noiseData.push(2);
+
 		comp.constantBuffer.copyData(noiseData);
 
 		let fence = api.fence();

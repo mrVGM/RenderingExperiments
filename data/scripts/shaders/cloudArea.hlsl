@@ -27,7 +27,8 @@ SamplerState p_sampler  : register(s0);
 
 float sampleCloud(float3 coord)
 {
-    return m_cloudAbsorbtion;
+    float4 tex = p_texture.Sample(p_sampler, coord + 0.1 * m_time);
+    return tex.x;
 }
 
 struct Wall
@@ -167,7 +168,7 @@ int findIntersections(Wall walls[6], float3 startPoint, float3 dir, out float3 i
     return num;
 }
 
-float lightMarch(Wall walls[6], float3 pos)
+float lightMarch(Wall walls[6], float3 pos, out float energy)
 {
     float3 hits[2];
     int num = findIntersections(walls, pos, normalize(m_lightPosition - pos), hits);
@@ -177,29 +178,33 @@ float lightMarch(Wall walls[6], float3 pos)
     }
 
     float distToLight = length(hits[0] - m_lightPosition);
-    float energyCoef = m_lightIntensity * exp(-distToLight * m_airLightAbsorbtion);
+    energy = m_lightIntensity * exp(-distToLight * m_airLightAbsorbtion);
 
-    float cloudDist = length(hits[0] - pos);
-    float stepSize = cloudDist / m_sampleSteps;
+    float lightTransmittance = 0;
+
     {
-
+        float cloudDist = length(hits[0] - pos);
+        float stepSize = cloudDist / m_sampleSteps;
+        [unroll(40)]
         for (int i = 1; i <= m_sampleSteps; ++i) {
             float c = i / m_sampleSteps;
             float3 testPoint = (1 - c) * hits[0] + c * pos;
 
             float n = sampleCloud(testPoint) * stepSize;
-            energyCoef *= exp(-n * m_cloudLightAbsorbtion);
+            lightTransmittance += n;
         }
     }
 
-    return energyCoef;
+    return lightTransmittance;
 }
 
 float phase(float cosAngle)
 {
     float g = m_g;
     float g2 = g * g;
-    return 0.5 * (1 - g2) / pow(1 + g2 - 2 * g * cosAngle, 1.5);
+    float x = 0.5 * (1 - g2) / pow(1 + g2 - 2 * g * cosAngle, 1.5);
+    float y = 0.5 * (1 - g2) / pow(1 + g2 + 2 * g * cosAngle, 1.5);
+    return 0.5 * (x + y);
 }
 
 PSInput VSMain(
@@ -241,29 +246,36 @@ float4 PSMain(
     }
 
     float light = 0;
+    float transmittance = 0;
+    float lightTransmittance = 0;
+
     float cloudDist = length(hits[1] - hits[0]);
     {
         float stepSize = cloudDist / m_sampleSteps;
-        float energyCoef = 1;
+        [unroll(40)]
         for (int i = 1; i <= m_sampleSteps; ++i) {
             float c = i / m_sampleSteps;
             float3 testPoint = (1 - c) * hits[0] + c * hits[1];
 
             float n = sampleCloud(testPoint) * stepSize;
-            energyCoef *= exp(-n * m_cloudLightAbsorbtion);
+            lightTransmittance += n;
+            transmittance += n;
 
-            float l = lightMarch(walls, testPoint);
+            float energy;
+            float l = lightMarch(walls, testPoint, energy);
 
             float cosAngle = dot(
                 normalize(testPoint - m_lightPosition),
                 normalize(m_camPos - testPoint)
             );
 
-            light += energyCoef * l * phase(cosAngle);
+            light += energy 
+                * phase(cosAngle)
+                * exp(-(lightTransmittance + l) * m_cloudLightAbsorbtion)
+                * (1 - exp(-2 * (lightTransmittance + l) * m_cloudLightAbsorbtion));
         }
     }
 
-    float transmittance = cloudDist * sampleCloud(hits[1]);
 
-    return float4(light, light, light, 1 - exp(-transmittance * m_cloudAbsorbtion));
+    return float4(light, light, light, 1 - exp(-transmittance * m_cloudAbsorbtion + m_densityOffset));
 }

@@ -12,7 +12,6 @@ cbuffer InfoConstantBuff : register(b0)
     float m_texSize;
 
     float m_factor;
-    float m_verticalOffset;
 
     float m_octaves;
     float m_persistance;
@@ -128,7 +127,21 @@ void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid
     uvw /= m_texSize;
     uvw *= m_factor;
 
-    float n = calcNoise(uvw);
+    float scale = 1;
+    float factor = m_persistance;
+    float totalFactor = 0;
+
+    float n = 0;
+
+    for (int i = 0; i < m_octaves; ++i) {
+        float curSample = calcNoise(scale * uvw);
+        n += factor * curSample;
+
+        totalFactor += factor;
+        scale *= m_scale;
+        factor *= m_persistance;
+    }
+    n /= totalFactor;
 
     texData[DTid] = float4(n, n, n, 1);
     return;
