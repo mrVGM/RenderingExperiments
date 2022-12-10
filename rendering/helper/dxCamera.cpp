@@ -6,6 +6,7 @@
 #include "dxRenderer.h"
 #include "api.h"
 #include "scene/IScene.h"
+#include "helper/dxUpdater.h"
 
 #include <list>
 #include <corecrt_math_defines.h>
@@ -74,6 +75,8 @@ void rendering::DXCamera::InitProperties(interpreter::NativeObject & nativeObjec
 #define THROW_EXCEPTION(error)\
 scope.SetProperty("exception", Value(error));\
 return Value();
+
+	Value& p_updaters = GetOrCreateProperty(nativeObject, "updaters");
 
 	Value& setPosition = GetOrCreateProperty(nativeObject, "setPosition");
 	setPosition = CreateNativeMethod(nativeObject, 1, [](Value scope) {
@@ -186,6 +189,30 @@ return Value();
 		}
 
 		self->m_fov = nearPlaneValue.GetNum();
+		return Value();
+	});
+
+	Value& addUpdater = GetOrCreateProperty(nativeObject, "addUpdater");
+	addUpdater = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value updaterValue = scope.GetProperty("param0");
+		helper::DXUpdater* updater = dynamic_cast<helper::DXUpdater*>(NativeObject::ExtractNativeObject(updaterValue));
+
+		if (!updater) {
+			THROW_EXCEPTION("Please supply updater!")
+		}
+
+		std::list<Value> tmp;
+		if (!p_updaters.IsNone()) {
+			p_updaters.ToList(tmp);
+		}
+
+		tmp.push_back(updaterValue);
+		p_updaters = Value::FromList(tmp);
+
+		self->m_updaters.push_back(updater);
 		return Value();
 	});
 
@@ -366,6 +393,16 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	std::string error;
 	UpdateSceneTransform(renderer, error);
 
+	RunUpdaters(dt);
+}
+
+void rendering::DXCamera::RunUpdaters(double dt)
+{
+	for (std::list<helper::IUpdater*>::iterator it = m_updaters.begin(); it != m_updaters.end(); ++it) {
+		helper::IUpdater* cur = *it;
+
+		cur->Update(dt);
+	}
 }
 
 DirectX::XMVECTOR rendering::DXCamera::GetRightVector() const

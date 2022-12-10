@@ -9,5 +9,6 @@ namespace rendering
 	{
 	public:
 		virtual void HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp) = 0;
+		virtual void RunUpdaters(double dt) = 0;
 	};
 }

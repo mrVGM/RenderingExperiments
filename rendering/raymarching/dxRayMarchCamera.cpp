@@ -445,6 +445,10 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, std::list<WPA
 	m_camBuff->Unmap(0, nullptr);
 }
 
+void rendering::raymarch::DXRayMarchCamera::RunUpdaters(double dt)
+{
+}
+
 DirectX::XMVECTOR rendering::raymarch::DXRayMarchCamera::GetRightVector() const
 {
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0, 1, 0, 0);

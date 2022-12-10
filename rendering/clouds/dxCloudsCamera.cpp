@@ -411,6 +411,10 @@ void rendering::clouds::DXCloudsCamera::HandleInput(double dt, std::list<WPARAM>
 	m_camBuff->Unmap(0, nullptr);
 }
 
+void rendering::clouds::DXCloudsCamera::RunUpdaters(double dt)
+{
+}
+
 DirectX::XMVECTOR rendering::clouds::DXCloudsCamera::GetRightVector() const
 {
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0, 1, 0, 0);

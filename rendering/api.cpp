@@ -64,6 +64,8 @@
 
 #include "compute/dxNoiseTexture.h"
 
+#include "helper/dxUpdater.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -254,6 +256,11 @@ namespace rendering
 		aux.SetProperty("clearRT", CreateNativeFunc(0, [](Value scope) {
 			DXClearRTCL* clearRT = new DXClearRTCL();
 			return NativeObject::Create(clearRT);
+		}));
+
+		aux.SetProperty("updater", CreateNativeFunc(0, [](Value scope) {
+			helper::DXUpdater* updater = new helper::DXUpdater();
+			return NativeObject::Create(updater);
 		}));
 #pragma endregion
 

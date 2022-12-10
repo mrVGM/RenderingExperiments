@@ -15,6 +15,7 @@ let generalInit = func() {
 	commandQueue.create(device);
 	swapChain.create(device, wnd, commandQueue);
 	fence.create(device);
+	api.app_context.root_dir = rootDir();
 	print("General Init!");
 };
 
@@ -129,11 +130,9 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 });
 
 cloudMat(device, "shaders/cloudArea.hlsl", commandQueue, func(mat) {
-	let area = [];
-	area.push(20);
-	area.push(1.5);
-	
-	mat.constantBuff.copyData(area);
+	let updater = api.aux.updater();
+	updater.setSettingsBuffer(mat.constantBuff);
+	cameraInputHandler.addUpdater(updater);
 
 	materialRepo.addMaterial("cloudArea", mat);
 	materialsLoaded = materialsLoaded + 1;

@@ -12,6 +12,7 @@ cbuffer CloudAreaSettings : register(b1)
 {
     float m_sampleSteps;
     float m_cloudAbsorbtion;
+    float m_densityOffset;
 };
 
 Texture3D p_texture     : register(t0);
@@ -160,9 +161,6 @@ float4 PSMain(
     float2 uv : UV,
     Wall walls[6] : WALLS) : SV_TARGET
 {
-    float4 textureColor = p_texture.Sample(p_sampler, float3(uv + 0.5, 0));
-    //return textureColor;
-
     int intersections = 0;
 
     float3 colors[6];
@@ -205,10 +203,10 @@ float4 PSMain(
             float c = i / m_sampleSteps;
             float3 curPos = (1 - c) * hits[0] + c * hits[1];
 
-            float4 textureColor = p_texture.Sample(p_sampler, curPos);
+            float4 textureColor = p_texture.Sample(p_sampler, curPos + 0.1 * m_time);
             tr += textureColor.x * stepSize;
         }
     }
 
-    return float4(1, 1, 1, 1 - exp(-tr * 3));
+    return float4(1, 1, 1, 1 - exp(-tr * 3 + m_densityOffset));
 }

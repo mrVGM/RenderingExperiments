@@ -354,6 +354,12 @@ interpreter::Session::Session(std::string rootDir, scripting::Parser& parser, st
 	});
 
 	scope->BindValue("now", now);
+
+	Value rootDirFunc = CreateNativeFunc(0, [&](Value scope) {
+		return Value(m_rootDir);
+	});
+
+	scope->BindValue("rootDir", rootDirFunc);
 }
 
 interpreter::Session::~Session()

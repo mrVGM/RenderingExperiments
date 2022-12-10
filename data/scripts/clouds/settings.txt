@@ -1,0 +1,3 @@
+m_sampleSteps 25
+m_cloudAbsorbtion 1.5
+m_densityOffset 1
