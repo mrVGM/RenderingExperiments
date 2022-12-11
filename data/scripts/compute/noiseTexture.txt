@@ -33,9 +33,8 @@ let loadTex = func(device, texSize, onReady) {
 };
 
 let compileShader = func(shaderFile) {
-	let shaderCode = readFile(shaderFile);
 	let computeShader = api.computeShader();
-	computeShader.compile(shaderCode);
+	computeShader.loadPrecompiled(shaderFile);
 	return computeShader;
 };
 

@@ -13,6 +13,8 @@ namespace rendering
 		bool Init(const std::string& shaderCode, std::string& errorMessage);
 
 		Microsoft::WRL::ComPtr<ID3DBlob> m_computeShader;
+
+		bool LoadPrecompiledShader(const std::string& name, std::string& errorMessage);
 	public:
 		ID3DBlob* GetCompiledShader() const;
 	};

@@ -2,7 +2,7 @@ let prepNoiseTex = require("compute/noiseTexture.txt");
 
 let prepNoise = func(device, commandQueue, onReady) {
 	let texSize = 256;
-	prepNoiseTex(device, texSize, "shaders/computeNoise.hlsl", func(comp) {
+	prepNoiseTex(device, texSize, "computeNoise.hlsl", func(comp) {
 		let noiseData = [];
 		noiseData.push(texSize);
 		noiseData.push(10);
