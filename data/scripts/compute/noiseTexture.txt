@@ -38,7 +38,7 @@ let compileShader = func(shaderFile) {
 	return computeShader;
 };
 
-let prepareData = func(device, texSize, shaderFile, onReady) {
+let prepareData = func(device, texSize, shaderFile, worlySizes, onReady) {
 	let cBuff = none;
 	let srvBuff = none;
 	let uavTex = none;
@@ -61,9 +61,9 @@ let prepareData = func(device, texSize, shaderFile, onReady) {
 		return descHeap;
 	};
 
-	let w1 = 3;
-	let w2 = 6;
-	let w3 = 8;
+	let w1 = worlySizes[0];
+	let w2 = worlySizes[1];
+	let w3 = worlySizes[2];
 	let dataBuffElements = w1 * w1 * w1 + w2 * w2 * w2 + w3 * w3 * w3;
 	let dataBuffStride = 12;
 	let dataBuffSize = dataBuffElements * dataBuffStride;
@@ -85,7 +85,8 @@ let prepareData = func(device, texSize, shaderFile, onReady) {
 		compute.setTexture(uavTex);
 		compute.setDescriptorHeap(createDescHeap());
 
-		compute.setupWorlyData(w1, w2, w3);
+		compute.setWorlySizes(worlySizes[0], worlySizes[1], worlySizes[2]);
+		compute.setupWorlyData();
 		
 		onReady(compute);
 	};

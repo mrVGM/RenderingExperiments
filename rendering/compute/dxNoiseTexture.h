@@ -26,6 +26,10 @@ namespace rendering::compute
 		ID3D12Resource* m_texture;
 		ID3D12DescriptorHeap* m_descriptorHeap;
 
+		int m_worly1Size = -1;
+		int m_worly2Size = -1;
+		int m_worly3Size = -1;
+
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_computeAllocator;
@@ -51,7 +55,7 @@ namespace rendering::compute
 		bool ExecuteCompute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 		bool ExecutePrepareForPS(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 
-		bool SetupDataBuffer(int tex1Size, int tex2Size, int tex3Size, std::string& errorMessage);
+		bool SetupDataBuffer(std::string& errorMessage);
 	public:
 	};
 }

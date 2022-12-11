@@ -242,8 +242,8 @@ return Value();
         return Value();
     });
 
-    Value& setupWorlyData = GetOrCreateProperty(nativeObject, "setupWorlyData");
-    setupWorlyData = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
+    Value& setWorlySizes = GetOrCreateProperty(nativeObject, "setWorlySizes");
+    setWorlySizes = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXNoiseTexture* self = static_cast<DXNoiseTexture*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -251,17 +251,36 @@ return Value();
         Value tex2Size = scope.GetProperty("param1");
         Value tex3Size = scope.GetProperty("param2");
 
+        if (tex1Size.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a valid size for worly texture 1!")
+        }
+
+        if (tex2Size.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a valid size for worly texture 2!")
+        }
+
+        if (tex3Size.GetType() != ScriptingValueType::Number) {
+            THROW_EXCEPTION("Please supply a valid size for worly texture 3!")
+        }
+
         p_w1Size = tex1Size;
         p_w2Size = tex2Size;
         p_w3Size = tex3Size;
 
+        self->m_worly1Size = static_cast<int>(tex1Size.GetNum());
+        self->m_worly2Size = static_cast<int>(tex2Size.GetNum());
+        self->m_worly3Size = static_cast<int>(tex3Size.GetNum());
+
+        return Value();
+    });
+
+    Value& setupWorlyData = GetOrCreateProperty(nativeObject, "setupWorlyData");
+    setupWorlyData = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXNoiseTexture* self = static_cast<DXNoiseTexture*>(NativeObject::ExtractNativeObject(selfValue));
+
         std::string error;
-        bool res = self->SetupDataBuffer(
-            static_cast<int>(tex1Size.GetNum()),
-            static_cast<int>(tex2Size.GetNum()),
-            static_cast<int>(tex3Size.GetNum()),
-            error
-        );
+        bool res = self->SetupDataBuffer(error);
 
         if (!res) {
             THROW_EXCEPTION(error)
@@ -449,7 +468,7 @@ bool rendering::compute::DXNoiseTexture::ExecutePrepareForPS(ID3D12CommandQueue*
     return true;
 }
 
-bool rendering::compute::DXNoiseTexture::SetupDataBuffer(int tex1Size, int tex2Size, int tex3Size, std::string& errorMessage)
+bool rendering::compute::DXNoiseTexture::SetupDataBuffer(std::string& errorMessage)
 {
     CD3DX12_RANGE range(0, 0);
     void* dst = nullptr;
@@ -460,10 +479,10 @@ bool rendering::compute::DXNoiseTexture::SetupDataBuffer(int tex1Size, int tex2S
 
     Vec3* vecs = reinterpret_cast<Vec3*>(dst);
 
-    for (int k = 0; k < tex1Size; ++k) {
-        for (int i = 0; i < tex1Size; ++i) {
-            for (int j = 0; j < tex1Size; ++j) {
-                int index = k * tex1Size * tex1Size + i * tex1Size + j;
+    for (int k = 0; k < m_worly1Size; ++k) {
+        for (int i = 0; i < m_worly1Size; ++i) {
+            for (int j = 0; j < m_worly1Size; ++j) {
+                int index = k * m_worly1Size * m_worly1Size + i * m_worly1Size + j;
                 Vec3& cur = vecs[index];
 
                 float randX = (float)rand() / RAND_MAX;
@@ -476,12 +495,12 @@ bool rendering::compute::DXNoiseTexture::SetupDataBuffer(int tex1Size, int tex2S
             }
         }
     }
-    vecs += tex1Size * tex1Size * tex1Size;
+    vecs += m_worly1Size * m_worly1Size * m_worly1Size;
 
-    for (int k = 0; k < tex2Size; ++k) {
-        for (int i = 0; i < tex2Size; ++i) {
-            for (int j = 0; j < tex2Size; ++j) {
-                int index = k * tex2Size * tex2Size + i * tex2Size + j;
+    for (int k = 0; k < m_worly2Size; ++k) {
+        for (int i = 0; i < m_worly2Size; ++i) {
+            for (int j = 0; j < m_worly2Size; ++j) {
+                int index = k * m_worly2Size * m_worly2Size + i * m_worly2Size + j;
                 Vec3& cur = vecs[index];
 
                 float randX = (float)rand() / RAND_MAX;
@@ -494,12 +513,12 @@ bool rendering::compute::DXNoiseTexture::SetupDataBuffer(int tex1Size, int tex2S
             }
         }
     }
-    vecs += tex2Size * tex2Size * tex2Size;
+    vecs += m_worly2Size * m_worly2Size * m_worly2Size;
 
-    for (int k = 0; k < tex3Size; ++k) {
-        for (int i = 0; i < tex3Size; ++i) {
-            for (int j = 0; j < tex3Size; ++j) {
-                int index = k * tex3Size * tex3Size + i * tex3Size + j;
+    for (int k = 0; k < m_worly3Size; ++k) {
+        for (int i = 0; i < m_worly3Size; ++i) {
+            for (int j = 0; j < m_worly3Size; ++j) {
+                int index = k * m_worly3Size * m_worly3Size + i * m_worly3Size + j;
                 Vec3& cur = vecs[index];
 
                 float randX = (float)rand() / RAND_MAX;

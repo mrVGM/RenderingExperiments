@@ -2,7 +2,13 @@ let prepNoiseTex = require("compute/noiseTexture.txt");
 
 let prepNoise = func(device, commandQueue, onReady) {
 	let texSize = 256;
-	prepNoiseTex(device, texSize, "computeNoise.hlsl", func(comp) {
+
+	let worlySizes = [];
+	worlySizes.push(3);
+	worlySizes.push(6);
+	worlySizes.push(8);
+
+	prepNoiseTex(device, texSize, "computeNoise.hlsl", worlySizes, func(comp) {
 		let noiseData = [];
 		noiseData.push(texSize);
 		noiseData.push(10);
@@ -10,9 +16,9 @@ let prepNoise = func(device, commandQueue, onReady) {
 		noiseData.push(0.7);
 		noiseData.push(2);
 
-		noiseData.push(comp.w1Size);
-		noiseData.push(comp.w2Size);
-		noiseData.push(comp.w3Size);
+		noiseData.push(worlySizes[0]);
+		noiseData.push(worlySizes[1]);
+		noiseData.push(worlySizes[2]);
 
 		comp.constantBuffer.copyData(noiseData);
 
