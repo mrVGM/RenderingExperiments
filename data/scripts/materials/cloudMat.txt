@@ -36,7 +36,7 @@ let prepNoise = func(device, commandQueue, onReady) {
 			prepareForGraphics();
 		});
 
-		comp.populate(texSize, texSize, texSize);
+		comp.populate(texSize / 16, texSize / 16, texSize / 4);
 
 		let computeCommandQueue = api.computeCommandQueue();
 		computeCommandQueue.create(device);
