@@ -61,9 +61,9 @@ let prepareData = func(device, texSize, shaderFile, onReady) {
 		return descHeap;
 	};
 
-	let w1 = 5;
-	let w2 = 10;
-	let w3 = 13;
+	let w1 = 3;
+	let w2 = 6;
+	let w3 = 8;
 	let dataBuffElements = w1 * w1 * w1 + w2 * w2 * w2 + w3 * w3 * w3;
 	let dataBuffStride = 12;
 	let dataBuffSize = dataBuffElements * dataBuffStride;

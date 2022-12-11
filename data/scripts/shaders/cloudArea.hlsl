@@ -20,6 +20,10 @@ cbuffer CloudAreaSettings : register(b1)
     float m_cloudLightAbsorbtion;
     float m_airLightAbsorbtion;
     float m_g;
+
+    float m_worly1Weight;
+    float m_worly2Weight;
+    float m_worly3Weight;
 };
 
 Texture3D p_texture     : register(t0);
@@ -28,7 +32,10 @@ SamplerState p_sampler  : register(s0);
 float sampleCloud(float3 coord)
 {
     float4 tex = p_texture.Sample(p_sampler, coord + 0.1 * m_time);
-    return tex.x;
+
+    float worly = m_worly1Weight * (1 - tex.y) + m_worly2Weight * (1 - tex.z) + m_worly3Weight * (1 - tex.w);
+
+    return (1 - tex.x * worly);
 }
 
 struct Wall
@@ -238,23 +245,6 @@ float4 PSMain(
     float2 uv : UV,
     Wall walls[6] : WALLS) : SV_TARGET
 {
-    float4 t = p_texture.Sample(p_sampler, float3(uv, 0));
-    int time = floor(m_time);
-    time %= 4;
-
-    float v = t.x;
-    if (time == 1) {
-        v = t.y;
-    }
-    if (time == 2) {
-        v = t.z;
-    }
-    if (time == 3) {
-        v = t.w;
-    }
-
-    return float4(v, v, v, 1);
-
     float3 hits[2];
     int intersections = findIntersections(walls, m_camPos, normalize(world_position - m_camPos.xyz), hits);
 

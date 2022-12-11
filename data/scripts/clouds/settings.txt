@@ -1,9 +1,13 @@
 m_lightPosition 5 5 5 1
 
-m_sampleSteps 35
-m_cloudAbsorbtion 3
-m_densityOffset 1.5
+m_sampleSteps 15
+m_cloudAbsorbtion 6
+m_densityOffset 3
 
-m_cloudLightAbsorbtion 3.5
+m_cloudLightAbsorbtion 6
 m_airLightAbsorbtion 0.2
-m_g 0.6
+m_g 0.8
+
+m_worly1Weight 0.625
+m_worly2Weight 0.25
+m_worly3Weight 0.125
