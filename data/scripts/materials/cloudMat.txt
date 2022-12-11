@@ -14,8 +14,6 @@ let prepNoise = func(device, commandQueue, onReady) {
 		noiseData.push(comp.w2Size);
 		noiseData.push(comp.w3Size);
 
-		print(comp.w1Size);
-
 		comp.constantBuffer.copyData(noiseData);
 
 		let fence = api.fence();

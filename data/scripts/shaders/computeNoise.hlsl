@@ -185,9 +185,6 @@ void GetNeighbours(int3 coord, int size, int offset, out float3 neighbours[27])
 
 float sampleWorlyNoise(float3 uvw, int size, int offset)
 {
-    uvw *= size;
-    uvw -= floor(uvw);
-
     float3 gridCoord = uvw * size;
     int3 squareCoord = floor(gridCoord);
 
@@ -242,7 +239,7 @@ void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid
     float w2n = sampleWorlyNoise(uvw, m_w2Size, offset);
     offset += m_w2Size * m_w2Size * m_w2Size;
 
-    float w3n = sampleWorlyNoise(uvw, m_w3Size, 0);
+    float w3n = sampleWorlyNoise(uvw, m_w3Size, offset);
 
     texData[DTid] = float4(pn, w1n, w2n, w3n);
     return;

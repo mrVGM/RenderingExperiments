@@ -239,7 +239,21 @@ float4 PSMain(
     Wall walls[6] : WALLS) : SV_TARGET
 {
     float4 t = p_texture.Sample(p_sampler, float3(uv, 0));
-    return float4(t.x, t.x, t.x, 1);
+    int time = floor(m_time);
+    time %= 4;
+
+    float v = t.x;
+    if (time == 1) {
+        v = t.y;
+    }
+    if (time == 2) {
+        v = t.z;
+    }
+    if (time == 3) {
+        v = t.w;
+    }
+
+    return float4(v, v, v, 1);
 
     float3 hits[2];
     int intersections = findIntersections(walls, m_camPos, normalize(world_position - m_camPos.xyz), hits);
