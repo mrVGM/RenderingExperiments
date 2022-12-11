@@ -103,7 +103,7 @@ let setMaterialRepo = func() {
 	rendererReady();
 };
 
-simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
+simpleUnlit(device, "unlit.hlsl", func(mat) {
 	let color = [];
 	color.push(1);
 	color.push(1);
@@ -116,7 +116,7 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	setMaterialRepo();
 });
 
-simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
+simpleUnlit(device, "unlit.hlsl", func(mat) {
 	let color = [];
 	color.push(1);
 	color.push(0);
@@ -129,7 +129,7 @@ simpleUnlit(device, "shaders/unlit.hlsl", func(mat) {
 	setMaterialRepo();
 });
 
-cloudMat(device, "shaders/cloudArea.hlsl", commandQueue, func(mat) {
+cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 	let updater = api.aux.updater();
 	updater.setSettingsBuffer(mat.constantBuff);
 	cameraInputHandler.addUpdater(updater);

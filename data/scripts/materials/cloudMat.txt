@@ -49,14 +49,12 @@ let prepNoise = func(device, commandQueue, onReady) {
 };
 
 let createMat = func(device, shadersFile, commandQueue, onReady) {
-	let shaderCode = readFile(shadersFile);
-
 	let vertexShader = api.vertexShader();
 	let pixelShader = api.pixelShader();
 
 	try {
-		vertexShader.compile(shaderCode);
-		pixelShader.compile(shaderCode);
+		vertexShader.loadPrecompiled(shadersFile);
+		pixelShader.loadPrecompiled(shadersFile);
 	} catch(e) {
 		print(e);
 	}
