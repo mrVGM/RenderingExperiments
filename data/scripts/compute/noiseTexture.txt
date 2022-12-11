@@ -62,6 +62,13 @@ let prepareData = func(device, texSize, shaderFile, onReady) {
 		return descHeap;
 	};
 
+	let w1 = 5;
+	let w2 = 10;
+	let w3 = 13;
+	let dataBuffElements = w1 * w1 * w1 + w2 * w2 * w2 + w3 * w3 * w3;
+	let dataBuffStride = 12;
+	let dataBuffSize = dataBuffElements * dataBuffStride;
+
 	let callReady = func() {
 		if (cBuff == none || srvBuff == none || uavTex == none) {
 			return;
@@ -78,11 +85,13 @@ let prepareData = func(device, texSize, shaderFile, onReady) {
 		compute.setDataBuffer(srvBuff);
 		compute.setTexture(uavTex);
 		compute.setDescriptorHeap(createDescHeap());
+
+		compute.setupWorlyData(w1, w2, w3);
 		
 		onReady(compute);
 	};
 
-	loadSRVBuff(device, 256, 256, func(buff) {
+	loadSRVBuff(device, dataBuffSize, dataBuffStride, func(buff) {
 		srvBuff = buff;
 		callReady();
 	});

@@ -13,6 +13,14 @@
 
 #include <stdlib.h>
 
+namespace
+{
+    struct Vec3
+    {
+        float coord[3];
+    };
+}
+
 void rendering::compute::DXNoiseTexture::InitProperties(interpreter::NativeObject & nativeObject)
 {
 	using namespace interpreter;
@@ -25,6 +33,10 @@ return Value();
     Value& p_dataBuffer = GetOrCreateProperty(nativeObject, "dataBuffer");
     Value& p_texture = GetOrCreateProperty(nativeObject, "texture");
     Value& p_descriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
+
+    Value& p_w1Size = GetOrCreateProperty(nativeObject, "w1Size");
+    Value& p_w2Size = GetOrCreateProperty(nativeObject, "w2Size");
+    Value& p_w3Size = GetOrCreateProperty(nativeObject, "w3Size");
 
     Value& setConstantBuffer = GetOrCreateProperty(nativeObject, "setConstantBuffer");
     setConstantBuffer = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
@@ -230,6 +242,35 @@ return Value();
         return Value();
     });
 
+    Value& setupWorlyData = GetOrCreateProperty(nativeObject, "setupWorlyData");
+    setupWorlyData = CreateNativeMethod(nativeObject, 3, [&](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXNoiseTexture* self = static_cast<DXNoiseTexture*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value tex1Size = scope.GetProperty("param0");
+        Value tex2Size = scope.GetProperty("param1");
+        Value tex3Size = scope.GetProperty("param2");
+
+        p_w1Size = tex1Size;
+        p_w2Size = tex2Size;
+        p_w3Size = tex3Size;
+
+        std::string error;
+        bool res = self->SetupDataBuffer(
+            static_cast<int>(tex1Size.GetNum()),
+            static_cast<int>(tex2Size.GetNum()),
+            static_cast<int>(tex3Size.GetNum()),
+            error
+        );
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+
+        return Value();
+    });
+
+
 #undef THROW_EXCEPTION
 }
 
@@ -404,6 +445,74 @@ bool rendering::compute::DXNoiseTexture::ExecutePrepareForPS(ID3D12CommandQueue*
     ID3D12CommandList* ppCommandLists[] = { m_prepareForPixelCL.Get() };
     commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
     commandQueue->Signal(fence, signal);
+
+    return true;
+}
+
+bool rendering::compute::DXNoiseTexture::SetupDataBuffer(int tex1Size, int tex2Size, int tex3Size, std::string& errorMessage)
+{
+    CD3DX12_RANGE range(0, 0);
+    void* dst = nullptr;
+
+    THROW_ERROR(
+        m_dataBuffer->Map(0, &range, &dst),
+        "Can't map SRV Buffer!")
+
+    Vec3* vecs = reinterpret_cast<Vec3*>(dst);
+
+    for (int k = 0; k < tex1Size; ++k) {
+        for (int i = 0; i < tex1Size; ++i) {
+            for (int j = 0; j < tex1Size; ++j) {
+                int index = k * tex1Size * tex1Size + i * tex1Size + j;
+                Vec3& cur = vecs[index];
+
+                float randX = (float)rand() / RAND_MAX;
+                float randY = (float)rand() / RAND_MAX;
+                float randZ = (float)rand() / RAND_MAX;
+
+                cur.coord[0] = j + randX;
+                cur.coord[1] = i + randY;
+                cur.coord[2] = k + randZ;
+            }
+        }
+    }
+    vecs += tex1Size * tex1Size * tex1Size;
+
+    for (int k = 0; k < tex2Size; ++k) {
+        for (int i = 0; i < tex2Size; ++i) {
+            for (int j = 0; j < tex2Size; ++j) {
+                int index = k * tex2Size * tex2Size + i * tex2Size + j;
+                Vec3& cur = vecs[index];
+
+                float randX = (float)rand() / RAND_MAX;
+                float randY = (float)rand() / RAND_MAX;
+                float randZ = (float)rand() / RAND_MAX;
+
+                cur.coord[0] = j + randX;
+                cur.coord[1] = i + randY;
+                cur.coord[2] = k + randZ;
+            }
+        }
+    }
+    vecs += tex2Size * tex2Size * tex2Size;
+
+    for (int k = 0; k < tex3Size; ++k) {
+        for (int i = 0; i < tex3Size; ++i) {
+            for (int j = 0; j < tex3Size; ++j) {
+                int index = k * tex3Size * tex3Size + i * tex3Size + j;
+                Vec3& cur = vecs[index];
+
+                float randX = (float)rand() / RAND_MAX;
+                float randY = (float)rand() / RAND_MAX;
+                float randZ = (float)rand() / RAND_MAX;
+
+                cur.coord[0] = j + randX;
+                cur.coord[1] = i + randY;
+                cur.coord[2] = k + randZ;
+            }
+        }
+    }
+    m_dataBuffer->Unmap(0, nullptr);
 
     return true;
 }

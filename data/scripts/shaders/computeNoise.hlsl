@@ -1,11 +1,5 @@
-struct SRVBuffElement
-{
-    float x;
-    float y;
-};
-
 RWTexture3D<float4> texData			        : register(u0);    // UAV
-StructuredBuffer<SRVBuffElement> points1	: register(t0);    // SRV
+StructuredBuffer<float3> points	            : register(t0);    // SRV
 
 cbuffer InfoConstantBuff : register(b0)
 {
@@ -16,6 +10,10 @@ cbuffer InfoConstantBuff : register(b0)
     float m_octaves;
     float m_persistance;
     float m_scale;
+
+    float m_w1Size;
+    float m_w2Size;
+    float m_w3Size;
 };
 
 
@@ -120,11 +118,95 @@ float calcNoise(float3 uvw)
     return h;
 }
 
-[numthreads(16, 16, 4)]
-void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
+
+
+int CoordToIndex(int3 coord, int size)
 {
-    float3 uvw = float3(DTid);
-    uvw /= m_texSize;
+    return coord.z * size * size + coord.y * size + coord.x;
+}
+
+int3 IndexToCoord(int index, int size)
+{
+    int col = index % size;
+    int row = index % size;
+    int plate = index / (size * size);
+
+    return int3(col, row, plate);
+}
+
+void GetNeighbours(int3 coord, int size, int offset, out float3 neighbours[27])
+{
+    int3 offsets[27];
+
+    int index = 0;
+    for (int k = -1; k < 2; ++k) {
+        for (int i = -1; i < 2; ++i) {
+            for (int j = -1; j < 2; ++j) {
+                offsets[index] = int3(j, i, k);
+                index = index + 1;
+            }
+        }
+    }
+
+    for (int i = 0; i < 27; ++i) {
+        int3 cur = coord + offsets[i];
+        int3 cube = cur;
+
+
+        if (cur.x < 0) {
+            cur.x = size - 1;
+        }
+        if (cur.x >= size) {
+            cur.x = 0;
+        }
+
+        if (cur.y < 0) {
+            cur.y = size - 1;
+        }
+        if (cur.y >= size) {
+            cur.y = 0;
+        }
+
+        if (cur.z < 0) {
+            cur.z = size - 1;
+        }
+        if (cur.z >= size) {
+            cur.z = 0;
+        }
+
+        float3 curPoint = points[CoordToIndex(cur, size) + offset];
+
+        float3 curCoord = float3(curPoint.x, curPoint.y, curPoint.z);
+        float3 localOffset = curCoord - cur;
+
+        neighbours[i] = cube + localOffset;
+    }
+}
+
+float sampleWorlyNoise(float3 uvw, int size, int offset)
+{
+    uvw *= size;
+    uvw -= floor(uvw);
+
+    float3 gridCoord = uvw * size;
+    int3 squareCoord = floor(gridCoord);
+
+    float3 neighbours[27];
+    GetNeighbours(squareCoord, size, offset, neighbours);
+
+    float minDist = 4;
+    for (int i = 0; i < 27; ++i) {
+        float d = length(gridCoord - neighbours[i]);
+        if (d < minDist) {
+            minDist = d;
+        }
+    }
+
+    return clamp(minDist, 0, 1);
+}
+
+float samplePerlinNoise(float3 uvw)
+{
     uvw *= m_factor;
 
     float scale = 1;
@@ -143,6 +225,25 @@ void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid
     }
     n /= totalFactor;
 
-    texData[DTid] = float4(n, n, n, 1);
+    return n;
+}
+
+[numthreads(16, 16, 4)]
+void CSMain(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
+{
+    float3 uvw = float3(DTid);
+    uvw /= m_texSize;
+    
+    float pn = samplePerlinNoise(uvw);
+    int offset = 0;
+    float w1n = sampleWorlyNoise(uvw, m_w1Size, offset);
+    offset += m_w1Size * m_w1Size * m_w1Size;
+    
+    float w2n = sampleWorlyNoise(uvw, m_w2Size, offset);
+    offset += m_w2Size * m_w2Size * m_w2Size;
+
+    float w3n = sampleWorlyNoise(uvw, m_w3Size, 0);
+
+    texData[DTid] = float4(pn, w1n, w2n, w3n);
     return;
 }

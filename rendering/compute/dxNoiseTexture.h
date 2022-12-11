@@ -51,6 +51,7 @@ namespace rendering::compute
 		bool ExecuteCompute(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 		bool ExecutePrepareForPS(ID3D12CommandQueue* commandQueue, ID3D12Fence* fence, int signal, std::string& error);
 
+		bool SetupDataBuffer(int tex1Size, int tex2Size, int tex3Size, std::string& errorMessage);
 	public:
 	};
 }

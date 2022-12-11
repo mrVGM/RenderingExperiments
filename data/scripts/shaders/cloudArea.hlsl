@@ -238,6 +238,9 @@ float4 PSMain(
     float2 uv : UV,
     Wall walls[6] : WALLS) : SV_TARGET
 {
+    float4 t = p_texture.Sample(p_sampler, float3(uv, 0));
+    return float4(t.x, t.x, t.x, 1);
+
     float3 hits[2];
     int intersections = findIntersections(walls, m_camPos, normalize(world_position - m_camPos.xyz), hits);
 
