@@ -26,12 +26,13 @@ cbuffer CloudAreaSettings : register(b1)
     float m_worly3Weight;
 };
 
-Texture3D p_texture     : register(t0);
+Texture3D p_detailTexture   : register(t0);
+Texture3D p_shapeTexture    : register(t1);
 SamplerState p_sampler  : register(s0);
 
 float sampleCloud(float3 coord)
 {
-    float4 tex = p_texture.Sample(p_sampler, coord + 0.1 * m_time);
+    float4 tex = p_detailTexture.Sample(p_sampler, coord + 0.1 * m_time);
 
     float worly = m_worly1Weight * (1 - tex.y) + m_worly2Weight * (1 - tex.z) + m_worly3Weight * (1 - tex.w);
 

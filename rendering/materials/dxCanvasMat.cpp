@@ -234,7 +234,7 @@ bool rendering::material::DXCanvasMat::Init(DXRenderer& renderer, std::string& e
         CD3DX12_ROOT_PARAMETER1 rootParameters[3];
         rootParameters[0].InitAsConstantBufferView(0, 0);
         rootParameters[1].InitAsConstantBufferView(1, 0);
-        rootParameters[2].InitAsDescriptorTable(_countof(ranges), ranges);
+        rootParameters[2].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL);
 
         rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, rootSignatureFlags);
 
