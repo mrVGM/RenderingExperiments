@@ -25,6 +25,8 @@ namespace rendering::material
 		ID3DBlob* m_vertexShader = nullptr;
 		ID3DBlob* m_pixelShader = nullptr;
 
+		ID3D12DescriptorHeap* m_descriptorHeap = nullptr;
+
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 	public:

@@ -1,7 +1,18 @@
-cbuffer NoiseData : register(b0)
+cbuffer MVCMatrix : register(b0)
+{
+    float4x4 m_matrix;
+    float4 m_camPos;
+    float m_time;
+    float m_airAbsorbtion;
+};
+
+cbuffer CardData : register(b0)
 {
     float4 m_color;
 };
+
+Texture3D p_texture     : register(t0);
+SamplerState p_sampler  : register(s0);
 
 struct PSInput
 {
@@ -27,6 +38,8 @@ PSInput VSMain(
 
 float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
 {
-    return m_color;
+    float4 tex = p_texture.Sample(p_sampler, float3(uv, 0.1 * m_time));
+
+    return float4(tex.x, tex.x, tex.x, 1);
 }
 

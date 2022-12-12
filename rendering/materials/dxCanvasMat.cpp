@@ -26,6 +26,7 @@ return Value();
     Value& p_constantBuff = GetOrCreateProperty(nativeObject, "constantBuff");
     Value& p_vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& p_pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
+    Value& p_descriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& setConstantBuff = GetOrCreateProperty(nativeObject, "setConstantBuff");
     setConstantBuff = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
@@ -70,6 +71,23 @@ return Value();
         self->m_vertexShader = vertexShader->GetCompiledShader();
         self->m_pixelShader = pixelShader->GetCompiledShader();
 
+        return Value();
+    });
+
+    Value& setDescriptorHeap = GetOrCreateProperty(nativeObject, "setDescriptorHeap");
+    setDescriptorHeap = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXCanvasMat* self = static_cast<DXCanvasMat*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value descriptorHeapValue = scope.GetProperty("param0");
+        DXDescriptorHeap* descriptorHeap = dynamic_cast<DXDescriptorHeap*>(NativeObject::ExtractNativeObject(descriptorHeapValue));
+
+        if (!descriptorHeap) {
+            THROW_EXCEPTION("Please supply descriptor heap!")
+        }
+
+        p_descriptorHeap = descriptorHeapValue;
+        self->m_descriptorHeap = descriptorHeap->GetHeap();
         return Value();
     });
 
@@ -118,7 +136,13 @@ bool rendering::material::DXCanvasMat::Render(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffer->GetGPUVirtualAddress());
+
+    ID3D12DescriptorHeap* heaps[] = { m_descriptorHeap };
+    m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    m_commandList->SetGraphicsRootConstantBufferView(0, renderer->GetCamBuff()->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootConstantBufferView(1, m_constantBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootDescriptorTable(2, m_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, &renderer->GetISwapChain()->m_viewport);
     m_commandList->RSSetScissorRects(1, &renderer->GetISwapChain()->m_scissorRect);
@@ -188,11 +212,31 @@ bool rendering::material::DXCanvasMat::Init(DXRenderer& renderer, std::string& e
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsConstantBufferView(0, 0);
+        D3D12_STATIC_SAMPLER_DESC sampler = {};
+        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.MipLODBias = 0;
+        sampler.MaxAnisotropy = 0;
+        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        sampler.MinLOD = 0.0f;
+        sampler.MaxLOD = D3D12_FLOAT32_MAX;
+        sampler.ShaderRegister = 0;
+        sampler.RegisterSpace = 0;
+        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+        rootParameters[0].InitAsConstantBufferView(0, 0);
+        rootParameters[1].InitAsConstantBufferView(1, 0);
+        rootParameters[2].InitAsDescriptorTable(_countof(ranges), ranges);
+
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &sampler, rootSignatureFlags);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;

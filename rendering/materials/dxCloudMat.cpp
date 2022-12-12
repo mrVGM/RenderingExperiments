@@ -28,10 +28,10 @@ return Value();
     Value& p_vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& p_pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
     Value& p_noiseTexture = GetOrCreateProperty(nativeObject, "noiseTexture");
-    Value& p_descriptionHeap = GetOrCreateProperty(nativeObject, "descriptionHeap");
+    Value& p_descriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
-    Value& setDescriptionHeap = GetOrCreateProperty(nativeObject, "setDescriptionHeap");
-    setDescriptionHeap = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+    Value& setDescriptorHeap = GetOrCreateProperty(nativeObject, "setDescriptorHeap");
+    setDescriptorHeap = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCloudMat* self = static_cast<DXCloudMat*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -42,8 +42,8 @@ return Value();
             THROW_EXCEPTION("Please supply Description Heap!")
         }
 
-        p_descriptionHeap = descHeapValue;
-        self->m_descriptionHeap = descHeap->GetHeap();
+        p_descriptorHeap = descHeapValue;
+        self->m_descriptorHeap = descHeap->GetHeap();
 
         return Value();
     });
@@ -157,11 +157,11 @@ bool rendering::material::DXCloudMat::Render(
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetDescriptorHeaps(1, &m_descriptionHeap);
+    m_commandList->SetDescriptorHeaps(1, &m_descriptorHeap);
 
     m_commandList->SetGraphicsRootConstantBufferView(0, renderer->GetCamBuff()->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootConstantBufferView(1, m_constantBuffer->GetGPUVirtualAddress());
-    m_commandList->SetGraphicsRootDescriptorTable(2, m_descriptionHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRootDescriptorTable(2, m_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, &renderer->GetISwapChain()->m_viewport);
     m_commandList->RSSetScissorRects(1, &renderer->GetISwapChain()->m_scissorRect);

@@ -22,7 +22,7 @@ let loadInstanceBuffer = func(device, buffData, onReady) {
 	});
 };
 
-let setup = func(device, onReady) {
+let setup = func(device, addObjects, onReady) {
 
 	let plane = require("primitives/plane.txt");
 	let cube = require("primitives/cube.txt");
@@ -68,23 +68,7 @@ let setup = func(device, onReady) {
 			return;
 		}
 
-		scene.addObject("ground", "plane");
-		scene.addObjectMaterial("ground", "default");
-		scene.setObjectScale("ground", math.vector3(1000, 1, 1000));
-
-		scene.addObject("cloud", "cube");
-		scene.addObjectMaterial("cloud", "cloudArea");
-		scene.setObjectPosition("cloud", math.vector3(0, 5, 5));
-
-		scene.addObject("sun", "cube");
-		scene.addObjectMaterial("sun", "red");
-		scene.setObjectPosition("sun", math.vector3(5, 5, 5));
-		scene.setObjectScale("sun", math.vector3(0.1, 0.1, 0.1));
-
-		scene.addObject("canvas", "canvas");
-		scene.addObjectMaterial("canvas", "canvas");
-		scene.setObjectScale("canvas", math.vector3(0.5, 0.5, 1));
-		scene.setObjectPosition("canvas", math.vector3(-0.5, -0.5, 0));
+		addObjects(scene);
 
 		setupInstanceBuffers();
 	};

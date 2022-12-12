@@ -98,7 +98,7 @@ let createMat = func(device, shadersFile, commandQueue, onReady) {
 		let descHeap = api.descriptorHeap();
 		descHeap.create(device, descriptors);
 		cloudMat.setNoiseTexture(noiseTex);
-		cloudMat.setDescriptionHeap(descHeap);
+		cloudMat.setDescriptorHeap(descHeap);
 
 		callReady();
 	});
