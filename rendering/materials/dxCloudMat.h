@@ -21,7 +21,7 @@ namespace rendering::material
 		ID3D12Resource* m_curRT = nullptr;
 
 		ID3D12Resource* m_constantBuffer = nullptr;
-		ID3D12Resource* m_noiseTexture = nullptr;
+		std::list<ID3D12Resource*> m_noiseTextures;
 		ID3D12DescriptorHeap* m_descriptorHeap = nullptr;
 
 		ID3DBlob* m_vertexShader = nullptr;

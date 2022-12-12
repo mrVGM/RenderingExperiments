@@ -142,7 +142,7 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 	
 	canvasMat(device, "card.hlsl", func(cardMat) {
 		let settings = [];
-		settings.push(0);
+		settings.push(1);
 		cardMat.constantBuff.copyData(settings);
 		cardMat.setDescriptorHeap(mat.descriptorHeap);
 
@@ -151,11 +151,21 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 		setMaterialRepo();
 	});
 
+
 	canvasMat(device, "card.hlsl", func(cardMat) {
 		let settings = [];
 		settings.push(1);
 		cardMat.constantBuff.copyData(settings);
-		cardMat.setDescriptorHeap(mat.descriptorHeap);
+
+		let descriptors = [];
+		let texDesc = {};
+		texDesc.type = "srv_tex";
+		texDesc.texture = mat.noiseTextures[1];
+		descriptors.push(texDesc);
+		let descHeap = api.descriptorHeap();
+		descHeap.create(device, descriptors);
+
+		cardMat.setDescriptorHeap(descHeap);
 
 		materialRepo.addMaterial("card2", cardMat);
 		materialsLoaded = materialsLoaded + 1;

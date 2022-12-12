@@ -27,7 +27,7 @@ return Value();
     Value& p_constantBuff = GetOrCreateProperty(nativeObject, "constantBuff");
     Value& p_vertexShader = GetOrCreateProperty(nativeObject, "vertexShader");
     Value& p_pixelShader = GetOrCreateProperty(nativeObject, "pixelShader");
-    Value& p_noiseTexture = GetOrCreateProperty(nativeObject, "noiseTexture");
+    Value& p_noiseTextures = GetOrCreateProperty(nativeObject, "noiseTextures");
     Value& p_descriptorHeap = GetOrCreateProperty(nativeObject, "descriptorHeap");
 
     Value& setDescriptorHeap = GetOrCreateProperty(nativeObject, "setDescriptorHeap");
@@ -48,8 +48,8 @@ return Value();
         return Value();
     });
 
-    Value& setNoiseTexture = GetOrCreateProperty(nativeObject, "setNoiseTexture");
-    setNoiseTexture = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+    Value& addNoiseTexture = GetOrCreateProperty(nativeObject, "addNoiseTexture");
+    addNoiseTexture = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
         Value selfValue = scope.GetProperty("self");
         DXCloudMat* self = static_cast<DXCloudMat*>(NativeObject::ExtractNativeObject(selfValue));
 
@@ -57,11 +57,17 @@ return Value();
         DXTexture* noiseTexture = dynamic_cast<DXTexture*>(NativeObject::ExtractNativeObject(noiseTextureValue));
 
         if (!noiseTexture) {
-            THROW_EXCEPTION("Please supply constant buffer!")
+            THROW_EXCEPTION("Please supply texture!")
         }
 
-        p_noiseTexture = noiseTextureValue;
-        self->m_noiseTexture = noiseTexture->GetTexture();
+        std::list<Value> textures;
+        if (!p_noiseTextures.IsNone()) {
+            p_noiseTextures.ToList(textures);
+        }
+        textures.push_back(noiseTextureValue);
+
+        p_noiseTextures = Value::FromList(textures);
+        self->m_noiseTextures.push_back(noiseTexture->GetTexture());
 
         return Value();
     });
@@ -247,7 +253,7 @@ bool rendering::material::DXCloudMat::Init(DXRenderer& renderer, std::string& er
             D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
         CD3DX12_DESCRIPTOR_RANGE1 range;
-        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
         CD3DX12_ROOT_PARAMETER1 rootParameters[3];
