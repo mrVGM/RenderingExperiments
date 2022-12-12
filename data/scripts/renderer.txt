@@ -99,7 +99,7 @@ let canvasMat = require("materials/canvasMat.txt");
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 4) {
+	if (materialsLoaded < 5) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
@@ -140,27 +140,28 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 	materialRepo.addMaterial("cloudArea", mat);
 	materialsLoaded = materialsLoaded + 1;
 	
-
 	canvasMat(device, "card.hlsl", func(cardMat) {
-		let color = [];
-		color.push(1);
-		color.push(1);
-		color.push(1);
-		color.push(0.3);
-
-		print(mat.descriptorHeap);
-
-		cardMat.constantBuff.copyData(color);
-
+		let settings = [];
+		settings.push(0);
+		cardMat.constantBuff.copyData(settings);
 		cardMat.setDescriptorHeap(mat.descriptorHeap);
 
-		materialRepo.addMaterial("canvas", cardMat);
+		materialRepo.addMaterial("card1", cardMat);
+		materialsLoaded = materialsLoaded + 1;
+		setMaterialRepo();
+	});
+
+	canvasMat(device, "card.hlsl", func(cardMat) {
+		let settings = [];
+		settings.push(1);
+		cardMat.constantBuff.copyData(settings);
+		cardMat.setDescriptorHeap(mat.descriptorHeap);
+
+		materialRepo.addMaterial("card2", cardMat);
 		materialsLoaded = materialsLoaded + 1;
 		setMaterialRepo();
 	});
 });
-
-
 
 let scene = require("setupScene.txt");
 
@@ -178,10 +179,15 @@ let addObjects = func(scene) {
 	scene.setObjectPosition("sun", math.vector3(5, 5, 5));
 	scene.setObjectScale("sun", math.vector3(0.1, 0.1, 0.1));
 
-	scene.addObject("canvas", "canvas");
-	scene.addObjectMaterial("canvas", "canvas");
-	scene.setObjectScale("canvas", math.vector3(0.15, 0.15 * wnd.width() / wnd.height(), 1));
-	scene.setObjectPosition("canvas", math.vector3(-0.8, -0.7, 0));
+	scene.addObject("card1", "canvas");
+	scene.addObjectMaterial("card1", "card1");
+	scene.setObjectScale("card1", math.vector3(0.15, 0.15 * wnd.width() / wnd.height(), 1));
+	scene.setObjectPosition("card1", math.vector3(-0.8, -0.7, 0));
+
+	scene.addObject("card2", "canvas");
+	scene.addObjectMaterial("card2", "card2");
+	scene.setObjectScale("card2", math.vector3(0.15, 0.15 * wnd.width() / wnd.height(), 1));
+	scene.setObjectPosition("card2", math.vector3(-0.45, -0.7, 0));
 };
 
 scene(device, addObjects, func(data) {

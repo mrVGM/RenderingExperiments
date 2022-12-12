@@ -6,9 +6,9 @@ cbuffer MVCMatrix : register(b0)
     float m_airAbsorbtion;
 };
 
-cbuffer CardData : register(b0)
+cbuffer CardData : register(b1)
 {
-    float4 m_color;
+    float m_texChannel;
 };
 
 Texture3D p_texture     : register(t0);
@@ -40,6 +40,8 @@ float4 PSMain(float4 position : SV_POSITION, float2 uv : UV) : SV_Target
 {
     float4 tex = p_texture.Sample(p_sampler, float3(uv, 0.1 * m_time));
 
-    return float4(tex.x, tex.x, tex.x, 1);
+    int texChannel = (int)m_texChannel;
+
+    return float4(tex[texChannel], tex[texChannel], tex[texChannel], 1);
 }
 
