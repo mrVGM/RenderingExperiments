@@ -26,7 +26,7 @@ namespace rendering::helper
 		double m_timeSinceUpdate = 1000;
 		double m_updateTime = 1;
 
-		ID3D12Resource* m_settingsBuffer;
+		ID3D12Resource* m_settingsBuffer = nullptr;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 

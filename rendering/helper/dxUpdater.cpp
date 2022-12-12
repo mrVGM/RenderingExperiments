@@ -82,6 +82,17 @@ void rendering::helper::DXUpdater::Update(double dt)
 		m_timeSinceUpdate = 0;
 	}
 
+	for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
+		Setting& cur = *it;
+
+		if (cur.m_name == "m_lightPosition") {
+			cur.m_value[0] = 0 + 2 * cos(0.1 * m_totalTime);
+			cur.m_value[1] = 5 + 2 * sin(0.1 * m_totalTime);
+			cur.m_value[2] = 5;
+			break;
+		}
+	}
+
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
 
