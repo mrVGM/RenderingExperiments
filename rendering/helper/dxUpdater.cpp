@@ -46,79 +46,111 @@ if (FAILED(hRes)) {\
     return false;\
 }
 
+void rendering::helper::DXUpdater::UpdateSettings()
+{
+	using namespace interpreter;
+
+	Value api = GetAPI();
+	Value appContext = api.GetProperty("app_context");
+	std::string rootDir = appContext.GetProperty("root_dir").GetString();
+	std::stringstream ss(data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.txt"));
+
+	std::string settingName;
+
+	while (ss >> settingName) {
+		for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
+			Setting& cur = *it;
+
+			if (cur.m_name == settingName) {
+				for (int i = 0; i < cur.m_dim; ++i) {
+					ss >> cur.m_value[i];
+				}
+				break;
+			}
+		}
+	}
+}
+
 void rendering::helper::DXUpdater::Update(double dt)
 {
 	using namespace interpreter;
 	m_timeSinceUpdate += dt;
 	m_totalTime += dt;
-	if (m_timeSinceUpdate < m_updateTime) {
-		return;
+
+	if (m_timeSinceUpdate > m_updateTime) {
+		UpdateSettings();
+		m_timeSinceUpdate = 0;
 	}
 
-	m_timeSinceUpdate = 0;
+	CD3DX12_RANGE readRange(0, 0);
+	void* dst = nullptr;
+
+	HRESULT hr = m_settingsBuffer->Map(0, &readRange, &dst);
+	if (FAILED(hr)) {
+		return;
+	}
+	float* floatData = reinterpret_cast<float*>(dst);
+
+	for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
+		Setting& cur = *it;
+
+		for (int i = 0; i < cur.m_dim; ++i) {
+			*floatData = cur.m_value[i];
+			++floatData;
+		}
+	}
+
+	m_settingsBuffer->Unmap(0, nullptr);
 
 	Value api = GetAPI();
 	Value appContext = api.GetProperty("app_context");
-
 	Value rendererValue = appContext.GetProperty("renderer");
 	DXRenderer* renderer = nullptr;
 
 	if (!rendererValue.IsNone()) {
 		renderer = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(rendererValue));
 	}
-	
-	std::string rootDir = appContext.GetProperty("root_dir").GetString();
-	std::stringstream ss(data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.txt"));
 
-	std::string dummy;
-	float val;
+	if (!renderer) {
+		return;
+	}
 
-	CD3DX12_RANGE readRange(0, 0);
+	scene::IScene* scene = renderer->GetScene();
+	std::map<std::string, scene::Object3D>::iterator sunIt = scene->m_objects.find("sun");
 
-	void* dst = nullptr;
+	if (sunIt == scene->m_objects.end()) {
+		return;
+	}
+	scene::Object3D& sun = sunIt->second;
 
-	m_settingsBuffer->Map(0, &readRange, &dst);
-	float* floatData = reinterpret_cast<float*>(dst);
+	for (std::list<Setting>::const_iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
+		const Setting& cur = *it;
 
-	ss >> dummy;
+		if (cur.m_name == "m_lightPosition") {
+			sun.m_transform.m_position[0] = cur.m_value[0];
+			sun.m_transform.m_position[1] = cur.m_value[1];
+			sun.m_transform.m_position[2] = cur.m_value[2];
 
-	float sunPos[3];
-	ss >> sunPos[0] >> sunPos[1] >> sunPos[2];
-
-	sunPos[0] = 0 + 5 * cos(0.3 * m_totalTime);
-	sunPos[1] = 5 + 5 * sin(0.3 * m_totalTime);
-	sunPos[2] = 5 + 0;
-
-	floatData[0] = sunPos[0];
-	floatData[1] = sunPos[1];
-	floatData[2] = sunPos[2];
-	floatData += 3;
-
-	if (renderer) {
-		scene::IScene* scene = renderer->GetScene();
-		std::map<std::string, scene::Object3D>::iterator sunIt = scene->m_objects.find("sun");
-
-		if (sunIt != scene->m_objects.end()) {
-			scene::Object3D& sunObj = sunIt->second;
-
-			sunObj.m_transform.m_position[0] = sunPos[0];
-			sunObj.m_transform.m_position[1] = sunPos[1];
-			sunObj.m_transform.m_position[2] = sunPos[2];
+			break;
 		}
 	}
+}
 
-	float lightIntensity;
-	ss >> lightIntensity;
+rendering::helper::DXUpdater::DXUpdater()
+{
+	m_settings.push_back(Setting{ "m_lightPosition", 4, {5, 5, 5, 1} });
 
-	*floatData = lightIntensity;
-	floatData += 1;
+	m_settings.push_back(Setting{ "m_sampleSteps", 1, 15 });
+	m_settings.push_back(Setting{ "m_cloudAbsorbtion", 1, 6 });
+	m_settings.push_back(Setting{ "m_densityOffset", 1, 3 });
+	
+	m_settings.push_back(Setting{ "m_cloudLightAbsorbtion", 1, 6 });
+	m_settings.push_back(Setting{ "m_airLightAbsorbtion", 1, 0.2 });
+	m_settings.push_back(Setting{ "m_g", 1, 0.8 });
 
-	while (ss >> dummy) {
-		ss >> val;
-		*floatData = val;
-		floatData += 1;
-	}
-	m_settingsBuffer->Unmap(0, nullptr);
+	m_settings.push_back(Setting{ "m_worly1Weight", 1, 0.625 });
+	m_settings.push_back(Setting{ "m_worly2Weight", 1, 0.25 });
+	m_settings.push_back(Setting{ "m_worly3Weight", 1, 0.125 });
 }
 
 #undef THROW_ERROR
