@@ -2,32 +2,14 @@ let generateVertices = func() {
 	let verts = [];
 	let indices = [];
 
-	let append3 = func(x, y, z) {
-		verts.push(x);
-		verts.push(y);
-		verts.push(z);
-	};
-
 	let append2 = func(x, y) {
 		verts.push(x);
 		verts.push(y);
 	};
-
-	append3(-1, 0, -1);
-	append3(0, 1, 0);
-	append2(0, 0);
-
-	append3(1, 0, -1);
-	append3(0, 1, 0);
-	append2(1, 0);
-
-	append3(1, 0, 1);
-	append3(0, 1, 0);
+	append2(-1, -1);
+	append2(1, -1);
 	append2(1, 1);
-
-	append3(-1, 0, 1);
-	append3(0, 1, 0);
-	append2(0, 1);
+	append2(-1, 1);
 
 	indices.push(0);
 	indices.push(3);
@@ -50,12 +32,12 @@ let prepareData = func(device, onReady) {
 	let vertexUploadBB = resources.bufferBuilder();
 	vertexUploadBB.upload(1);
 	vertexUploadBB.setSize(4 * verts.vertexData.length);
-	vertexUploadBB.setStride(32);
+	vertexUploadBB.setStride(8);
 
 	let vertexBB = resources.bufferBuilder();
 	vertexBB.upload(0);
 	vertexBB.setSize(4 * verts.vertexData.length);
-	vertexBB.setStride(32);
+	vertexBB.setStride(8);
 
 	let indexUploadBB = resources.bufferBuilder();
 	indexUploadBB.upload(1);
@@ -139,6 +121,5 @@ let prepareData = func(device, onReady) {
 		copyIndex();
 	});
 };
-
 
 export = prepareData;

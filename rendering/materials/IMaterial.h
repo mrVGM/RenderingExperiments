@@ -15,6 +15,7 @@ namespace rendering::material
 		Unlit,
 		Lit,
 		Cloud,
+		Canvas,
 	};
 
 	class IMaterial

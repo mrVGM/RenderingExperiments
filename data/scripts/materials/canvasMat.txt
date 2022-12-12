@@ -1,0 +1,27 @@
+let createMat = func(device, shadersFile, onReady) {
+	let vertexShader = api.vertexShader();
+	let pixelShader = api.pixelShader();
+
+	try {
+		vertexShader.loadPrecompiled(shadersFile);
+		pixelShader.loadPrecompiled(shadersFile);
+	} catch(e) {
+		print(e);
+	}
+
+	let canvasMat = api.material.canvasMat();
+	canvasMat.setShaders(vertexShader, pixelShader);
+
+	let resources = require("resources/resourceUtils.txt");
+	let bb = resources.bufferBuilder();
+	bb.upload(1);
+	bb.setSize(256);
+	bb.setStride(256);
+
+	bb.build(device, func(buff) {
+		canvasMat.setConstantBuff(buff);
+		onReady(canvasMat);
+	});
+};
+
+export = createMat;

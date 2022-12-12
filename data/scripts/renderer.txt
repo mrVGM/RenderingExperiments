@@ -51,11 +51,13 @@ let clearRT = api.renderer.clearRT();
 let clearDS = api.renderer.clearDS();
 let unlitPass = api.renderer.unlitPass();
 let cloudPass = api.renderer.cloudPass();
+let canvasPass = api.renderer.canvasPass();
 
 renderer.addRenderStage(clearRT);
 renderer.addRenderStage(clearDS);
 renderer.addRenderStage(unlitPass);
 renderer.addRenderStage(cloudPass);
+renderer.addRenderStage(canvasPass);
 
 let rendererReady = func() {
 	if (renderer.camBuff == none 
@@ -92,11 +94,12 @@ dsTexBB.build(device, func(tex) {
 let materialRepo = api.material.materialRepo();
 let simpleUnlit = require("materials/simpleUnlitMat.txt");
 let cloudMat = require("materials/cloudMat.txt");
+let canvasMat = require("materials/canvasMat.txt");
 
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 3) {
+	if (materialsLoaded < 4) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
@@ -135,6 +138,20 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 	cameraInputHandler.addUpdater(updater);
 
 	materialRepo.addMaterial("cloudArea", mat);
+	materialsLoaded = materialsLoaded + 1;
+	setMaterialRepo();
+});
+
+canvasMat(device, "card.hlsl", func(mat) {
+	let color = [];
+	color.push(1);
+	color.push(1);
+	color.push(1);
+	color.push(0.3);
+
+	mat.constantBuff.copyData(color);
+
+	materialRepo.addMaterial("canvas", mat);
 	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
 });

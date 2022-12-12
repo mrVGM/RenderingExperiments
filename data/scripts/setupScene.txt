@@ -26,6 +26,7 @@ let setup = func(device, onReady) {
 
 	let plane = require("primitives/plane.txt");
 	let cube = require("primitives/cube.txt");
+	let canvas = require("primitives/cube.txt");
 
 	let meshRepo = api.scene.meshRepo();
 	let scene = api.scene.scene();
@@ -58,10 +59,12 @@ let setup = func(device, onReady) {
 
 	let planeMeshLoaded = 0;
 	let cubeMeshLoaded = 0;
+	let canvasMeshLoaded = 0;
 
 	let setupScene = func() {
 		if (planeMeshLoaded == 0 ||
-			cubeMeshLoaded == 0) {
+			cubeMeshLoaded == 0 ||
+			canvasMeshLoaded == 0) {
 			return;
 		}
 
@@ -78,6 +81,11 @@ let setup = func(device, onReady) {
 		scene.setObjectPosition("sun", math.vector3(5, 5, 5));
 		scene.setObjectScale("sun", math.vector3(0.1, 0.1, 0.1));
 
+		scene.addObject("canvas", "canvas");
+		scene.addObjectMaterial("canvas", "canvas");
+		scene.setObjectScale("canvas", math.vector3(0.5, 0.5, 1));
+		scene.setObjectPosition("canvas", math.vector3(-0.5, -0.5, 0));
+
 		setupInstanceBuffers();
 	};
 
@@ -90,6 +98,12 @@ let setup = func(device, onReady) {
 	cube(device, func(data) {
 		meshRepo.addMesh("cube", data.mesh);
 		cubeMeshLoaded = 1;
+		setupScene();
+	});
+
+	canvas(device, func(data) {
+		meshRepo.addMesh("canvas", data.mesh);
+		canvasMeshLoaded = 1;
 		setupScene();
 	});
 };

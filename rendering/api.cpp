@@ -57,10 +57,12 @@
 
 #include "materials/dxMaterialRepo.h"
 #include "materials/dxSimpleUnlitMat.h"
+#include "materials/dxCanvasMat.h"
 
 #include "renderstage/dxUnlitPass.h"
 #include "renderstage/dxClearDSRS.h"
 #include "renderstage/dxCloudPass.h"
+#include "renderstage/dxCanvasPass.h"
 
 #include "compute/dxNoiseTexture.h"
 
@@ -337,6 +339,11 @@ namespace rendering
 			renderstage::DXCloudPass* cloudPass = new renderstage::DXCloudPass();
 			return NativeObject::Create(cloudPass);
 		}));
+
+		renderer.SetProperty("canvasPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXCanvasPass* canvasPass = new renderstage::DXCanvasPass();
+			return NativeObject::Create(canvasPass);
+		}));
 #pragma endregion
 
 #pragma region Scene
@@ -377,6 +384,11 @@ namespace rendering
 		material.SetProperty("cloudMat", CreateNativeFunc(0, [](Value scope) {
 			material::DXCloudMat* cloudMat = new material::DXCloudMat();
 			return NativeObject::Create(cloudMat);
+		}));
+
+		material.SetProperty("canvasMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXCanvasMat* canvasMat = new material::DXCanvasMat();
+			return NativeObject::Create(canvasMat);
 		}));
 
 #pragma endregion
