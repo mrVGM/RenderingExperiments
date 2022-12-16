@@ -15,84 +15,6 @@
         let content = document.getElementById('shaders');
         let cache = {};
 
-        function compile(fileInfo) {
-            let original = cache[fileInfo.name];
-            original.hash = fileInfo.hash;
-
-            const path = document.app.compileServer.path;
-
-            let fxc = path.join(__dirname, 'fxc.exe');
-
-            if (fileInfo.vs) {
-                if (original.vs_pr) {
-                    original.vs_pr.kill();
-                }
-
-                let name = 'vs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
-                let compiledShaderName = path.join(document.app.compileServer.shaders, name);
-                let command = document.app.compileServer.fxc + ' /T vs_5_0 /E VSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
-
-                original.vs = 'pending';
-                original.vs_compile_start = Date.now();
-
-                original.vs_pr = document.app.compileServer.runCompiler(command, function(err) {
-                    if (err) {
-                        original.vs = 'failed';
-                    } else {
-                        original.vs = 'succeded'
-                    }
-
-                    original.vs_pr = undefined;
-                });
-            }
-
-            if (fileInfo.ps) {
-                if (original.ps_pr) {
-                    original.ps_pr.kill();
-                }
-
-                let name = 'ps_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
-                let compiledShaderName = path.join(document.app.compileServer.shaders, name);
-                let command = document.app.compileServer.fxc + ' /T ps_5_0 /E PSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
-
-                original.ps = 'pending';
-                original.ps_compile_start = Date.now();
-
-                original.ps_pr = document.app.compileServer.runCompiler(command, function(err) {
-                    if (err) {
-                        original.ps = 'failed';
-                    } else {
-                        original.ps = 'succeded'
-                    }
-
-                    original.ps_pr = undefined;
-                });
-            }
-
-            if (fileInfo.cs) {
-                if (original.cs_pr) {
-                    original.cs_pr.kill();
-                }
-
-                let name = 'cs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
-                let compiledShaderName = path.join(document.app.compileServer.shaders, name);
-                let command = document.app.compileServer.fxc + ' /T cs_5_0 /E CSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
-
-                original.cs = 'pending';
-                original.cs_compile_start = Date.now();
-
-                original.cs_pr = document.app.compileServer.runCompiler(command, function(err) {
-                    if (err) {
-                        original.cs = 'failed';
-                    } else {
-                        original.cs = 'succeded'
-                    }
-
-                    original.cs_pr = undefined;
-                });
-            }
-        }
-
         function updateRecord(fileInfo) {
             let cached = cache[fileInfo.name];
             if (!cached) {
@@ -150,20 +72,134 @@
 
         function update() {
             document.app.compileServer.getShaders(function(shaders) {
-                shaders.forEach(element => {
-                    document.app.compileServer.getFileInfo(element, function(fileInfo) {
-                        updateRecord(fileInfo);
-                    });
+                for (let key in cache) {
+                    cache[key].active = false;
+                }
+
+                shaders.forEach(file => {
+                    let record = cache[file];
+                    if (!record) {
+                        cache[file] = {
+                            name: file,
+                            active: true,
+                        };
+
+                        startCompilingShader(file);
+
+                        return;
+                    }
+
+                    record.active = true;
                 });
 
                 setTimeout(update, 5000);
             });
         }
 
+        function startCompilingShader(file) {
+            function compile(fileInfo) {
+                let original = cache[file];
+
+                if (original.hash === fileInfo.hash) {
+                    return;
+                }
+
+                original.hash = fileInfo.hash;
+
+                const path = document.app.compileServer.path;
+                let fxc = path.join(__dirname, 'fxc.exe');
+
+                if (fileInfo.vs) {
+                    if (original.vs_pr) {
+                        original.vs_pr.kill();
+                    }
+
+                    let name = 'vs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
+                    let compiledShaderName = path.join(document.app.compileServer.shaders, name);
+                    let command = document.app.compileServer.fxc + ' /T vs_5_0 /E VSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
+
+                    original.vs = 'pending';
+                    original.vs_compile_start = Date.now();
+
+                    original.vs_pr = document.app.compileServer.runCompiler(command, function(err) {
+                        if (err) {
+                            original.vs = 'failed';
+                        } else {
+                            original.vs = 'succeded'
+                        }
+
+                        original.vs_pr = undefined;
+                    });
+                }
+
+                if (fileInfo.ps) {
+                    if (original.ps_pr) {
+                        original.ps_pr.kill();
+                    }
+
+                    let name = 'ps_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
+                    let compiledShaderName = path.join(document.app.compileServer.shaders, name);
+                    let command = document.app.compileServer.fxc + ' /T ps_5_0 /E PSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
+
+                    original.ps = 'pending';
+                    original.ps_compile_start = Date.now();
+
+                    original.ps_pr = document.app.compileServer.runCompiler(command, function(err) {
+                        if (err) {
+                            original.ps = 'failed';
+                        } else {
+                            original.ps = 'succeded'
+                        }
+
+                        original.ps_pr = undefined;
+                    });
+                }
+
+                if (fileInfo.cs) {
+                    if (original.cs_pr) {
+                        original.cs_pr.kill();
+                    }
+
+                    let name = 'cs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
+                    let compiledShaderName = path.join(document.app.compileServer.shaders, name);
+                    let command = document.app.compileServer.fxc + ' /T cs_5_0 /E CSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
+
+                    original.cs = 'pending';
+                    original.cs_compile_start = Date.now();
+
+                    original.cs_pr = document.app.compileServer.runCompiler(command, function(err) {
+                        if (err) {
+                            original.cs = 'failed';
+                        } else {
+                            original.cs = 'succeded'
+                        }
+
+                        original.cs_pr = undefined;
+                    });
+                }
+            }
+            
+            function compileTick() {
+                if (!cache[file].active) {
+                    delete cache[file];
+                    return;
+                }
+
+                document.app.compileServer.getFileInfo(file, function(fileInfo) {
+                    compile(fileInfo);
+                });
+
+                setTimeout(compileTick, 5000);
+            }
+
+            compileTick();
+        }
+
         function display() {
             content.textContent = '';
             for (let key in cache) {
                 let record = cache[key];
+                
                 let entry = createEntry(record);
                 content.appendChild(entry);
             }
