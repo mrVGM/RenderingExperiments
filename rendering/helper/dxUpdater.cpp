@@ -55,6 +55,11 @@ namespace
 
 			char* data = reinterpret_cast<char*>(chBuf);
 			data[cbRead] = 0;
+
+			if (cbRead > 0) {
+				std::string setting(data);
+				updater->UpdateSettings(setting);
+			}
 		}
 
 		CloseHandle(hPipe);
@@ -142,13 +147,7 @@ void rendering::helper::DXUpdater::UpdateSettings(const std::string& setting)
 void rendering::helper::DXUpdater::Update(double dt)
 {
 	using namespace interpreter;
-	m_timeSinceUpdate += dt;
 	m_totalTime += dt;
-
-	if (m_timeSinceUpdate > m_updateTime) {
-		UpdateSettings();
-		m_timeSinceUpdate = 0;
-	}
 
 	for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
 		Setting& cur = *it;

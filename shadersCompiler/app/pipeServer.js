@@ -17,16 +17,15 @@ function stateInstruction(stream) {
 var server = net.createServer(function(stream) {
     L('Server: on connection')
 
-    stream.on('data', function(c) {
-        L('Server: on data:', c.toString());
-    });
-
     stream.on('end', function() {
-        L('Server: on end')
-        server.close();
+        document.app.pipeServer.sendMessage = function(message) {
+            console.log("No connection!");
+        };
     });
 
-    stateInstruction(stream);
+    document.app.pipeServer.sendMessage = function(message) {
+        stream.write(message);
+    };
 });
 
 server.on('close',function(){
@@ -59,4 +58,7 @@ if (!document.app) {
 }
 
 document.app.pipeServer = {
+    sendMessage: function(message) {
+        console.log("No connection!");
+    }
 };

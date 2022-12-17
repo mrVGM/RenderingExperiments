@@ -4,11 +4,28 @@
     <meta charset="UTF-8">
     <title>Hello World!</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h3>Shader status:</h3>
-    <ul id="shaders">
-    </ul>
+
+    <div style="width: 100%; overflow: hidden;">
+        <div style="width: 50%; float: left;">
+            <h3>Shader status:</h3>
+            <ul id="shaders">
+            </ul>
+        </div>
+        <div style="margin-left: 50%;">
+            <h3>Settings:</h3>
+
+            <div>
+                <label>Density Offset: </label>
+                <span id="density_offset_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.01" min="0" max="10" value="1" class="slider" id="density_offset">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src='compileServer.js'></script>
     <script src='pipeServer.js'></script>
@@ -211,6 +228,15 @@
         update();
         display();
 
+    </script>
+
+    <script>
+        let densityOffset = document.getElementById("density_offset");
+        let densityOffsetValue = document.getElementById("density_offset_value");
+        densityOffset.oninput = function(x) {
+            densityOffsetValue.textContent = densityOffset.value;
+            document.app.pipeServer.sendMessage("m_densityOffset " + densityOffset.value);
+        } 
     </script>
 </body>
 </html>
