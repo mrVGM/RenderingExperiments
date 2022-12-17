@@ -9,6 +9,57 @@
 
 #include <sstream>
 #include <list>
+#include <thread>
+#include <Windows.h>
+
+namespace
+{
+	std::thread* m_thread = nullptr;
+	rendering::helper::DXUpdater* m_updater = nullptr;
+
+	void run() {
+		rendering::helper::DXUpdater* updater = m_updater;
+		m_updater = nullptr;
+
+		const int BUFSIZE = 512;
+		HANDLE hPipe;
+		TCHAR  chBuf[BUFSIZE];
+		BOOL   fSuccess = FALSE;
+		DWORD  cbRead, cbToWrite, cbWritten, dwMode;
+		// Try to open a named pipe; wait for it, if necessary. 
+
+		hPipe = CreateFile(
+			TEXT("\\\\.\\pipe\\mynamedpipe"),   // pipe name 
+			GENERIC_READ,
+			0,              // no sharing 
+			NULL,           // default security attributes
+			OPEN_EXISTING,  // opens existing pipe 
+			0,              // default attributes 
+			NULL);          // no template file 
+
+		// Break if the pipe handle is valid. 
+
+		if (hPipe == INVALID_HANDLE_VALUE)
+			return;
+
+		while(true)
+		{
+			// Read from the pipe. 
+
+			fSuccess = ReadFile(
+				hPipe,    // pipe handle 
+				chBuf,    // buffer to receive reply 
+				BUFSIZE * sizeof(TCHAR),  // size of buffer 
+				&cbRead,  // number of bytes read 
+				NULL);    // not overlapped 
+
+			char* data = reinterpret_cast<char*>(chBuf);
+			data[cbRead] = 0;
+		}
+
+		CloseHandle(hPipe);
+	}
+}
 
 void rendering::helper::DXUpdater::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -37,6 +88,17 @@ return Value();
 		return Value();
 	});
 
+	Value& connectToPipe = GetOrCreateProperty(nativeObject, "connectToPipe");
+	connectToPipe = CreateNativeMethod(nativeObject, 0, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXUpdater* self = static_cast<DXUpdater*>(NativeObject::ExtractNativeObject(selfValue));
+
+		m_updater = self;
+		self->m_pipeThread = new std::thread(run);
+
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -53,8 +115,14 @@ void rendering::helper::DXUpdater::UpdateSettings()
 	Value api = GetAPI();
 	Value appContext = api.GetProperty("app_context");
 	std::string rootDir = appContext.GetProperty("root_dir").GetString();
-	std::stringstream ss(data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.txt"));
+	std::string dataFromFile = data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.txt");
 
+	UpdateSettings(dataFromFile);
+}
+
+void rendering::helper::DXUpdater::UpdateSettings(const std::string& setting)
+{
+	std::stringstream ss(setting);
 	std::string settingName;
 
 	while (ss >> settingName) {
@@ -162,6 +230,14 @@ rendering::helper::DXUpdater::DXUpdater()
 	m_settings.push_back(Setting{ "m_worly1Weight", 1, 0.625 });
 	m_settings.push_back(Setting{ "m_worly2Weight", 1, 0.25 });
 	m_settings.push_back(Setting{ "m_worly3Weight", 1, 0.125 });
+}
+
+rendering::helper::DXUpdater::~DXUpdater()
+{
+	if (m_pipeThread) {
+		delete m_pipeThread;
+	}
+	m_pipeThread = nullptr;
 }
 
 #undef THROW_ERROR

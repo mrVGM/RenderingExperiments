@@ -137,6 +137,8 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 	updater.setSettingsBuffer(mat.constantBuff);
 	cameraInputHandler.addUpdater(updater);
 
+	updater.connectToPipe();
+
 	materialRepo.addMaterial("cloudArea", mat);
 	materialsLoaded = materialsLoaded + 1;
 	

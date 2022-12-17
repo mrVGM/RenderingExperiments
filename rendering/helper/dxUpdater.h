@@ -9,6 +9,8 @@
 #include <string>
 #include <list>
 
+#include <thread>
+
 namespace rendering::helper
 {
 	class DXUpdater : public interpreter::INativeObject, public IUpdater
@@ -31,9 +33,13 @@ namespace rendering::helper
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		void UpdateSettings();
+		void UpdateSettings(const std::string& setting);
 
 	public:
+		std::thread* m_pipeThread = nullptr;
+
 		void Update(double dt) override;
 		DXUpdater();
+		~DXUpdater();
 	};
 }

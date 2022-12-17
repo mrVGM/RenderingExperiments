@@ -51,13 +51,14 @@ function runCompiler(cmd, onReady) {
     return pr;
 }
 
-document.app = {
-    compileServer: {
-        getShaders: getShaders,
-        getFileInfo: getFileInfo,
-        fxc: path.join(__dirname, 'fxc.exe'),
-        shaders: shadersDir,
-        path: path,
-        runCompiler: runCompiler
-    }
+if (!document.app) {
+    document.app = {};
+}
+document.app.compileServer = {
+    getShaders: getShaders,
+    getFileInfo: getFileInfo,
+    fxc: path.join(__dirname, 'fxc.exe'),
+    shaders: shadersDir,
+    path: path,
+    runCompiler: runCompiler
 };
