@@ -275,7 +275,6 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
             * exp(-(max(0, lightTransmittance + l)) * m_cloudLightAbsorbtion)
             * (1 - exp(-2 * max(0, lightTransmittance + l) * m_cloudLightAbsorbtion));
     }
-    s
     return float2(light, exp(-transmittance * m_cloudAbsorbtion));
 }
 
