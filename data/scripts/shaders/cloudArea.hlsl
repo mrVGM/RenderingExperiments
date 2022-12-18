@@ -204,9 +204,8 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
     return lightTransmittance;
 }
 
-float phase(float cosAngle)
+float phase(float g, float cosAngle)
 {
-    float g = m_g;
     float g2 = g * g;
     float x = 0.5 * (1 - g2) / pow(1 + g2 - 2 * g * cosAngle, 1.5);
     float y = 0.5 * (1 - g2) / pow(1 + g2 + 2 * g * cosAngle, 1.5);
@@ -238,6 +237,42 @@ PSInput VSMain(
     return result;
 }
 
+float simpleScattering(float lightTransmittance, float angleCos)
+{
+    return phase(m_g, angleCos)
+        * exp(-lightTransmittance * m_cloudLightAbsorbtion)
+        * (1 - exp(-2 * lightTransmittance * m_cloudLightAbsorbtion));
+}
+
+float multipleOctaveScattering(float density, float angleCos)
+{
+    float attenuation = 0.2;
+    float contribution = 0.4;
+    float phaseAttenuation = 0.1;
+
+    const float scatteringOctaves = 4.0;
+
+    float a = 1.0;
+    float b = 1.0;
+    float c = 1.0;
+    float g = m_g;
+
+    float luminance = 0.0;
+
+    for (float i = 0.0; i < scatteringOctaves; ++i) {
+        float phaseFunction = phase(c * g, angleCos);
+        float beers = exp(-density * m_cloudLightAbsorbtion * a);
+
+        luminance += b * phaseFunction * beers;
+
+        a *= attenuation;
+        b *= contribution;
+        c *= (1 - phaseAttenuation);
+    }
+
+    return luminance;
+}
+
 float2 cloudMarch(Wall walls[6], float3 hitPoint)
 {
     float3 hits[2];
@@ -265,18 +300,18 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
         float energy;
         float l = lightMarch(walls, testPoint, energy);
 
-        float cosAngle = dot(
+        float angleCos = dot(
             normalize(testPoint - m_lightPosition),
             normalize(m_camPos - testPoint)
         );
 
-        light += energy
-            * phase(cosAngle)
-            * exp(-(max(0, lightTransmittance + l)) * m_cloudLightAbsorbtion)
-            * (1 - exp(-2 * max(0, lightTransmittance + l) * m_cloudLightAbsorbtion));
+        //light += energy * simpleScattering(max(0, lightTransmittance + l), angleCos);
+        light += energy * multipleOctaveScattering(max(0, lightTransmittance + l), angleCos);
     }
     return float2(light, exp(-transmittance * m_cloudAbsorbtion));
 }
+
+
 
 float4 PSMain(
     float4 position : SV_POSITION,
