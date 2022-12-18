@@ -261,7 +261,8 @@ float multipleOctaveScattering(float density, float angleCos)
 
     for (float i = 0.0; i < scatteringOctaves; ++i) {
         float phaseFunction = phase(c * g, angleCos);
-        float beers = exp(-density * m_cloudLightAbsorbtion * a);
+        float beers = exp(-density * m_cloudLightAbsorbtion * a) *
+            (1 - exp(-2 * density * m_cloudLightAbsorbtion * a));
 
         luminance += b * phaseFunction * beers;
 
