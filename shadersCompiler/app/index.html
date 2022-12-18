@@ -21,7 +21,56 @@
                 <label>Density Offset: </label>
                 <span id="density_offset_value"></span>
                 <div class="slidecontainer">
-                    <input type="range" step="0.01" min="0" max="10" value="1" class="slider" id="density_offset">
+                    <input type="range" step="0.001" min="0" max="10" value="1" class="slider" id="density_offset">
+                </div>
+            </div>
+
+            <div>
+                <label>Light Intensity: </label>
+                <span id="light_intensity_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="10" value="1" class="slider" id="light_intensity">
+                </div>
+            </div>
+
+
+            <div>
+                <label>Sample Steps: </label>
+                <span id="sample_steps_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="1" min="0" max="30" value="10" class="slider" id="sample_steps">
+                </div>
+            </div>
+
+            <div>
+                <label>Cloud Abosorbtion: </label>
+                <span id="cloud_absorbtion_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="cloud_absorbtion">
+                </div>
+            </div>
+
+            <div>
+                <label>Cloud Light Abosorbtion: </label>
+                <span id="cloud_light_absorbtion_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="cloud_light_absorbtion">
+                </div>
+            </div>
+
+            <div>
+                <label>Air Light Abosorbtion: </label>
+                <span id="air_light_absorbtion_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="air_light_absorbtion">
+                </div>
+            </div>
+
+            <div>
+                <label>G: </label>
+                <span id="g_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="1" value="0.8" class="slider" id="g">
                 </div>
             </div>
         </div>
@@ -231,12 +280,68 @@
     </script>
 
     <script>
-        let densityOffset = document.getElementById("density_offset");
-        let densityOffsetValue = document.getElementById("density_offset_value");
-        densityOffset.oninput = function(x) {
-            densityOffsetValue.textContent = densityOffset.value;
-            document.app.pipeServer.sendMessage("m_densityOffset " + densityOffset.value);
-        } 
+        {
+            let inputElement = document.getElementById("density_offset");
+            let valueElement = document.getElementById("density_offset_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_densityOffset " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("light_intensity");
+            let valueElement = document.getElementById("light_intensity_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_lightIntensity " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("sample_steps");
+            let valueElement = document.getElementById("sample_steps_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_sampleSteps " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("cloud_absorbtion");
+            let valueElement = document.getElementById("cloud_absorbtion_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_cloudAbsorbtion " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("cloud_light_absorbtion");
+            let valueElement = document.getElementById("cloud_light_absorbtion_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_cloudLightAbsorbtion " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("air_light_absorbtion");
+            let valueElement = document.getElementById("air_light_absorbtion_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_airLightAbsorbtion " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("g");
+            let valueElement = document.getElementById("g_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_g " + inputElement.value);
+            } 
+        }
     </script>
 </body>
 </html>

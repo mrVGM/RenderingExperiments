@@ -125,21 +125,20 @@ void rendering::helper::DXUpdater::UpdateSettings()
 	UpdateSettings(dataFromFile);
 }
 
+void rendering::helper::DXUpdater::AddSetting(const Setting& setting)
+{
+	m_settings.insert(std::pair<std::string, Setting>(setting.m_name, setting));
+}
+
 void rendering::helper::DXUpdater::UpdateSettings(const std::string& setting)
 {
 	std::stringstream ss(setting);
 	std::string settingName;
 
 	while (ss >> settingName) {
-		for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
-			Setting& cur = *it;
-
-			if (cur.m_name == settingName) {
-				for (int i = 0; i < cur.m_dim; ++i) {
-					ss >> cur.m_value[i];
-				}
-				break;
-			}
+		Setting& setting = m_settings[settingName];
+		for (int i = 0; i < setting.m_dim; ++i) {
+			ss >> setting.m_value[i];
 		}
 	}
 }
@@ -149,16 +148,11 @@ void rendering::helper::DXUpdater::Update(double dt)
 	using namespace interpreter;
 	m_totalTime += dt;
 
-	for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
-		Setting& cur = *it;
-
-		if (cur.m_name == "m_lightPosition") {
-			cur.m_value[0] = 0 + 2 * cos(0.1 * m_totalTime);
-			cur.m_value[1] = 5 + 2 * sin(0.1 * m_totalTime);
-			cur.m_value[2] = 5;
-			break;
-		}
-	}
+	Setting& lightPosition = m_settings["m_lightPosition"];
+	lightPosition.m_value[0] = 0 + 2 * cos(0.1 * m_totalTime);
+	lightPosition.m_value[1] = 5 + 2 * sin(0.1 * m_totalTime);
+	lightPosition.m_value[2] = 5;
+	
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
@@ -169,8 +163,8 @@ void rendering::helper::DXUpdater::Update(double dt)
 	}
 	float* floatData = reinterpret_cast<float*>(dst);
 
-	for (std::list<Setting>::iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
-		Setting& cur = *it;
+	for (std::list<std::string>::iterator it = m_shaderSettings.begin(); it != m_shaderSettings.end(); ++it) {
+		const Setting& cur = m_settings[*it];
 
 		for (int i = 0; i < cur.m_dim; ++i) {
 			*floatData = cur.m_value[i];
@@ -200,35 +194,34 @@ void rendering::helper::DXUpdater::Update(double dt)
 		return;
 	}
 	scene::Object3D& sun = sunIt->second;
-
-	for (std::list<Setting>::const_iterator it = m_settings.begin(); it != m_settings.end(); ++it) {
-		const Setting& cur = *it;
-
-		if (cur.m_name == "m_lightPosition") {
-			sun.m_transform.m_position[0] = cur.m_value[0];
-			sun.m_transform.m_position[1] = cur.m_value[1];
-			sun.m_transform.m_position[2] = cur.m_value[2];
-
-			break;
-		}
-	}
+	sun.m_transform.m_position[0] = lightPosition.m_value[0];
+	sun.m_transform.m_position[1] = lightPosition.m_value[1];
+	sun.m_transform.m_position[2] = lightPosition.m_value[2];
 }
 
 rendering::helper::DXUpdater::DXUpdater()
 {
-	m_settings.push_back(Setting{ "m_lightPosition", 4, {5, 5, 5, 1} });
+	AddSetting(Setting{ "m_lightPosition", 4, {5, 5, 5, 1} });
+	AddSetting(Setting{ "m_sampleSteps", 1, 15 });
+	AddSetting(Setting{ "m_cloudAbsorbtion", 1, 6 });
+	AddSetting(Setting{ "m_densityOffset", 1, 3 });
+	AddSetting(Setting{ "m_cloudLightAbsorbtion", 1, 6 });
+	AddSetting(Setting{ "m_airLightAbsorbtion", 1, 0.2 });
+	AddSetting(Setting{ "m_g", 1, 0.8 });
+	AddSetting(Setting{ "m_worly1Weight", 1, 0.625 });
+	AddSetting(Setting{ "m_worly2Weight", 1, 0.25 });
+	AddSetting(Setting{ "m_worly3Weight", 1, 0.125 });
 
-	m_settings.push_back(Setting{ "m_sampleSteps", 1, 15 });
-	m_settings.push_back(Setting{ "m_cloudAbsorbtion", 1, 6 });
-	m_settings.push_back(Setting{ "m_densityOffset", 1, 3 });
-	
-	m_settings.push_back(Setting{ "m_cloudLightAbsorbtion", 1, 6 });
-	m_settings.push_back(Setting{ "m_airLightAbsorbtion", 1, 0.2 });
-	m_settings.push_back(Setting{ "m_g", 1, 0.8 });
-
-	m_settings.push_back(Setting{ "m_worly1Weight", 1, 0.625 });
-	m_settings.push_back(Setting{ "m_worly2Weight", 1, 0.25 });
-	m_settings.push_back(Setting{ "m_worly3Weight", 1, 0.125 });
+	m_shaderSettings.push_back("m_lightPosition");
+	m_shaderSettings.push_back("m_sampleSteps");
+	m_shaderSettings.push_back("m_cloudAbsorbtion");
+	m_shaderSettings.push_back("m_densityOffset");
+	m_shaderSettings.push_back("m_cloudLightAbsorbtion");
+	m_shaderSettings.push_back("m_airLightAbsorbtion");
+	m_shaderSettings.push_back("m_g");
+	m_shaderSettings.push_back("m_worly1Weight");
+	m_shaderSettings.push_back("m_worly2Weight");
+	m_shaderSettings.push_back("m_worly3Weight");
 }
 
 rendering::helper::DXUpdater::~DXUpdater()

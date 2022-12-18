@@ -22,7 +22,8 @@ namespace rendering::helper
 			float m_value[4];
 		};
 
-		std::list<Setting> m_settings;
+		std::map<std::string, Setting> m_settings;
+		std::list<std::string> m_shaderSettings;
 
 		double m_totalTime = 0;
 		double m_updateTime = 1;
@@ -32,6 +33,8 @@ namespace rendering::helper
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		void UpdateSettings();
+
+		void AddSetting(const Setting& setting);
 
 	public:
 		void UpdateSettings(const std::string& setting);
