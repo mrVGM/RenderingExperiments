@@ -33,9 +33,7 @@ SamplerState p_sampler  : register(s0);
 float sampleCloud(float3 coord)
 {
     float4 tex = p_detailTexture.Sample(p_sampler, coord + 0.1 * m_time);
-
     float worly = m_worly1Weight * (1 - tex.y) + m_worly2Weight * (1 - tex.z) + m_worly3Weight * (1 - tex.w);
-
     return (1 - tex.x * worly);
 }
 
@@ -240,50 +238,53 @@ PSInput VSMain(
     return result;
 }
 
+float2 cloudMarch(Wall walls[6], float3 hitPoint)
+{
+    float3 hits[2];
+    int intersections = findIntersections(walls, m_camPos.xyz, normalize(hitPoint - m_camPos.xyz), hits);
+
+    if (intersections != 2) {
+        return float2(-1, -1);
+    }
+
+    float light = 0;
+    float transmittance = -m_densityOffset;
+    float lightTransmittance = -m_densityOffset;
+
+    float cloudDist = length(hits[1] - hits[0]);
+    float stepSize = cloudDist / m_sampleSteps;
+    [unroll(10)]
+    for (int i = 1; i <= m_sampleSteps; ++i) {
+        float c = i / m_sampleSteps;
+        float3 testPoint = (1 - c) * hits[0] + c * hits[1];
+
+        float n = sampleCloud(testPoint) * stepSize;
+        lightTransmittance += n;
+        transmittance += n;
+
+        float energy;
+        float l = lightMarch(walls, testPoint, energy);
+
+        float cosAngle = dot(
+            normalize(testPoint - m_lightPosition),
+            normalize(m_camPos - testPoint)
+        );
+
+        light += energy
+            * phase(cosAngle)
+            * exp(-(max(0, lightTransmittance + l)) * m_cloudLightAbsorbtion)
+            * (1 - exp(-2 * max(0, lightTransmittance + l) * m_cloudLightAbsorbtion));
+    }
+    s
+    return float2(light, exp(-transmittance * m_cloudAbsorbtion));
+}
+
 float4 PSMain(
     float4 position : SV_POSITION,
     float4 world_position : WORLD_POSITION,
     float2 uv : UV,
     Wall walls[6] : WALLS) : SV_TARGET
 {
-    float3 hits[2];
-    int intersections = findIntersections(walls, m_camPos, normalize(world_position - m_camPos.xyz), hits);
-
-    if (intersections != 2) {
-        return float4(1, 0, 0, 1);
-    }
-
-    float light = 0;
-    float transmittance = 0;
-    float lightTransmittance = 0;
-
-    float cloudDist = length(hits[1] - hits[0]);
-    {
-        float stepSize = cloudDist / m_sampleSteps;
-        [unroll(10)]
-        for (int i = 1; i <= m_sampleSteps; ++i) {
-            float c = i / m_sampleSteps;
-            float3 testPoint = (1 - c) * hits[0] + c * hits[1];
-
-            float n = sampleCloud(testPoint) * stepSize;
-            lightTransmittance += n;
-            transmittance += n;
-
-            float energy;
-            float l = lightMarch(walls, testPoint, energy);
-
-            float cosAngle = dot(
-                normalize(testPoint - m_lightPosition),
-                normalize(m_camPos - testPoint)
-            );
-
-            light += energy 
-                * phase(cosAngle)
-                * exp(-(lightTransmittance + l) * m_cloudLightAbsorbtion)
-                * (1 - exp(-2 * (lightTransmittance + l) * m_cloudLightAbsorbtion));
-        }
-    }
-
-
-    return float4(light, light, light, 1 - exp(-transmittance * m_cloudAbsorbtion + m_densityOffset));
+    float2 marchResult = cloudMarch(walls, world_position); 
+    return float4(marchResult.x, marchResult.x, marchResult.x, 1 - marchResult.y); 
 }

@@ -54,7 +54,7 @@
                 <label>Cloud Abosorbtion: </label>
                 <span id="cloud_absorbtion_value"></span>
                 <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="cloud_absorbtion">
+                    <input type="range" step="0.001" min="0" max="10" value="0.5" class="slider" id="cloud_absorbtion">
                 </div>
             </div>
 
@@ -62,7 +62,7 @@
                 <label>Cloud Light Abosorbtion: </label>
                 <span id="cloud_light_absorbtion_value"></span>
                 <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="cloud_light_absorbtion">
+                    <input type="range" step="0.001" min="0" max="10" value="0.5" class="slider" id="cloud_light_absorbtion">
                 </div>
             </div>
 
@@ -199,52 +199,55 @@
                     original.vs_pr = document.app.compileServer.runCompiler(command, function(err) {
                         if (err) {
                             original.vs = 'failed';
+                            console.log(err);
                         } else {
                             original.vs = 'succeded'
                         }
-
+                        
                         original.vs_pr = undefined;
                     });
                 }
-
+                
                 if (fileInfo.ps) {
                     if (original.ps_pr) {
                         original.ps_pr.kill();
                     }
-
+                    
                     let name = 'ps_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
                     let compiledShaderName = path.join(document.app.compileServer.shaders, name);
                     let command = document.app.compileServer.fxc + ' /T ps_5_0 /E PSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
-
+                    
                     original.ps = 'pending';
                     original.ps_compile_start = Date.now();
-
+                    
                     original.ps_pr = document.app.compileServer.runCompiler(command, function(err) {
                         if (err) {
                             original.ps = 'failed';
+                            console.log(err);
                         } else {
                             original.ps = 'succeded'
                         }
-
+                        
                         original.ps_pr = undefined;
                     });
                 }
-
+                
                 if (fileInfo.cs) {
                     if (original.cs_pr) {
                         original.cs_pr.kill();
                     }
-
+                    
                     let name = 'cs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
                     let compiledShaderName = path.join(document.app.compileServer.shaders, name);
                     let command = document.app.compileServer.fxc + ' /T cs_5_0 /E CSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
-
+                    
                     original.cs = 'pending';
                     original.cs_compile_start = Date.now();
-
+                    
                     original.cs_pr = document.app.compileServer.runCompiler(command, function(err) {
                         if (err) {
                             original.cs = 'failed';
+                            console.log(err);
                         } else {
                             original.cs = 'succeded'
                         }
