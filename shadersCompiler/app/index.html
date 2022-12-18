@@ -18,6 +18,14 @@
             <h3>Settings:</h3>
 
             <div>
+                <label>Light Position: </label>
+                <span id="light_position_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="1" value="0.5" class="slider" id="light_position">
+                </div>
+            </div>
+
+            <div>
                 <label>Density Offset: </label>
                 <span id="density_offset_value"></span>
                 <div class="slidecontainer">
@@ -280,6 +288,15 @@
     </script>
 
     <script>
+        {
+            let inputElement = document.getElementById("light_position");
+            let valueElement = document.getElementById("light_position_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_lightPositionBlendFactor " + inputElement.value);
+            } 
+        }
+
         {
             let inputElement = document.getElementById("density_offset");
             let valueElement = document.getElementById("density_offset_value");

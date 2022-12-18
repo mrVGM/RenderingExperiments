@@ -146,13 +146,21 @@ void rendering::helper::DXUpdater::UpdateSettings(const std::string& setting)
 void rendering::helper::DXUpdater::Update(double dt)
 {
 	using namespace interpreter;
+	using namespace DirectX;
 	m_totalTime += dt;
 
+	DirectX::XMVECTOR p1 = DirectX::XMVectorSet(-3, 7, 5, 0);
+	DirectX::XMVECTOR p2 = DirectX::XMVectorSet(3, 7, 5, 0);
+	Setting& blendFactor = m_settings["m_lightPositionBlendFactor"];
+
+	DirectX::XMVECTOR p = 
+		(1- blendFactor.m_value[0]) * p1
+		+ blendFactor.m_value[0] * p2;
+
 	Setting& lightPosition = m_settings["m_lightPosition"];
-	lightPosition.m_value[0] = 0 + 2 * cos(0.1 * m_totalTime);
-	lightPosition.m_value[1] = 5 + 2 * sin(0.1 * m_totalTime);
-	lightPosition.m_value[2] = 5;
-	
+	lightPosition.m_value[0] = DirectX::XMVectorGetX(p);
+	lightPosition.m_value[1] = DirectX::XMVectorGetY(p);
+	lightPosition.m_value[2] = DirectX::XMVectorGetZ(p);
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
@@ -201,6 +209,7 @@ void rendering::helper::DXUpdater::Update(double dt)
 
 rendering::helper::DXUpdater::DXUpdater()
 {
+	AddSetting(Setting{ "m_lightPositionBlendFactor", 1, 0.5 });
 	AddSetting(Setting{ "m_lightPosition", 4, {5, 5, 5, 1} });
 	AddSetting(Setting{ "m_sampleSteps", 1, 15 });
 	AddSetting(Setting{ "m_cloudAbsorbtion", 1, 6 });
