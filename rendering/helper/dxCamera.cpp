@@ -282,50 +282,48 @@ void rendering::DXCamera::MoveCamera(double dt, const long cursorPos[2])
 {
 	using namespace DirectX;
 
-	if (!m_aiming) {
-		return;
-	}
-
 	rendering::DXRenderer* renderer = GetRenderer();
 	if (!renderer) {
 		return;
+	}	
+
+	if (m_aiming) {
+		m_azimuth = -m_angleSpeed * (cursorPos[0] - m_cursorRelativePos[0]) + m_anglesCache[0];
+		while (m_azimuth >= 360) {
+			m_azimuth -= 360;
+		}
+		while (m_azimuth < 0) {
+			m_azimuth += 360;
+		}
+
+		m_altitude = -m_angleSpeed * (cursorPos[1] - m_cursorRelativePos[1]) + m_anglesCache[1];
+		if (m_altitude > 80) {
+			m_altitude = 80;
+		}
+
+		if (m_altitude < -80) {
+			m_altitude = -80;
+		}
+
+		float azimuth = M_PI * m_azimuth / 180.0;
+		float altitude = M_PI * m_altitude / 180.0;
+
+		XMVECTOR fwdVector = XMVectorSet(cos(azimuth) * cos(altitude), sin(altitude), sin(azimuth) * cos(altitude), 0);
+		XMVECTOR rightVector = XMVector3Cross(XMVectorSet(0, 1, 0, 0), fwdVector);
+		rightVector = XMVector3Normalize(rightVector);
+
+		XMVECTOR moveVector = XMVectorSet(m_move[0], 0, m_move[1], 0);
+		moveVector = XMVector3Normalize(moveVector);
+		moveVector = m_moveSpeed * moveVector;
+		moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
+
+		if (DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(moveVector)) < 0.0000001) {
+			moveVector += DirectX::XMVectorSet(0, m_moveSpeed * m_move[2], 0, 0);
+		}
+
+		m_position = DirectX::XMVectorAdd(m_position, moveVector);
+		m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 	}
-
-	m_azimuth = -m_angleSpeed * (cursorPos[0] - m_cursorRelativePos[0]) + m_anglesCache[0];
-	while (m_azimuth >= 360) {
-		m_azimuth -= 360;
-	}
-	while (m_azimuth < 0) {
-		m_azimuth += 360;
-	}
-
-	m_altitude = -m_angleSpeed * (cursorPos[1] - m_cursorRelativePos[1]) + m_anglesCache[1];
-	if (m_altitude > 80) {
-		m_altitude = 80;
-	}
-
-	if (m_altitude < -80) {
-		m_altitude = -80;
-	}
-
-	float azimuth = M_PI * m_azimuth / 180.0;
-	float altitude = M_PI * m_altitude / 180.0;
-
-	XMVECTOR fwdVector = XMVectorSet(cos(azimuth) * cos(altitude), sin(altitude), sin(azimuth) * cos(altitude), 0);
-	XMVECTOR rightVector = XMVector3Cross(XMVectorSet(0, 1, 0, 0), fwdVector);
-	rightVector = XMVector3Normalize(rightVector);
-
-	XMVECTOR moveVector = XMVectorSet(m_move[0], 0, m_move[1], 0);
-	moveVector = XMVector3Normalize(moveVector);
-	moveVector = m_moveSpeed * moveVector;
-	moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
-
-	if (DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(moveVector)) < 0.0000001) {
-		moveVector += DirectX::XMVectorSet(0, m_moveSpeed * m_move[2], 0, 0);
-	}
-
-	m_position = DirectX::XMVectorAdd(m_position, moveVector);
-	m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 
 	float matrixCoefs[22];
 	DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(GetMVPMatrix());
