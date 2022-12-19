@@ -320,6 +320,10 @@ void rendering::DXCamera::MoveCamera(double dt, const long cursorPos[2])
 	moveVector = m_moveSpeed * moveVector;
 	moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
 
+	if (DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(moveVector)) < 0.0000001) {
+		moveVector += DirectX::XMVectorSet(0, m_moveSpeed * m_move[2], 0, 0);
+	}
+
 	m_position = DirectX::XMVectorAdd(m_position, moveVector);
 	m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 
@@ -367,6 +371,7 @@ void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 
 	m_move[0] = 0;
 	m_move[1] = 0;
+	m_move[2] = 0;
 	for (std::set<WPARAM>::const_iterator it = inputInfo.m_keysDown.begin(); it != inputInfo.m_keysDown.end(); ++it) {
 		WPARAM x = *it;
 		if (x == 65) {
@@ -381,6 +386,13 @@ void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 		}
 		if (x == 83) {
 			m_move[1] = -1;
+		}
+
+		if (x == 81) {
+			m_move[2] = -1;
+		}
+		if (x == 69) {
+			m_move[2] = 1;
 		}
 	}
 

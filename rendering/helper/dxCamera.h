@@ -43,8 +43,7 @@ namespace rendering
 		long m_cursorRelativePos[2] = {0, 0};
 		float m_anglesCache[2] = {0, 0};
 		bool m_aiming = false;
-		int m_lastMouseMotion[3] = {0, 0, 0};
-		int m_move[2] = { 0, 0 };
+		int m_move[3] = { 0, 0, 0 };
 		int m_aim[2] = {0, 0 };
 
 		void MoveCamera(double dt, const long cursorPos[2]);

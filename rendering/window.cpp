@@ -202,8 +202,14 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		RAWINPUT* raw = (RAWINPUT*)lpb;
 		if (raw->header.dwType == RIM_TYPEMOUSE)
 		{
-			m_inputInfo.m_mouseMovement[0] += raw->data.mouse.lLastX;
-			m_inputInfo.m_mouseMovement[1] += raw->data.mouse.lLastY;
+			if (raw->data.mouse.usFlags == MOUSE_MOVE_RELATIVE) {
+				m_inputInfo.m_mouseMovement[0] += raw->data.mouse.lLastX;
+				m_inputInfo.m_mouseMovement[1] += raw->data.mouse.lLastY;
+			}
+			else if (raw->data.mouse.usFlags == MOUSE_MOVE_ABSOLUTE) {
+				m_inputInfo.m_mouseMovement[0] = raw->data.mouse.lLastX;
+				m_inputInfo.m_mouseMovement[1] = raw->data.mouse.lLastY;
+			}
 		}
 		return 0;
 	}
