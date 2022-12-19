@@ -298,7 +298,7 @@ void rendering::raymarch::DXRayMarchCamera::HandleInput(double dt, const InputIn
 	float aimRight = 0;
 	float aimUp = 0;
 
-	for (std::list<WPARAM>::const_iterator it = inputInfo.m_keysDown.begin(); it != inputInfo.m_keysDown.end(); ++it) {
+	for (std::set<WPARAM>::const_iterator it = inputInfo.m_keysDown.begin(); it != inputInfo.m_keysDown.end(); ++it) {
 		WPARAM x = *it;
 		if (x == 65) {
 			right = -1;

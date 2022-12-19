@@ -3,15 +3,17 @@
 #include "nativeObject.h"
 
 #include <Windows.h>
-#include <list>
+#include <set>
 
 
 namespace rendering
 {
 	struct InputInfo
 	{
-		std::list<WPARAM> m_keysDown;
-		std::list<WPARAM> m_keysUp;
+		std::set<WPARAM> m_keysDown;
+		bool m_leftMouseButtonDown = false;
+		bool m_rightMouseButtonDown = false;
+		long m_mouseMovement[2];
 	};
 
 	class Window : public interpreter::INativeObject
@@ -25,6 +27,9 @@ namespace rendering
 		LRESULT CALLBACK WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
+
+		void RegisterRawInputDevice();
+
 	public:
 		HWND m_hwnd;
 		UINT m_width;

@@ -14,8 +14,8 @@ namespace rendering
 	{
 		float m_airAbsorbtion = 0.01;
 
-		float m_angleSpeed = 300;
-		float m_moveSpeed = 1;
+		float m_angleSpeed = 0.2;
+		float m_moveSpeed = 0.3;
 
 		float m_azimuth = 90;
 		float m_altitude = 0;
@@ -39,6 +39,16 @@ namespace rendering
 		
 		DirectX::XMVECTOR GetForwardVector() const;
 		DirectX::XMVECTOR GetRightVector() const;
+
+		long m_cursorRelativePos[2] = {0, 0};
+		float m_anglesCache[2] = {0, 0};
+		bool m_aiming = false;
+		int m_lastMouseMotion[3] = {0, 0, 0};
+		int m_move[2] = { 0, 0 };
+		int m_aim[2] = {0, 0 };
+
+		void MoveCamera(double dt, const long cursorPos[2]);
+
 	public:
 		void HandleInput(double dt, const InputInfo& inputInfo) override;
 		void RunUpdaters(double dt) override;

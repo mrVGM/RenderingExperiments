@@ -12,6 +12,7 @@
 #include <list>
 #include <corecrt_math_defines.h>
 
+#include <iostream>
 
 namespace
 {
@@ -277,51 +278,20 @@ DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
 	return res;
 }
 
-void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
+void rendering::DXCamera::MoveCamera(double dt, const long cursorPos[2])
 {
+	using namespace DirectX;
+
+	if (!m_aiming) {
+		return;
+	}
+
 	rendering::DXRenderer* renderer = GetRenderer();
 	if (!renderer) {
 		return;
 	}
 
-	using namespace DirectX;
-
-	float right = 0;
-	float forward = 0;
-	float aimRight = 0;
-	float aimUp = 0;
-
-	for (std::list<WPARAM>::const_iterator it = inputInfo.m_keysDown.begin(); it != inputInfo.m_keysDown.end(); ++it) {
-		WPARAM x = *it;
-		if (x == 65) {
-			right = -1;
-		}
-		if (x == 68) {
-			right = 1;
-		}
-
-		if (x == 87) {
-			forward = 1;
-		}
-		if (x == 83) {
-			forward = -1;
-		}
-
-		if (x == 37) {
-			aimRight = 1;
-		}
-		if (x == 39) {
-			aimRight = -1;
-		}
-		if (x == 38) {
-			aimUp = 1;
-		}
-		if (x == 40) {
-			aimUp = -1;
-		}
-	}
-
-	m_azimuth += dt * m_angleSpeed * aimRight;
+	m_azimuth = -m_angleSpeed * (cursorPos[0] - m_cursorRelativePos[0]) + m_anglesCache[0];
 	while (m_azimuth >= 360) {
 		m_azimuth -= 360;
 	}
@@ -329,7 +299,7 @@ void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 		m_azimuth += 360;
 	}
 
-	m_altitude += dt * m_angleSpeed * aimUp;
+	m_altitude = -m_angleSpeed * (cursorPos[1] - m_cursorRelativePos[1]) + m_anglesCache[1];
 	if (m_altitude > 80) {
 		m_altitude = 80;
 	}
@@ -338,15 +308,14 @@ void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 		m_altitude = -80;
 	}
 
-
 	float azimuth = M_PI * m_azimuth / 180.0;
 	float altitude = M_PI * m_altitude / 180.0;
-	
+
 	XMVECTOR fwdVector = XMVectorSet(cos(azimuth) * cos(altitude), sin(altitude), sin(azimuth) * cos(altitude), 0);
 	XMVECTOR rightVector = XMVector3Cross(XMVectorSet(0, 1, 0, 0), fwdVector);
 	rightVector = XMVector3Normalize(rightVector);
 
-	XMVECTOR moveVector = XMVectorSet(right, 0, forward, 0);
+	XMVECTOR moveVector = XMVectorSet(m_move[0], 0, m_move[1], 0);
 	moveVector = XMVector3Normalize(moveVector);
 	moveVector = m_moveSpeed * moveVector;
 	moveVector = XMVectorAdd(XMVectorGetX(moveVector) * rightVector, XMVectorGetZ(moveVector) * fwdVector);
@@ -387,7 +356,44 @@ void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 	}
 	memcpy(dst, matrixCoefs, _countof(matrixCoefs) * sizeof(float));
 	renderer->GetCamBuff()->Unmap(0, nullptr);
+}
 
+void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
+{
+	rendering::DXRenderer* renderer = GetRenderer();
+	if (!renderer) {
+		return;
+	}
+
+	m_move[0] = 0;
+	m_move[1] = 0;
+	for (std::set<WPARAM>::const_iterator it = inputInfo.m_keysDown.begin(); it != inputInfo.m_keysDown.end(); ++it) {
+		WPARAM x = *it;
+		if (x == 65) {
+			m_move[0] = -1;
+		}
+		if (x == 68) {
+			m_move[0] = 1;
+		}
+
+		if (x == 87) {
+			m_move[1] = 1;
+		}
+		if (x == 83) {
+			m_move[1] = -1;
+		}
+	}
+
+	if (inputInfo.m_rightMouseButtonDown && !m_aiming) {
+		m_cursorRelativePos[0] = inputInfo.m_mouseMovement[0];
+		m_cursorRelativePos[1] = inputInfo.m_mouseMovement[1];
+		m_anglesCache[0] = m_azimuth;
+		m_anglesCache[1] = m_altitude;
+	}
+
+	m_aiming = inputInfo.m_rightMouseButtonDown;
+
+	MoveCamera(dt, inputInfo.m_mouseMovement);
 	RunUpdaters(dt);
 
 	std::string error;

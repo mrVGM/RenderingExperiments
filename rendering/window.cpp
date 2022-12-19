@@ -8,8 +8,8 @@
 #include "dxRenderer.h"
 
 #include <thread>
-#include <semaphore>
 #include <chrono>
+#include <hidusage.h>
 
 namespace
 {
@@ -19,7 +19,6 @@ namespace
 
 	rendering::Window* m_wnd = nullptr;
 	bool m_windowLoopRunning = true;
-	std::binary_semaphore m_renderSemaphore{ 1 };
 	std::thread* m_windowLoopThread = nullptr;
 
 	std::chrono::system_clock::time_point m_lastTick;
@@ -135,6 +134,7 @@ LRESULT rendering::Window::StaticWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		::SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)data->lpCreateParams);
 		auto* window = (Window*)data->lpCreateParams;
 		window->m_hwnd = hWnd;
+		window->RegisterRawInputDevice();
 	}
 
 	// Process messages by window message function
@@ -161,15 +161,53 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 	{
-		m_inputInfo.m_keysDown.push_back(wParam);
+		m_inputInfo.m_keysDown.insert(wParam);
 		return 0;
 	}
 
 	case WM_KEYUP:
 	{
-		m_inputInfo.m_keysUp.push_back(wParam);
+		m_inputInfo.m_keysDown.erase(wParam);
 		return 0;
 	}
+
+	case WM_LBUTTONDOWN:
+	{
+		m_inputInfo.m_leftMouseButtonDown = true;
+		return 0;
+	}
+	case WM_LBUTTONUP:
+	{
+		m_inputInfo.m_leftMouseButtonDown = false;
+		return 0;
+	}
+
+	case WM_RBUTTONDOWN:
+	{
+		m_inputInfo.m_rightMouseButtonDown = true;
+		return 0;
+	}
+	case WM_RBUTTONUP:
+	{
+		m_inputInfo.m_rightMouseButtonDown = false;
+		return 0;
+	}
+
+	case WM_INPUT:
+	{
+		UINT dwSize = sizeof(RAWINPUT);
+		static BYTE lpb[sizeof(RAWINPUT)];
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER));
+
+		RAWINPUT* raw = (RAWINPUT*)lpb;
+		if (raw->header.dwType == RIM_TYPEMOUSE)
+		{
+			m_inputInfo.m_mouseMovement[0] += raw->data.mouse.lLastX;
+			m_inputInfo.m_mouseMovement[1] += raw->data.mouse.lLastY;
+		}
+		return 0;
+	}
+
 	}
 
 	return static_cast<LRESULT>(DefWindowProc(m_hwnd, uMsg, wParam, lParam));
@@ -210,8 +248,6 @@ void rendering::Window::WindowTick(double dt)
 	}
 
 	inputHandler->HandleInput(dt, m_inputInfo);
-	m_inputInfo.m_keysDown.clear();
-	m_inputInfo.m_keysUp.clear();
 }
 
 void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
@@ -279,47 +315,6 @@ return Value();
 		return interpreter::Value(wnd->m_height);
 	});
 
-	Value& keyDownHandler = GetOrCreateProperty(nativeObject, "keyDownHandler");
-	Value& keyUpHandler = GetOrCreateProperty(nativeObject, "keyUpHandler");
-
-	interpreter::Value windowLoop = interpreter::CreateNativeMethod(nativeObject, 0, [&](interpreter::Value scope) {
-		MSG msg;
-		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-			if (!GetMessage(&msg, NULL, 0, 0)) {
-				break;
-			}
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-
-		if (!keyDownHandler.IsNone()) {
-			for (std::list<WPARAM>::const_iterator it = m_inputInfo.m_keysDown.begin(); it != m_inputInfo.m_keysDown.end(); ++it) {
-				WPARAM cur = *it;
-				
-				Value arg = utils::GetEmptyObject();
-				arg.SetProperty("keyDown", Value(cur));
-
-				interpreter::utils::RunCallback(keyDownHandler, arg);
-			}
-		}
-
-		if (!keyUpHandler.IsNone()) {
-			for (std::list<WPARAM>::const_iterator it = m_inputInfo.m_keysUp.begin(); it != m_inputInfo.m_keysUp.end(); ++it) {
-				WPARAM cur = *it;
-
-				Value arg = utils::GetEmptyObject();
-				arg.SetProperty("keyUp", Value(cur));
-
-				interpreter::utils::RunCallback(keyUpHandler, arg);
-			}
-		}
-
-		m_inputInfo.m_keysDown.clear();
-		m_inputInfo.m_keysUp.clear();
-
-		return interpreter::Value();
-	});
-
 	interpreter::Value alive = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
 		interpreter::Value self = scope.GetProperty("self");
 		interpreter::NativeObject* obj = static_cast<interpreter::NativeObject*>(self.GetManagedValue());
@@ -330,49 +325,22 @@ return Value();
 	});
 	
 	interpreter::Value& createProp = GetOrCreateProperty(nativeObject, "create");
-	interpreter::Value& windowLoopProp = GetOrCreateProperty(nativeObject, "windowLoop");
 	interpreter::Value& aliveProp = GetOrCreateProperty(nativeObject, "isAlive");
 
 	createProp = create;
-	windowLoopProp = windowLoop;
 	aliveProp = alive;
 
-
-	Value& setKeyDownHandler = GetOrCreateProperty(nativeObject, "setKeyDownHandler");
-	setKeyDownHandler = interpreter::CreateNativeMethod(nativeObject, 1, [&](interpreter::Value scope) {
-		interpreter::Value self = scope.GetProperty("self");
-		Window* wnd = static_cast<Window*>(interpreter::NativeObject::ExtractNativeObject(self));
-
-		Value handler = scope.GetProperty("param0");
-		if (handler.GetType() != ScriptingValueType::Object) {
-			THROW_EXCEPTION("Please supply a callback function!")
-		}
-
-		keyDownHandler = handler;
-		return Value();
-	});
-
-	Value& setKeyUpHandler = GetOrCreateProperty(nativeObject, "setKeyUpHandler");
-	setKeyUpHandler = interpreter::CreateNativeMethod(nativeObject, 1, [&](interpreter::Value scope) {
-		interpreter::Value self = scope.GetProperty("self");
-		Window* wnd = static_cast<Window*>(interpreter::NativeObject::ExtractNativeObject(self));
-
-		Value handler = scope.GetProperty("param0");
-		if (handler.GetType() != ScriptingValueType::Object) {
-			THROW_EXCEPTION("Please supply a callback function!")
-		}
-
-		keyUpHandler = handler;
-		return Value();
-	});
-
-	Value& finishDraw = GetOrCreateProperty(nativeObject, "finishDraw");
-	finishDraw = interpreter::CreateNativeMethod(nativeObject, 0, [](interpreter::Value scope) {
-		m_renderSemaphore.release();
-		return Value();
-	});
-
 #undef THROW_EXCEPTION
+}
+
+void rendering::Window::RegisterRawInputDevice()
+{
+	RAWINPUTDEVICE rid[1];
+	rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
+	rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+	rid[0].dwFlags = RIDEV_INPUTSINK;
+	rid[0].hwndTarget = m_hwnd;
+	RegisterRawInputDevices(rid, 1, sizeof(rid[0]));
 }
 
 
