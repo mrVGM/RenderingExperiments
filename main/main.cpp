@@ -7,6 +7,8 @@
 #include <filesystem>
 #include <iostream>
 
+#define USE_LOCAL_DIR 1
+
 int main(int args, const char** argv)
 {
 	std::string executableName = argv[0];
@@ -19,7 +21,12 @@ int main(int args, const char** argv)
 	std::string executableDirectory = executableName.substr(0, index);
 	std::filesystem::path executableDirPath = std::filesystem::path(executableDirectory);
 
+#if USE_LOCAL_DIR
+	std::filesystem::path dataPath = "..\\..\\..\\..\\data\\";
+#else
 	std::filesystem::path dataPath = executableDirPath.append("..\\data\\");
+#endif
+
 	data::Init(dataPath.string().c_str());
 
 	std::filesystem::path scriptsDir = dataPath.append("scripts\\");
@@ -27,7 +34,7 @@ int main(int args, const char** argv)
 	interpreter::ISession& session = interpreter::OpenSession(scriptsDir.string(), std::cout);
 	session.AddGlobalValue("api", rendering::GetAPI());
 
-	const char* mainScript = "raymarch.txt";
+	const char* mainScript = "renderer.txt";
 	if (args > 1) {
 		mainScript = argv[1];
 	}

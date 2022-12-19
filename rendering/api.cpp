@@ -35,8 +35,8 @@
 #include "deferred/gBuffer.h"
 #include "deferred/dxLitPassCL.h"
 
-#include "materials/dxCloudMatCL.h"
 #include "materials/dxUnlitMatCL.h"
+#include "materials/dxCloudMat.h"
 
 #include "clouds/cloudSettingsReader.h"
 #include "clouds/dxCloudsCamera.h"
@@ -47,6 +47,26 @@
 
 #include "raymarching/dxRayMarchMatCL.h"
 #include "raymarching/dxRayMarchCamera.h"
+
+#include "dxRenderer.h"
+#include "renderstage/dxClearRTRS.h"
+
+#include "scene/dxScene.h"
+#include "scene/dxMesh.h"
+#include "scene/dxMeshRepo.h"
+
+#include "materials/dxMaterialRepo.h"
+#include "materials/dxSimpleUnlitMat.h"
+#include "materials/dxCanvasMat.h"
+
+#include "renderstage/dxUnlitPass.h"
+#include "renderstage/dxClearDSRS.h"
+#include "renderstage/dxCloudPass.h"
+#include "renderstage/dxCanvasPass.h"
+
+#include "compute/dxNoiseTexture.h"
+
+#include "helper/dxUpdater.h"
 
 #include <cmath>
 #include <numbers>
@@ -214,11 +234,6 @@ namespace rendering
 			return NativeObject::Create(litMat);
 		}));
 
-		deferred.SetProperty("cloudMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
-			DXCloudMatCL* cloudMat = new DXCloudMatCL();
-			return NativeObject::Create(cloudMat);
-		}));
-
 		deferred.SetProperty("unlitMatCL", interpreter::CreateNativeFunc(0, [](Value scope) {
 			DXUnlitMatCL* unlitMat = new DXUnlitMatCL();
 			return NativeObject::Create(unlitMat);
@@ -243,6 +258,11 @@ namespace rendering
 		aux.SetProperty("clearRT", CreateNativeFunc(0, [](Value scope) {
 			DXClearRTCL* clearRT = new DXClearRTCL();
 			return NativeObject::Create(clearRT);
+		}));
+
+		aux.SetProperty("updater", CreateNativeFunc(0, [](Value scope) {
+			helper::DXUpdater* updater = new helper::DXUpdater();
+			return NativeObject::Create(updater);
 		}));
 #pragma endregion
 
@@ -291,6 +311,97 @@ namespace rendering
 		}));
 #pragma endregion
 
+#pragma region Renderer
+		m_api.SetProperty("renderer", interpreter::utils::GetEmptyObject());
+		Value renderer = m_api.GetProperty("renderer");
+
+		renderer.SetProperty("renderer", CreateNativeFunc(0, [](Value scope) {
+			DXRenderer* renderer = new DXRenderer();
+			return NativeObject::Create(renderer);
+		}));
+
+		renderer.SetProperty("clearRT", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXClearRTRS* clearRT = new renderstage::DXClearRTRS();
+			return NativeObject::Create(clearRT);
+		}));
+
+		renderer.SetProperty("unlitPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXUnlitPass* unlitPass = new renderstage::DXUnlitPass();
+			return NativeObject::Create(unlitPass);
+		}));
+
+		renderer.SetProperty("clearDS", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXClearDSRS* clearDS = new renderstage::DXClearDSRS();
+			return NativeObject::Create(clearDS);
+		}));
+
+		renderer.SetProperty("cloudPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXCloudPass* cloudPass = new renderstage::DXCloudPass();
+			return NativeObject::Create(cloudPass);
+		}));
+
+		renderer.SetProperty("canvasPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXCanvasPass* canvasPass = new renderstage::DXCanvasPass();
+			return NativeObject::Create(canvasPass);
+		}));
+#pragma endregion
+
+#pragma region Scene
+		m_api.SetProperty("scene", interpreter::utils::GetEmptyObject());
+		Value scene = m_api.GetProperty("scene");
+
+		scene.SetProperty("scene", CreateNativeFunc(0, [](Value scope) {
+			scene::DXScene* scene = new scene::DXScene();
+			return NativeObject::Create(scene);
+		}));
+
+		scene.SetProperty("mesh", CreateNativeFunc(0, [](Value scope) {
+			scene::DXMesh* mesh = new scene::DXMesh();
+			return NativeObject::Create(mesh);
+		}));
+
+		scene.SetProperty("meshRepo", CreateNativeFunc(0, [](Value scope) {
+			scene::DXMeshRepo* meshRepo = new scene::DXMeshRepo();
+			return NativeObject::Create(meshRepo);
+		}));
+
+#pragma endregion
+
+#pragma region Materials
+		m_api.SetProperty("material", interpreter::utils::GetEmptyObject());
+		Value material = m_api.GetProperty("material");
+
+		material.SetProperty("materialRepo", CreateNativeFunc(0, [](Value scope) {
+			material::DXMaterialRepo* materialRepo = new material::DXMaterialRepo();
+			return NativeObject::Create(materialRepo);
+		}));
+
+		material.SetProperty("simpleUnlitMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXSimpleUnlitMatCL* simpleUnlitMat = new material::DXSimpleUnlitMatCL();
+			return NativeObject::Create(simpleUnlitMat);
+		}));
+
+		material.SetProperty("cloudMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXCloudMat* cloudMat = new material::DXCloudMat();
+			return NativeObject::Create(cloudMat);
+		}));
+
+		material.SetProperty("canvasMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXCanvasMat* canvasMat = new material::DXCanvasMat();
+			return NativeObject::Create(canvasMat);
+		}));
+
+#pragma endregion
+
+#pragma region Compute
+		m_api.SetProperty("compute", interpreter::utils::GetEmptyObject());
+		Value compute = m_api.GetProperty("compute");
+
+		compute.SetProperty("noiseTexture", CreateNativeFunc(0, [](Value scope) {
+			compute::DXNoiseTexture* noiseTexture = new compute::DXNoiseTexture();
+			return NativeObject::Create(noiseTexture);
+		}));
+#pragma endregion
 	}
 }
 

@@ -1,0 +1,95 @@
+let resources = require("resources/resourceUtils.txt");
+let utils = require("utils.txt");
+let math = require("math.txt");
+
+let loadInstanceBuffer = func(device, buffData, onReady) {
+	let id = buffData.id;
+	let count = buffData.count;
+
+	let stride = 40;
+	let size = count * stride;
+	
+	let bb = resources.bufferBuilder();
+	bb.upload(1);
+	bb.setSize(size);
+	bb.setStride(stride);
+
+	bb.build(device, func(buff) {
+		let res = {};
+		res.id = id;
+		res.buff = buff;
+		onReady(res);
+	});
+};
+
+let setup = func(device, addObjects, onReady) {
+
+	let plane = require("primitives/plane.txt");
+	let cube = require("primitives/cube.txt");
+	let canvas = require("primitives/cube.txt");
+
+	let meshRepo = api.scene.meshRepo();
+	let scene = api.scene.scene();
+
+	let setupInstanceBuffers = func() {
+		let res = {};
+		res.meshRepo = meshRepo;
+		res.scene = scene;
+
+		let instanceDataList = scene.getInstanceBuffersData();
+
+		let buffList = [];
+
+		let callReady = func() {
+			if (buffList.length < instanceDataList.length) {
+				return;
+			}
+
+			scene.setInstanceBuffers(buffList);
+			onReady(res);
+		};
+
+		utils.foreach(instanceDataList, func(x) {
+			loadInstanceBuffer(device, x, func(buff) {
+				buffList.push(buff);
+				callReady();
+			});
+		});
+	};
+
+	let planeMeshLoaded = 0;
+	let cubeMeshLoaded = 0;
+	let canvasMeshLoaded = 0;
+
+	let setupScene = func() {
+		if (planeMeshLoaded == 0 ||
+			cubeMeshLoaded == 0 ||
+			canvasMeshLoaded == 0) {
+			return;
+		}
+
+		addObjects(scene);
+
+		setupInstanceBuffers();
+	};
+
+	plane(device, func(data) {
+		meshRepo.addMesh("plane", data.mesh);
+		planeMeshLoaded = 1;
+		setupScene();
+	});
+
+	cube(device, func(data) {
+		meshRepo.addMesh("cube", data.mesh);
+		cubeMeshLoaded = 1;
+		setupScene();
+	});
+
+	canvas(device, func(data) {
+		meshRepo.addMesh("canvas", data.mesh);
+		canvasMeshLoaded = 1;
+		setupScene();
+	});
+};
+
+export = setup;

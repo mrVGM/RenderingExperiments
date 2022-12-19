@@ -1,6 +1,7 @@
 #include "dxPixelShader.h"
 
 #include "nativeFunc.h"
+#include "api.h"
 
 #include <d3dcompiler.h>
 
@@ -8,6 +9,10 @@
 void rendering::DXPixelShader::InitProperties(interpreter::NativeObject& nativeObject)
 {
     using namespace interpreter;
+
+#define THROW_EXCEPTION(error)\
+scope.SetProperty("exception", Value(error));\
+return Value();
 
     Value& compile = GetOrCreateProperty(nativeObject, "compile");
 
@@ -33,6 +38,33 @@ void rendering::DXPixelShader::InitProperties(interpreter::NativeObject& nativeO
 
         return Value();
     });
+
+    Value& loadPrecompiled = GetOrCreateProperty(nativeObject, "loadPrecompiled");
+    loadPrecompiled = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXPixelShader* self = static_cast<DXPixelShader*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value shaderNameValue = scope.GetProperty("param0");
+        if (shaderNameValue.GetType() != ScriptingValueType::String) {
+            THROW_EXCEPTION("Please supply shader name!")
+        }
+
+        std::string error;
+        bool res = self->LoadPrecompiledShader(shaderNameValue.GetString(), error);
+
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+        return Value();
+    });
+
+#undef THROW_EXCEPTION
+}
+
+#define THROW_ERROR(hRes, error) \
+if (FAILED(hRes)) {\
+    errorMessage = error;\
+    return false;\
 }
 
 bool rendering::DXPixelShader::Init(const std::string& shaderCode, std::string& errorMessage)
@@ -76,7 +108,28 @@ bool rendering::DXPixelShader::Init(const std::string& shaderCode, std::string& 
     return true;
 }
 
+bool rendering::DXPixelShader::LoadPrecompiledShader(const std::string& name, std::string& errorMessage)
+{
+    using namespace interpreter;
+    Value api = GetAPI();
+    Value appContext = api.GetProperty("app_context");
+
+    std::string rootDir = appContext.GetProperty("root_dir").GetString() + "shaders\\";
+
+    std::string preCompiledName = rootDir + "ps_" + name.substr(0, name.size() - 5) + ".fxc";
+    std::wstring preCompiledNameW(preCompiledName.begin(), preCompiledName.end());
+
+    THROW_ERROR(
+        D3DReadFileToBlob(preCompiledNameW.c_str(), &m_pixelShader),
+        "Can't load the precompiled Pixel Shader!"
+    )
+
+    return true;
+}
+
 ID3DBlob* rendering::DXPixelShader::GetCompiledShader() const
 {
     return m_pixelShader.Get();
 }
+
+#undef THROW_ERROR

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div style="width: 100%; overflow: hidden;">
+        <div style="width: 50%; float: left;">
+            <h3>Shader status:</h3>
+            <ul id="shaders">
+            </ul>
+        </div>
+        <div style="margin-left: 50%;">
+            <h3>Settings:</h3>
+
+            <div>
+                <label>Light Position: </label>
+                <span id="light_position_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="1" value="0.5" class="slider" id="light_position">
+                </div>
+            </div>
+
+            <div>
+                <label>Density Offset: </label>
+                <span id="density_offset_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="10" value="1" class="slider" id="density_offset">
+                </div>
+            </div>
+
+            <div>
+                <label>Light Intensity: </label>
+                <span id="light_intensity_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="10" value="1" class="slider" id="light_intensity">
+                </div>
+            </div>
+
+
+            <div>
+                <label>Sample Steps: </label>
+                <span id="sample_steps_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="1" min="0" max="30" value="10" class="slider" id="sample_steps">
+                </div>
+            </div>
+
+            <div>
+                <label>Cloud Abosorbtion: </label>
+                <span id="cloud_absorbtion_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="10" value="0.5" class="slider" id="cloud_absorbtion">
+                </div>
+            </div>
+
+            <div>
+                <label>Cloud Light Abosorbtion: </label>
+                <span id="cloud_light_absorbtion_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="10" value="0.5" class="slider" id="cloud_light_absorbtion">
+                </div>
+            </div>
+
+            <div>
+                <label>Air Light Abosorbtion: </label>
+                <span id="air_light_absorbtion_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="air_light_absorbtion">
+                </div>
+            </div>
+
+            <div>
+                <label>G: </label>
+                <span id="g_value"></span>
+                <div class="slidecontainer">
+                    <input type="range" step="0.001" min="0" max="1" value="0.8" class="slider" id="g">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src='compileServer.js'></script>
+    <script src='pipeServer.js'></script>
+    <script>
+        let content = document.getElementById('shaders');
+        let cache = {};
+
+        function updateRecord(fileInfo) {
+            let cached = cache[fileInfo.name];
+            if (!cached) {
+                cache[fileInfo.name] = fileInfo;
+                compile(fileInfo)
+                return;
+            }
+
+            if (cached.hash === fileInfo.hash) {
+                return;
+            }
+
+            compile(fileInfo);
+        }
+
+
+        function createEntry(fileInfo) {
+            let entry = document.createElement('li');
+            let name = document.createElement('span');
+            entry.appendChild(name);
+            name.textContent = fileInfo.name;
+
+            let children = document.createElement('ul');
+            entry.append(children);
+
+            if (fileInfo.vs) {
+                let vs = document.createElement('li');
+                vs.textContent = 'vs: ' + fileInfo.vs;
+                if (fileInfo.vs === 'pending') {
+                    vs.textContent += ' ' + (Date.now() - fileInfo.vs_compile_start) / 1000 + 'sec';
+                }
+                children.appendChild(vs);
+            }
+
+            if (fileInfo.ps) {
+                let ps = document.createElement('li');
+                ps.textContent = 'ps: ' + fileInfo.ps;
+                if (fileInfo.ps === 'pending') {
+                    ps.textContent += ' ' + (Date.now() - fileInfo.ps_compile_start) / 1000 + 'sec';
+                }
+                children.appendChild(ps);
+            }
+
+            if (fileInfo.cs) {
+                let cs = document.createElement('li');
+                cs.textContent = 'cs: ' + fileInfo.cs;
+                if (fileInfo.cs === 'pending') {
+                    cs.textContent += ' ' + (Date.now() - fileInfo.cs_compile_start) / 1000 + 'sec';
+                }
+                children.appendChild(cs);
+            }
+
+            return entry;
+        }
+
+        function update() {
+            document.app.compileServer.getShaders(function(shaders) {
+                for (let key in cache) {
+                    cache[key].active = false;
+                }
+
+                shaders.forEach(file => {
+                    let record = cache[file];
+                    if (!record) {
+                        cache[file] = {
+                            name: file,
+                            active: true,
+                        };
+
+                        startCompilingShader(file);
+
+                        return;
+                    }
+
+                    record.active = true;
+                });
+
+                setTimeout(update, 5000);
+            });
+        }
+
+        function startCompilingShader(file) {
+            function compile(fileInfo) {
+                let original = cache[file];
+
+                if (original.hash === fileInfo.hash) {
+                    return;
+                }
+
+                original.hash = fileInfo.hash;
+
+                const path = document.app.compileServer.path;
+                let fxc = path.join(__dirname, 'fxc.exe');
+
+                if (fileInfo.vs) {
+                    if (original.vs_pr) {
+                        original.vs_pr.kill();
+                    }
+
+                    let name = 'vs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
+                    let compiledShaderName = path.join(document.app.compileServer.shaders, name);
+                    let command = document.app.compileServer.fxc + ' /T vs_5_0 /E VSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
+
+                    original.vs = 'pending';
+                    original.vs_compile_start = Date.now();
+
+                    original.vs_pr = document.app.compileServer.runCompiler(command, function(err) {
+                        if (err) {
+                            original.vs = 'failed';
+                            console.log(err);
+                        } else {
+                            original.vs = 'succeded'
+                        }
+                        
+                        original.vs_pr = undefined;
+                    });
+                }
+                
+                if (fileInfo.ps) {
+                    if (original.ps_pr) {
+                        original.ps_pr.kill();
+                    }
+                    
+                    let name = 'ps_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
+                    let compiledShaderName = path.join(document.app.compileServer.shaders, name);
+                    let command = document.app.compileServer.fxc + ' /T ps_5_0 /E PSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
+                    
+                    original.ps = 'pending';
+                    original.ps_compile_start = Date.now();
+                    
+                    original.ps_pr = document.app.compileServer.runCompiler(command, function(err) {
+                        if (err) {
+                            original.ps = 'failed';
+                            console.log(err);
+                        } else {
+                            original.ps = 'succeded'
+                        }
+                        
+                        original.ps_pr = undefined;
+                    });
+                }
+                
+                if (fileInfo.cs) {
+                    if (original.cs_pr) {
+                        original.cs_pr.kill();
+                    }
+                    
+                    let name = 'cs_' + fileInfo.name.substring(0, fileInfo.name.length - 5) + '.fxc';
+                    let compiledShaderName = path.join(document.app.compileServer.shaders, name);
+                    let command = document.app.compileServer.fxc + ' /T cs_5_0 /E CSMain /Fo ' + compiledShaderName + ' ' + path.join(document.app.compileServer.shaders, fileInfo.name);
+                    
+                    original.cs = 'pending';
+                    original.cs_compile_start = Date.now();
+                    
+                    original.cs_pr = document.app.compileServer.runCompiler(command, function(err) {
+                        if (err) {
+                            original.cs = 'failed';
+                            console.log(err);
+                        } else {
+                            original.cs = 'succeded'
+                        }
+
+                        original.cs_pr = undefined;
+                    });
+                }
+            }
+            
+            function compileTick() {
+                if (!cache[file].active) {
+                    delete cache[file];
+                    return;
+                }
+
+                document.app.compileServer.getFileInfo(file, function(fileInfo) {
+                    compile(fileInfo);
+                });
+
+                setTimeout(compileTick, 5000);
+            }
+
+            compileTick();
+        }
+
+        function display() {
+            content.textContent = '';
+            for (let key in cache) {
+                let record = cache[key];
+                
+                let entry = createEntry(record);
+                content.appendChild(entry);
+            }
+
+            setTimeout(display, 0);
+        }
+        
+        update();
+        display();
+
+    </script>
+
+    <script>
+        {
+            let inputElement = document.getElementById("light_position");
+            let valueElement = document.getElementById("light_position_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_lightPositionBlendFactor " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("density_offset");
+            let valueElement = document.getElementById("density_offset_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_densityOffset " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("light_intensity");
+            let valueElement = document.getElementById("light_intensity_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_lightIntensity " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("sample_steps");
+            let valueElement = document.getElementById("sample_steps_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_sampleSteps " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("cloud_absorbtion");
+            let valueElement = document.getElementById("cloud_absorbtion_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_cloudAbsorbtion " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("cloud_light_absorbtion");
+            let valueElement = document.getElementById("cloud_light_absorbtion_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_cloudLightAbsorbtion " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("air_light_absorbtion");
+            let valueElement = document.getElementById("air_light_absorbtion_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_airLightAbsorbtion " + inputElement.value);
+            } 
+        }
+
+        {
+            let inputElement = document.getElementById("g");
+            let valueElement = document.getElementById("g_value");
+            inputElement.oninput = function(x) {
+                valueElement.textContent = inputElement.value;
+                document.app.pipeServer.sendMessage("m_g " + inputElement.value);
+            } 
+        }
+    </script>
+</body>
+</html>

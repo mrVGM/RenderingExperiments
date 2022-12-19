@@ -1,6 +1,4 @@
 let generateVertices = func() {
-	let cube = api.primitives.cube();
-
 	let verts = [];
 	let indices = [];
 
@@ -85,6 +83,16 @@ let prepareData = func(device, onReady) {
 		res.vertex = vertexBuff;
 		res.index = indexBuff;
 
+		let mesh = api.scene.mesh();
+		let ranges = [];
+		let range = [];
+		range.push(0);
+		range.push(6);
+		ranges.push(range);
+
+		mesh.create(vertexBuff, indexBuff, ranges);
+
+		res.mesh = mesh;
 		onReady(res);
 	};
 

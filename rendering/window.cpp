@@ -5,6 +5,8 @@
 #include "api.h"
 #include "helper/inputHandler.h"
 
+#include "dxRenderer.h"
+
 #include <thread>
 #include <semaphore>
 #include <chrono>
@@ -32,6 +34,22 @@ namespace
 		return app_context.GetProperty("render");
 	}
 
+	rendering::DXRenderer* GetRenderer()
+	{
+		using namespace interpreter;
+
+		Value api = rendering::GetAPI();
+		Value app_context = api.GetProperty("app_context");
+
+		Value renderer = app_context.GetProperty("renderer");
+
+		if (renderer.IsNone()) {
+			return nullptr;
+		}
+
+		return static_cast<rendering::DXRenderer*>(NativeObject::ExtractNativeObject(renderer));
+	}
+
 	rendering::InputHandler* GetInputHandler()
 	{
 		using namespace interpreter;
@@ -57,23 +75,29 @@ namespace
 		m_lastTick = std::chrono::system_clock::now();
 
 		while (m_windowLoopRunning) {
-			m_renderSemaphore.acquire();
-
 			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 			auto nowNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
 			auto lastTickNN = std::chrono::time_point_cast<std::chrono::nanoseconds>(m_lastTick);
 			long long deltaNN = nowNN.time_since_epoch().count() - lastTickNN.time_since_epoch().count();
 			double dt = deltaNN / 1000000000.0;
 			m_lastTick = now;
+			
+			rendering::DXRenderer* renderer = GetRenderer();
+			if (!renderer) {
+				continue;
+			}
 
+			std::string error;
+			bool res = renderer->Render(error);
+			if (!res) {
+				return;
+			}
+			
 			wnd->WindowTick(dt);
 
-			interpreter::Value renderFunc = GetRenderFunc();
-			if (renderFunc.IsNone()) {
-				m_renderSemaphore.release();
-			}
-			else {
-				interpreter::utils::RunCallback(renderFunc, interpreter::Value());
+			res = renderer->Wait(error);
+			if (!res) {
+				return;
 			}
 		}
 	}

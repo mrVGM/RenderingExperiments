@@ -1,15 +1,20 @@
 #include "dxVertexShader.h"
 
 #include "nativeFunc.h"
+#include "api.h"
 
 #include <d3dcompiler.h>
+
 
 void rendering::DXVertexShader::InitProperties(interpreter::NativeObject& nativeObject)
 {
     using namespace interpreter;
 
-    Value& compile = GetOrCreateProperty(nativeObject, "compile");
+#define THROW_EXCEPTION(error)\
+scope.SetProperty("exception", Value(error));\
+return Value();
 
+    Value& compile = GetOrCreateProperty(nativeObject, "compile");
     compile = CreateNativeMethod(nativeObject, 1, [](Value scope) {
         Value self = scope.GetProperty("self");
         NativeObject* selfNativeObject = static_cast<NativeObject*>(self.GetManagedValue());
@@ -32,6 +37,35 @@ void rendering::DXVertexShader::InitProperties(interpreter::NativeObject& native
 
         return Value();
     });
+
+    Value& loadPrecompiled = GetOrCreateProperty(nativeObject, "loadPrecompiled");
+    loadPrecompiled = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+        Value selfValue = scope.GetProperty("self");
+        DXVertexShader* self = static_cast<DXVertexShader*>(NativeObject::ExtractNativeObject(selfValue));
+
+        Value shaderNameValue = scope.GetProperty("param0");
+        if (shaderNameValue.GetType() != ScriptingValueType::String) {
+            THROW_EXCEPTION("Please supply shader name!")
+        }
+
+        std::string error;
+        bool res = self->LoadPrecompiledShader(shaderNameValue.GetString(), error);
+        
+        if (!res) {
+            THROW_EXCEPTION(error)
+        }
+        return Value();
+    });
+
+#undef THROW_EXCEPTION
+}
+
+
+
+#define THROW_ERROR(hRes, error) \
+if (FAILED(hRes)) {\
+    errorMessage = error;\
+    return false;\
 }
 
 bool rendering::DXVertexShader::Init(const std::string& shaderCode, std::string& errorMessage)
@@ -75,7 +109,28 @@ bool rendering::DXVertexShader::Init(const std::string& shaderCode, std::string&
 	return true;
 }
 
+bool rendering::DXVertexShader::LoadPrecompiledShader(const std::string& name, std::string& errorMessage)
+{
+    using namespace interpreter;
+    Value api = GetAPI();
+    Value appContext = api.GetProperty("app_context");
+
+    std::string rootDir = appContext.GetProperty("root_dir").GetString() + "shaders\\";
+
+    std::string preCompiledName = rootDir + "vs_" + name.substr(0, name.size() - 5) + ".fxc";
+    std::wstring preCompiledNameW(preCompiledName.begin(), preCompiledName.end());
+
+    THROW_ERROR(
+        D3DReadFileToBlob(preCompiledNameW.c_str(), &m_vertexShader),
+        "Can't load the precompiled Vertex Shader!"
+    )
+
+    return true;
+}
+
 ID3DBlob* rendering::DXVertexShader::GetCompiledShader() const
 {
 	return m_vertexShader.Get();
 }
+
+#undef THROW_ERROR

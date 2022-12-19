@@ -40,5 +40,6 @@ namespace rendering::clouds
 		DirectX::XMVECTOR GetRightVector() const;
 	public:
 		void HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp) override;
+		void RunUpdaters(double dt) override;
 	};
 }

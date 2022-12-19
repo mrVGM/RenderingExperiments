@@ -3,9 +3,70 @@
 #include "nativeFunc.h"
 #include "dxBuffer.h"
 #include "d3dx12.h"
+#include "dxRenderer.h"
+#include "api.h"
+#include "scene/IScene.h"
+#include "helper/dxUpdater.h"
 
 #include <list>
 #include <corecrt_math_defines.h>
+
+
+namespace
+{
+	rendering::DXRenderer* GetRenderer()
+	{
+		using namespace interpreter;
+
+		Value api = rendering::GetAPI();
+		Value app_context = api.GetProperty("app_context");
+
+		Value renderer = app_context.GetProperty("renderer");
+
+		if (renderer.IsNone()) {
+			return nullptr;
+		}
+
+		return static_cast<rendering::DXRenderer*>(NativeObject::ExtractNativeObject(renderer));
+	}
+
+	bool UpdateSceneTransform(rendering::DXRenderer* renderer, std::string& errorMessage)
+	{
+		using namespace rendering;
+
+		if (!renderer) {
+			return true;
+		}
+
+		scene::IScene* scene = renderer->GetScene();
+
+		for (std::map<int, scene::InstanceBuffer>::iterator it = scene->m_instanceBuffers.begin(); it != scene->m_instanceBuffers.end(); ++it) {
+			int id = it->first;
+			scene::InstanceBuffer& cur = it->second;
+
+
+			CD3DX12_RANGE readRange(0, 0);
+			void* dst = nullptr;
+			if (FAILED(cur.m_buffer->Map(0, &readRange, &dst))) {
+				errorMessage = "Can't Map Instance Buffer!";
+				return false;
+			}
+			for (std::map<std::string, scene::Object3D>::const_iterator objIt = scene->m_objects.begin(); objIt != scene->m_objects.end(); ++objIt) {
+				const scene::Object3D& curObj = objIt->second;
+
+				if (id != curObj.m_instanceBufferID) {
+					continue;
+				}
+
+				scene::Transform* tmp = reinterpret_cast<scene::Transform*>(dst);
+				memcpy(tmp + curObj.m_instanceBufferOffset, &curObj.m_transform, sizeof(scene::Transform));
+			}
+			cur.m_buffer->Unmap(0, nullptr);
+		}
+
+		return true;
+	}
+}
 
 void rendering::DXCamera::InitProperties(interpreter::NativeObject & nativeObject)
 {
@@ -14,6 +75,8 @@ void rendering::DXCamera::InitProperties(interpreter::NativeObject & nativeObjec
 #define THROW_EXCEPTION(error)\
 scope.SetProperty("exception", Value(error));\
 return Value();
+
+	Value& p_updaters = GetOrCreateProperty(nativeObject, "updaters");
 
 	Value& setPosition = GetOrCreateProperty(nativeObject, "setPosition");
 	setPosition = CreateNativeMethod(nativeObject, 1, [](Value scope) {
@@ -129,102 +192,27 @@ return Value();
 		return Value();
 	});
 
-	Value& getMVPMatrix = GetOrCreateProperty(nativeObject, "getMVPMatrix");
-	getMVPMatrix = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+	Value& addUpdater = GetOrCreateProperty(nativeObject, "addUpdater");
+	addUpdater = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
 		Value selfValue = scope.GetProperty("self");
 		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
 
-		std::list<Value> matrixCoefs;
-		DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(self->GetMVPMatrix());
+		Value updaterValue = scope.GetProperty("param0");
+		helper::DXUpdater* updater = dynamic_cast<helper::DXUpdater*>(NativeObject::ExtractNativeObject(updaterValue));
 
-		for (int r = 0; r < 4; ++r) {
-			float x = DirectX::XMVectorGetX(mvp.r[r]);
-			float y = DirectX::XMVectorGetY(mvp.r[r]);
-			float z = DirectX::XMVectorGetZ(mvp.r[r]);
-			float w = DirectX::XMVectorGetW(mvp.r[r]);
-
-			matrixCoefs.push_back(x);
-			matrixCoefs.push_back(y);
-			matrixCoefs.push_back(z);
-			matrixCoefs.push_back(w);
+		if (!updater) {
+			THROW_EXCEPTION("Please supply updater!")
 		}
 
-		return Value::FromList(matrixCoefs);
-	});
-
-	Value& getForward = GetOrCreateProperty(nativeObject, "getForward");
-	getForward = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-		Value selfValue = scope.GetProperty("self");
-		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
-
-		DirectX::XMVECTOR fwd = self->GetForwardVector();
 		std::list<Value> tmp;
-		tmp.push_back(Value(DirectX::XMVectorGetX(fwd)));
-		tmp.push_back(Value(DirectX::XMVectorGetY(fwd)));
-		tmp.push_back(Value(DirectX::XMVectorGetZ(fwd)));
-
-		return Value::FromList(tmp);
-	});
-
-	Value& getRight = GetOrCreateProperty(nativeObject, "getRight");
-	getRight = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-		Value selfValue = scope.GetProperty("self");
-		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
-
-		DirectX::XMVECTOR right = self->GetRightVector();
-		std::list<Value> tmp;
-		tmp.push_back(Value(DirectX::XMVectorGetX(right)));
-		tmp.push_back(Value(DirectX::XMVectorGetY(right)));
-		tmp.push_back(Value(DirectX::XMVectorGetZ(right)));
-
-		return Value::FromList(tmp);
-	});
-
-	Value& getPos = GetOrCreateProperty(nativeObject, "getPos");
-	getPos = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-		Value selfValue = scope.GetProperty("self");
-		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
-
-		DirectX::XMVECTOR pos = self->m_position;
-		std::list<Value> tmp;
-		tmp.push_back(Value(DirectX::XMVectorGetX(pos)));
-		tmp.push_back(Value(DirectX::XMVectorGetY(pos)));
-		tmp.push_back(Value(DirectX::XMVectorGetZ(pos)));
-
-		return Value::FromList(tmp);
-	});
-
-	Value& getTarget = GetOrCreateProperty(nativeObject, "getTarget");
-	getTarget = CreateNativeMethod(nativeObject, 0, [](Value scope) {
-		Value selfValue = scope.GetProperty("self");
-		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
-
-		DirectX::XMVECTOR target = self->m_position;
-		std::list<Value> tmp;
-		tmp.push_back(Value(DirectX::XMVectorGetX(target)));
-		tmp.push_back(Value(DirectX::XMVectorGetY(target)));
-		tmp.push_back(Value(DirectX::XMVectorGetZ(target)));
-
-		return Value::FromList(tmp);
-	});
-
-	Value& camBuff = GetOrCreateProperty(nativeObject, "camBuff");
-	
-	Value& setCamBuff = GetOrCreateProperty(nativeObject, "setCamBuff");
-	setCamBuff = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
-		Value selfValue = scope.GetProperty("self");
-		DXCamera* self = static_cast<DXCamera*>(NativeObject::ExtractNativeObject(selfValue));
-
-		Value camBuffValue = scope.GetProperty("param0");
-		DXBuffer* camBuffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(camBuffValue));
-
-		if (!camBuffer) {
-			THROW_EXCEPTION("Please supply a cam buffer!")
+		if (!p_updaters.IsNone()) {
+			p_updaters.ToList(tmp);
 		}
 
-		camBuff = camBuffValue;
-		self->m_camBuff = camBuffer->GetBuffer();
+		tmp.push_back(updaterValue);
+		p_updaters = Value::FromList(tmp);
 
+		self->m_updaters.push_back(updater);
 		return Value();
 	});
 
@@ -290,6 +278,11 @@ DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
 
 void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp)
 {
+	rendering::DXRenderer* renderer = GetRenderer();
+	if (!renderer) {
+		return;
+	}
+
 	using namespace DirectX;
 
 	float right = 0;
@@ -363,7 +356,7 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	m_position = DirectX::XMVectorAdd(m_position, moveVector);
 	m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 
-	float matrixCoefs[25];
+	float matrixCoefs[22];
 	DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(GetMVPMatrix());
 
 	int index = 0;
@@ -384,31 +377,32 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	matrixCoefs[index++] = DirectX::XMVectorGetZ(m_position);
 	matrixCoefs[index++] = 1;
 
+	m_time += dt;
+	matrixCoefs[index++] = static_cast<float>(m_time);
+	matrixCoefs[index++] = m_airAbsorbtion;
 
-
-	m_sunAngle += dt * 3;
-	if (m_sunAngle > 180) {
-		m_sunAngle = 0;
-	}
-
-	m_sunAngle = 70;
-	float sunDist = 100000;
-	matrixCoefs[index++] = sunDist * cos(M_PI * m_sunAngle / 180.0);
-	matrixCoefs[index++] = sunDist * sin(M_PI * m_sunAngle / 180.0);
-	matrixCoefs[index++] = 0;
-	matrixCoefs[index++] = 1;
-	
-	
-	m_cloudDisplacement += dt;
-	matrixCoefs[index++] = m_cloudDisplacement;
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
-	if (FAILED(m_camBuff->Map(0, &readRange, &dst))) {
+	if (FAILED(renderer->GetCamBuff()->Map(0, &readRange, &dst))) {
 		return;
 	}
 	memcpy(dst, matrixCoefs, _countof(matrixCoefs) * sizeof(float));
-	m_camBuff->Unmap(0, nullptr);
+	renderer->GetCamBuff()->Unmap(0, nullptr);
+
+	RunUpdaters(dt);
+
+	std::string error;
+	UpdateSceneTransform(renderer, error);
+}
+
+void rendering::DXCamera::RunUpdaters(double dt)
+{
+	for (std::list<helper::IUpdater*>::iterator it = m_updaters.begin(); it != m_updaters.end(); ++it) {
+		helper::IUpdater* cur = *it;
+
+		cur->Update(dt);
+	}
 }
 
 DirectX::XMVECTOR rendering::DXCamera::GetRightVector() const
