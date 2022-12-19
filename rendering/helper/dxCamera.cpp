@@ -7,6 +7,7 @@
 #include "api.h"
 #include "scene/IScene.h"
 #include "helper/dxUpdater.h"
+#include "window.h"
 
 #include <list>
 #include <corecrt_math_defines.h>
@@ -276,7 +277,7 @@ DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
 	return res;
 }
 
-void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, std::list<WPARAM>& keysUp)
+void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 {
 	rendering::DXRenderer* renderer = GetRenderer();
 	if (!renderer) {
@@ -290,7 +291,7 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 	float aimRight = 0;
 	float aimUp = 0;
 
-	for (std::list<WPARAM>::const_iterator it = keysDown.begin(); it != keysDown.end(); ++it) {
+	for (std::list<WPARAM>::const_iterator it = inputInfo.m_keysDown.begin(); it != inputInfo.m_keysDown.end(); ++it) {
 		WPARAM x = *it;
 		if (x == 65) {
 			right = -1;
@@ -319,9 +320,6 @@ void rendering::DXCamera::HandleInput(double dt, std::list<WPARAM>& keysDown, st
 			aimUp = -1;
 		}
 	}
-
-	keysDown.clear();
-	keysUp.clear();
 
 	m_azimuth += dt * m_angleSpeed * aimRight;
 	while (m_azimuth >= 360) {

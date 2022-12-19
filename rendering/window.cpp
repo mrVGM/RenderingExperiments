@@ -161,13 +161,13 @@ LRESULT rendering::Window::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 	{
-		m_keysDown.push_back(wParam);
+		m_inputInfo.m_keysDown.push_back(wParam);
 		return 0;
 	}
 
 	case WM_KEYUP:
 	{
-		m_keysUp.push_back(wParam);
+		m_inputInfo.m_keysUp.push_back(wParam);
 		return 0;
 	}
 	}
@@ -209,7 +209,9 @@ void rendering::Window::WindowTick(double dt)
 		return;
 	}
 
-	inputHandler->HandleInput(dt, m_keysDown, m_keysUp);
+	inputHandler->HandleInput(dt, m_inputInfo);
+	m_inputInfo.m_keysDown.clear();
+	m_inputInfo.m_keysUp.clear();
 }
 
 void rendering::Window::InitProperties(interpreter::NativeObject& nativeObject)
@@ -291,7 +293,7 @@ return Value();
 		}
 
 		if (!keyDownHandler.IsNone()) {
-			for (std::list<WPARAM>::const_iterator it = m_keysDown.begin(); it != m_keysDown.end(); ++it) {
+			for (std::list<WPARAM>::const_iterator it = m_inputInfo.m_keysDown.begin(); it != m_inputInfo.m_keysDown.end(); ++it) {
 				WPARAM cur = *it;
 				
 				Value arg = utils::GetEmptyObject();
@@ -302,7 +304,7 @@ return Value();
 		}
 
 		if (!keyUpHandler.IsNone()) {
-			for (std::list<WPARAM>::const_iterator it = m_keysUp.begin(); it != m_keysUp.end(); ++it) {
+			for (std::list<WPARAM>::const_iterator it = m_inputInfo.m_keysUp.begin(); it != m_inputInfo.m_keysUp.end(); ++it) {
 				WPARAM cur = *it;
 
 				Value arg = utils::GetEmptyObject();
@@ -312,8 +314,8 @@ return Value();
 			}
 		}
 
-		m_keysDown.clear();
-		m_keysUp.clear();
+		m_inputInfo.m_keysDown.clear();
+		m_inputInfo.m_keysUp.clear();
 
 		return interpreter::Value();
 	});

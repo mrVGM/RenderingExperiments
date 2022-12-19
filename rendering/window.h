@@ -8,10 +8,15 @@
 
 namespace rendering
 {
-	class Window : public interpreter::INativeObject
+	struct InputInfo
 	{
 		std::list<WPARAM> m_keysDown;
 		std::list<WPARAM> m_keysUp;
+	};
+
+	class Window : public interpreter::INativeObject
+	{
+		InputInfo m_inputInfo;
 
 		void RegisterWindowClass();
 		void Destroy();
