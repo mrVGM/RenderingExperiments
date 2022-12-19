@@ -8,8 +8,10 @@
 
 namespace rendering
 {
+	class Window;
 	struct InputInfo
 	{
+		Window* m_source = nullptr;
 		std::set<WPARAM> m_keysDown;
 		bool m_leftMouseButtonDown = false;
 		bool m_rightMouseButtonDown = false;

@@ -384,14 +384,28 @@ void rendering::DXCamera::HandleInput(double dt, const InputInfo& inputInfo)
 		}
 	}
 
+	RECT rect;
+	GetWindowRect(inputInfo.m_source->m_hwnd, &rect);
+
 	if (inputInfo.m_rightMouseButtonDown && !m_aiming) {
 		m_cursorRelativePos[0] = inputInfo.m_mouseMovement[0];
 		m_cursorRelativePos[1] = inputInfo.m_mouseMovement[1];
 		m_anglesCache[0] = m_azimuth;
 		m_anglesCache[1] = m_altitude;
+
+		ClipCursor(&rect);
+		ShowCursor(false);
+	}
+
+	if (!inputInfo.m_rightMouseButtonDown && m_aiming) {
+		ClipCursor(nullptr);
+		ShowCursor(true);
 	}
 
 	m_aiming = inputInfo.m_rightMouseButtonDown;
+	if (m_aiming) {
+		SetCursorPos((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
+	}
 
 	MoveCamera(dt, inputInfo.m_mouseMovement);
 	RunUpdaters(dt);

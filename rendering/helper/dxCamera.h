@@ -15,7 +15,7 @@ namespace rendering
 		float m_airAbsorbtion = 0.01;
 
 		float m_angleSpeed = 0.2;
-		float m_moveSpeed = 0.3;
+		float m_moveSpeed = 0.05;
 
 		float m_azimuth = 90;
 		float m_altitude = 0;

@@ -247,6 +247,7 @@ void rendering::Window::WindowTick(double dt)
 		return;
 	}
 
+	m_inputInfo.m_source = this;
 	inputHandler->HandleInput(dt, m_inputInfo);
 }
 
