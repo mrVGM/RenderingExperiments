@@ -5,15 +5,6 @@ var PIPE_PATH = "\\\\.\\pipe\\" + PIPE_NAME;
 
 var L = console.log;
 
-let index = 0;
-function stateInstruction(stream) {
-    stream.write("daiujsfbew: " + index);
-    ++index;
-    setTimeout(() => {
-        stateInstruction(stream);
-    }, 1000);
-}
-
 var server = net.createServer(function(stream) {
     L('Server: on connection')
 

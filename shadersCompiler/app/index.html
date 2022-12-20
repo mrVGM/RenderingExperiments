@@ -17,75 +17,16 @@
         <div style="margin-left: 50%;">
             <h3>Settings:</h3>
 
-            <div>
-                <label>Light Position: </label>
-                <span id="light_position_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="1" value="0.5" class="slider" id="light_position">
-                </div>
+            <div id="settingsContainer">
             </div>
 
-            <div>
-                <label>Density Offset: </label>
-                <span id="density_offset_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="10" value="1" class="slider" id="density_offset">
-                </div>
-            </div>
-
-            <div>
-                <label>Light Intensity: </label>
-                <span id="light_intensity_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="10" value="1" class="slider" id="light_intensity">
-                </div>
-            </div>
-
-
-            <div>
-                <label>Sample Steps: </label>
-                <span id="sample_steps_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="1" min="0" max="30" value="10" class="slider" id="sample_steps">
-                </div>
-            </div>
-
-            <div>
-                <label>Cloud Abosorbtion: </label>
-                <span id="cloud_absorbtion_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="10" value="0.5" class="slider" id="cloud_absorbtion">
-                </div>
-            </div>
-
-            <div>
-                <label>Cloud Light Abosorbtion: </label>
-                <span id="cloud_light_absorbtion_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="10" value="0.5" class="slider" id="cloud_light_absorbtion">
-                </div>
-            </div>
-
-            <div>
-                <label>Air Light Abosorbtion: </label>
-                <span id="air_light_absorbtion_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="3" value="0.5" class="slider" id="air_light_absorbtion">
-                </div>
-            </div>
-
-            <div>
-                <label>G: </label>
-                <span id="g_value"></span>
-                <div class="slidecontainer">
-                    <input type="range" step="0.001" min="0" max="1" value="0.8" class="slider" id="g">
-                </div>
-            </div>
         </div>
     </div>
 
     <script src='compileServer.js'></script>
     <script src='pipeServer.js'></script>
+    <script src="loadSettingsData.js"></script>
+    
     <script>
         let content = document.getElementById('shaders');
         let cache = {};
@@ -291,77 +232,73 @@
     </script>
 
     <script>
-        {
-            let inputElement = document.getElementById("light_position");
-            let valueElement = document.getElementById("light_position_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_lightPositionBlendFactor " + inputElement.value);
-            } 
+
+        let settingsData = undefined;
+        let dirty = false;
+
+        function displaySliders() {
+            let settingsContainer = document.getElementById('settingsContainer');
+            function displaySingle(name) {
+                let prop = settingsData.settings[name];
+                if (prop.dim !== 1) {
+                    return;
+                }
+
+                let propElement = document.createElement('div');
+                let label = document.createElement('label');
+                label.textContent = name + ': ';
+                let span = document.createElement('span');
+                span.textContent = prop.value;
+                let inputContainer = document.createElement('div');
+                inputContainer.className = 'slidecontainer';
+                let input = document.createElement('input');
+                input.type = 'range';
+                input.value = prop.value;
+                input.step = prop.step;
+                input.min = prop.min;
+                input.max = prop.max;
+                input.className = 'slider';
+
+                propElement.appendChild(label);
+                propElement.appendChild(span);
+                propElement.appendChild(inputContainer);
+                inputContainer.appendChild(input);
+                settingsContainer.appendChild(propElement);
+
+                input.oninput = function(x) {
+                    span.textContent = input.value;
+                    prop.value = input.value;
+                    document.app.pipeServer.sendMessage(name + " " + input.value);
+                    dirty = true;
+                };
+            }
+
+            settingsContainer.textContent = '';
+
+            for (let s in settingsData.settings) {
+                displaySingle(s);
+            }
         }
 
-        {
-            let inputElement = document.getElementById("density_offset");
-            let valueElement = document.getElementById("density_offset_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_densityOffset " + inputElement.value);
-            } 
+        function startStoring() {
+            function store() {
+                if (!dirty) {
+                    setTimeout(store, 0);
+                    return;
+                }
+                dirty = false;
+                document.app.settings.storeSettings(settingsData, store);
+            }
+
+            store();
         }
 
-        {
-            let inputElement = document.getElementById("light_intensity");
-            let valueElement = document.getElementById("light_intensity_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_lightIntensity " + inputElement.value);
-            } 
-        }
+        document.app.settings.loadSettings(function(data) {
+            settingsData = data;
 
-        {
-            let inputElement = document.getElementById("sample_steps");
-            let valueElement = document.getElementById("sample_steps_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_sampleSteps " + inputElement.value);
-            } 
-        }
-
-        {
-            let inputElement = document.getElementById("cloud_absorbtion");
-            let valueElement = document.getElementById("cloud_absorbtion_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_cloudAbsorbtion " + inputElement.value);
-            } 
-        }
-
-        {
-            let inputElement = document.getElementById("cloud_light_absorbtion");
-            let valueElement = document.getElementById("cloud_light_absorbtion_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_cloudLightAbsorbtion " + inputElement.value);
-            } 
-        }
-
-        {
-            let inputElement = document.getElementById("air_light_absorbtion");
-            let valueElement = document.getElementById("air_light_absorbtion_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_airLightAbsorbtion " + inputElement.value);
-            } 
-        }
-
-        {
-            let inputElement = document.getElementById("g");
-            let valueElement = document.getElementById("g_value");
-            inputElement.oninput = function(x) {
-                valueElement.textContent = inputElement.value;
-                document.app.pipeServer.sendMessage("m_g " + inputElement.value);
-            } 
-        }
+            displaySliders();
+            startStoring();
+        });
     </script>
 </body>
 </html>

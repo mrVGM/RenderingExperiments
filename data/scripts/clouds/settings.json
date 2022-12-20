@@ -1,0 +1,95 @@
+{
+    "settings": {
+        "m_lightPosition": {
+            "dim": 3,
+            "value": [
+                5,
+                5,
+                5
+            ]
+        },
+        "m_lightIntensity": {
+            "dim": 1,
+            "value": 1,
+            "min": 0,
+            "max": 10,
+            "step": 0.001
+        },
+        "m_sampleSteps": {
+            "dim": 1,
+            "value": "15",
+            "min": 1,
+            "max": 20,
+            "step": 1
+        },
+        "m_cloudAbsorbtion": {
+            "dim": 1,
+            "value": 6,
+            "min": 0,
+            "max": 10,
+            "step": 0.001
+        },
+        "m_densityOffset": {
+            "dim": 1,
+            "value": 3,
+            "min": 0,
+            "max": 10,
+            "step": 0.001
+        },
+        "m_cloudLightAbsorbtion": {
+            "dim": 1,
+            "value": 6,
+            "min": 0,
+            "max": 10,
+            "step": 0.001
+        },
+        "m_airLightAbsorbtion": {
+            "dim": 1,
+            "value": 0.2,
+            "min": 0,
+            "max": 3,
+            "step": 0.001
+        },
+        "m_g": {
+            "dim": 1,
+            "value": 0.8,
+            "min": 0,
+            "max": 1,
+            "step": 0.001
+        },
+        "m_worly1Weight": {
+            "dim": 1,
+            "value": 0.625,
+            "min": 0,
+            "max": 3,
+            "step": 0.001
+        },
+        "m_worly2Weight": {
+            "dim": 1,
+            "value": 0.25,
+            "min": 0,
+            "max": 3,
+            "step": 0.001
+        },
+        "m_worly3Weight": {
+            "dim": 1,
+            "value": "0.125",
+            "min": 0,
+            "max": 3,
+            "step": 0.001
+        }
+    },
+    "shaderOrdering": [
+        "m_lightPosition",
+        "m_lightIntensity",
+        "m_sampleSteps",
+        "m_cloudAbsorbtion",
+        "m_densityOffset",
+        "m_cloudLightAbsorbtion",
+        "m_airLightAbsorbtion",
+        "m_g",
+        "m_worly1Weight",
+        "m_worly2Weight",
+        "m_worly3Weight"
+    ]
+}
