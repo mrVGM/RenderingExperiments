@@ -246,29 +246,32 @@
 
                 let propElement = document.createElement('div');
                 let label = document.createElement('label');
-                label.textContent = name + ': ';
                 let span = document.createElement('span');
-                span.textContent = prop.value;
                 let inputContainer = document.createElement('div');
-                inputContainer.className = 'slidecontainer';
                 let input = document.createElement('input');
-                input.type = 'range';
-                input.value = prop.value;
-                input.step = prop.step;
-                input.min = prop.min;
-                input.max = prop.max;
-                input.className = 'slider';
-
+                
                 propElement.appendChild(label);
                 propElement.appendChild(span);
                 propElement.appendChild(inputContainer);
                 inputContainer.appendChild(input);
                 settingsContainer.appendChild(propElement);
 
+                label.textContent = name + ': ';
+                span.textContent = prop.value;
+                inputContainer.className = 'slidecontainer';
+                
+                input.type = 'range';
+                input.className = 'slider';
+                input.step = prop.step;
+                input.min = prop.min;
+                input.max = prop.max;
+                input.value = prop.value;
+
                 input.oninput = function(x) {
-                    span.textContent = input.value;
-                    prop.value = input.value;
-                    document.app.pipeServer.sendMessage(name + " " + input.value);
+                    let v = parseFloat(input.value);
+                    span.textContent = v;
+                    prop.value = v;
+                    document.app.pipeServer.sendMessage(name + " " + v);
                     dirty = true;
                 };
             }

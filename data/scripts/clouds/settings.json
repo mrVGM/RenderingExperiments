@@ -1,5 +1,12 @@
 {
     "settings": {
+        "m_lightPositionBlendFactor": {
+            "dim": 1,
+            "value": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.001
+        },
         "m_lightPosition": {
             "dim": 3,
             "value": [
@@ -17,7 +24,7 @@
         },
         "m_sampleSteps": {
             "dim": 1,
-            "value": "15",
+            "value": 15,
             "min": 1,
             "max": 20,
             "step": 1
@@ -31,7 +38,7 @@
         },
         "m_densityOffset": {
             "dim": 1,
-            "value": 3,
+            "value": 0.461,
             "min": 0,
             "max": 10,
             "step": 0.001
@@ -73,7 +80,7 @@
         },
         "m_worly3Weight": {
             "dim": 1,
-            "value": "0.125",
+            "value": 0.125,
             "min": 0,
             "max": 3,
             "step": 0.001

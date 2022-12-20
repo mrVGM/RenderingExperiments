@@ -6,6 +6,7 @@
 #include "dxRenderer.h"
 #include "api.h"
 #include "dataLib.h"
+#include "json.hpp"
 
 #include <sstream>
 #include <list>
@@ -120,9 +121,36 @@ void rendering::helper::DXUpdater::UpdateSettings()
 	Value api = GetAPI();
 	Value appContext = api.GetProperty("app_context");
 	std::string rootDir = appContext.GetProperty("root_dir").GetString();
-	std::string dataFromFile = data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.txt");
+	std::string dataFromFile = data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.json");
 
-	UpdateSettings(dataFromFile);
+	nlohmann::json json = nlohmann::json::parse(dataFromFile);
+	const nlohmann::json& settings = json["settings"];
+	for (auto it = settings.begin(); it != settings.end(); ++it) {
+		const nlohmann::json& cur = *it;
+		int dim = static_cast<int>(cur["dim"]);
+
+		Setting setting;
+		setting.m_name = it.key();
+		setting.m_dim = dim;
+
+		const nlohmann::json& value = cur["value"];
+		float val[4];
+		if (dim == 1) {
+			setting.m_value[0] = static_cast<float>(value);
+		}
+		else {
+			for (int i = 0; i < dim; ++i) {
+				setting.m_value[i] = static_cast<float>(value.at(i));
+			}
+		}
+		AddSetting(setting);
+	}
+
+	const nlohmann::json& shaderOrdering = json["shaderOrdering"];
+
+	for (auto it = shaderOrdering.begin(); it != shaderOrdering.end(); ++it) {
+		m_shaderSettings.push_back(static_cast<std::string>(*it));
+	}
 }
 
 void rendering::helper::DXUpdater::AddSetting(const Setting& setting)
@@ -209,6 +237,9 @@ void rendering::helper::DXUpdater::Update(double dt)
 
 rendering::helper::DXUpdater::DXUpdater()
 {
+	UpdateSettings();
+	return;
+
 	AddSetting(Setting{ "m_lightPositionBlendFactor", 1, 0.5 });
 	AddSetting(Setting{ "m_lightPosition", 4, {5, 5, 5, 1} });
 	AddSetting(Setting{ "m_sampleSteps", 1, 15 });
