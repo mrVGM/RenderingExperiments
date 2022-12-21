@@ -21,6 +21,9 @@ cbuffer CloudAreaSettings : register(b1)
     float m_airLightAbsorbtion;
     float m_g;
 
+    float m_texScale;
+    float m_minDensity;
+    float m_densityFactor;
     float m_worly1Weight;
     float m_worly2Weight;
     float m_worly3Weight;
@@ -32,9 +35,16 @@ SamplerState p_sampler  : register(s0);
 
 float sampleCloud(float3 coord)
 {
-    float4 tex = p_detailTexture.Sample(p_sampler, coord + 0.1 * m_time);
+    float3 newCoord = m_texScale * coord;
+    newCoord = newCoord - floor(newCoord);
+    float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
     float worly = m_worly1Weight * (1 - tex.y) + m_worly2Weight * (1 - tex.z) + m_worly3Weight * (1 - tex.w);
-    return (1 - tex.x * worly);
+    float res = tex.x * worly;
+    if (res < m_minDensity) {
+        res = 0;
+    }
+    res *= m_densityFactor;
+    return res;
 }
 
 struct Wall

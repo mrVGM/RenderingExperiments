@@ -11,7 +11,7 @@ let prepNoise1 = func(device, commandQueue, onReady) {
 	prepNoiseTex(device, texSize, "computeNoise.hlsl", worlySizes, func(comp) {
 		let noiseData = [];
 		noiseData.push(texSize);
-		noiseData.push(10);
+		noiseData.push(5);
 		noiseData.push(4);
 		noiseData.push(0.7);
 		noiseData.push(2);

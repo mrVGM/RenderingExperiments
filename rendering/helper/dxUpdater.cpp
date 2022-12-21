@@ -177,8 +177,11 @@ void rendering::helper::DXUpdater::Update(double dt)
 	using namespace DirectX;
 	m_totalTime += dt;
 
-	DirectX::XMVECTOR p1 = DirectX::XMVectorSet(-3, 7, 5, 0);
-	DirectX::XMVECTOR p2 = DirectX::XMVectorSet(3, 7, 5, 0);
+	const Setting& sunPos1 = m_settings["m_lightPos1"];
+	const Setting& sunPos2 = m_settings["m_lightPos2"];
+
+	DirectX::XMVECTOR p1 = DirectX::XMVectorSet(sunPos1.m_value[0], sunPos1.m_value[1], sunPos1.m_value[2], 0);
+	DirectX::XMVECTOR p2 = DirectX::XMVectorSet(sunPos2.m_value[0], sunPos2.m_value[1], sunPos2.m_value[2], 0);
 	Setting& blendFactor = m_settings["m_lightPositionBlendFactor"];
 
 	DirectX::XMVECTOR p = 
