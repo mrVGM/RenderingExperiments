@@ -13,6 +13,7 @@ cbuffer CloudAreaSettings : register(b1)
     float3 m_lightPosition;
     float m_lightIntensity;
 
+    float m_randomOffsetStrength;
     float m_sampleSteps;
     float m_cloudAbsorbtion;
     float m_densityOffset;
@@ -184,6 +185,14 @@ int findIntersections(Wall walls[6], float3 startPoint, float3 dir, out float3 i
     return num;
 }
 
+float randNoise(float3 value) {
+    float3 smallValue = sin(value);
+    float random = dot(smallValue, float3(12.9898, 78.233, 37.719));
+    random = sin(random) * 143758.5453;
+    random -= floor(random);
+    return random;
+}
+
 float lightMarch(Wall walls[6], float3 pos, out float energy)
 {
     float3 hits[2];
@@ -199,12 +208,22 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
     float lightTransmittance = 0;
 
     {
+        float prevStep = pos;
         float cloudDist = length(hits[0] - pos);
-        float stepSize = cloudDist / m_sampleSteps;
         [unroll(10)]
         for (int i = 1; i <= m_sampleSteps; ++i) {
-            float c = i / m_sampleSteps;
+            float c0 = (i - 1) / m_sampleSteps;
+            float c1 = i / m_sampleSteps;
+            float c = c1;
             float3 testPoint = (1 - c) * hits[0] + c * pos;
+
+            float k = randNoise(testPoint) * m_randomOffsetStrength;
+            k = 1 - k;
+            c = (1 - k) * c0 + k * c1;
+            testPoint = (1 - c) * hits[0] + c * pos;
+
+            float stepSize = length(testPoint - prevStep);
+            prevStep = testPoint;
 
             float n = sampleCloud(testPoint) * stepSize;
             lightTransmittance += n;
@@ -298,11 +317,22 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
     float lightTransmittance = -m_densityOffset;
 
     float cloudDist = length(hits[1] - hits[0]);
-    float stepSize = cloudDist / m_sampleSteps;
+    float3 prevStep = hits[0];
+
     [unroll(10)]
     for (int i = 1; i <= m_sampleSteps; ++i) {
-        float c = i / m_sampleSteps;
+        float c0 = (i - 1) / m_sampleSteps;
+        float c1 = i / m_sampleSteps;
+        float c = c1;
         float3 testPoint = (1 - c) * hits[0] + c * hits[1];
+
+        float k = randNoise(testPoint) * m_randomOffsetStrength;
+        k = 1 - k;
+        c = (1 - k) * c0 + k * c1;
+        testPoint = (1 - c) * hits[0] + c * hits[1];
+
+        float stepSize = length(testPoint - prevStep);
+        prevStep = testPoint;
 
         float n = sampleCloud(testPoint) * stepSize;
         lightTransmittance += n;
