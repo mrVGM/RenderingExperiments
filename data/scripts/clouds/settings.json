@@ -18,7 +18,7 @@
         },
         "m_lightPositionBlendFactor": {
             "dim": 1,
-            "value": 0.531,
+            "value": 0.622,
             "min": 0,
             "max": 1,
             "step": 0.001
@@ -40,7 +40,7 @@
         },
         "m_randomOffsetStrength": {
             "dim": 1,
-            "value": 0.816,
+            "value": 0.656,
             "min": 0,
             "max": 1,
             "step": 0.001
@@ -133,16 +133,16 @@
     "shaderOrdering": [
         "m_lightPosition",
         "m_lightIntensity",
-        "m_randomOffsetStrength",
-        "m_sampleSteps",
         "m_cloudAbsorbtion",
-        "m_densityOffset",
-        "m_cloudLightAbsorbtion",
         "m_airLightAbsorbtion",
+        "m_cloudLightAbsorbtion",
         "m_g",
-        "m_texScale",
+        "m_sampleSteps",
+        "m_randomOffsetStrength",
         "m_minDensity",
         "m_densityFactor",
+        "m_densityOffset",
+        "m_texScale",
         "m_worly1Weight",
         "m_worly2Weight",
         "m_worly3Weight"
