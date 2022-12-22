@@ -251,22 +251,13 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
     float lightTransmittance = 0;
 
     {
-        float prevStep = pos;
         float cloudDist = length(hits[0] - pos);
+        float stepSize = cloudDist / m_sampleStepsTowardsLight;
+
         [unroll(10)]
         for (int i = 1; i <= m_sampleStepsTowardsLight; ++i) {
-            float c0 = (i - 1) / m_sampleStepsTowardsLight;
-            float c1 = i / m_sampleStepsTowardsLight;
-            float c = c1;
+            float c = i / m_sampleStepsTowardsLight;
             float3 testPoint = (1 - c) * hits[0] + c * pos;
-
-            float k = randNoise(testPoint) * m_randomOffsetStrength;
-            k = 1 - k;
-            c = (1 - k) * c0 + k * c1;
-            testPoint = (1 - c) * hits[0] + c * pos;
-
-            float stepSize = length(testPoint - prevStep);
-            prevStep = testPoint;
 
             float n = sampleCloud(testPoint) * stepSize;
             lightTransmittance += n;
@@ -290,22 +281,12 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
     float lightTransmittance = -m_densityOffset;
 
     float cloudDist = length(hits[1] - hits[0]);
-    float3 prevStep = hits[0];
+    float stepSize = cloudDist / m_sampleSteps;
 
     [unroll(10)]
     for (int i = 1; i <= m_sampleSteps; ++i) {
-        float c0 = (i - 1) / m_sampleSteps;
-        float c1 = i / m_sampleSteps;
-        float c = c1;
+        float c = i / m_sampleSteps;
         float3 testPoint = (1 - c) * hits[0] + c * hits[1];
-
-        float k = randNoise(testPoint) * m_randomOffsetStrength;
-        k = 1 - k;
-        c = (1 - k) * c0 + k * c1;
-        testPoint = (1 - c) * hits[0] + c * hits[1];
-
-        float stepSize = length(testPoint - prevStep);
-        prevStep = testPoint;
 
         float n = sampleCloud(testPoint) * stepSize;
         lightTransmittance += n;
