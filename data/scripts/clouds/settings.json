@@ -1,142 +1,142 @@
 {
-    "settings": {
-        "m_lightPos1": {
-            "dim": 3,
-            "value": [
-                -20,
-                15,
-                -10
-            ]
-        },
-        "m_lightPos2": {
-            "dim": 3,
-            "value": [
-                20,
-                15,
-                10
-            ]
-        },
-        "m_lightPositionBlendFactor": {
-            "dim": 1,
-            "value": 0.622,
-            "min": 0,
-            "max": 1,
-            "step": 0.001
-        },
-        "m_lightPosition": {
-            "dim": 3,
-            "value": [
-                5,
-                5,
-                5
-            ]
-        },
-        "m_lightIntensity": {
-            "dim": 1,
-            "value": 2.425,
-            "min": 0,
-            "max": 10,
-            "step": 0.001
-        },
-        "m_randomOffsetStrength": {
-            "dim": 1,
-            "value": 0,
-            "min": 0,
-            "max": 1,
-            "step": 0.001
-        },
-        "m_sampleSteps": {
-            "dim": 1,
-            "value": 10,
-            "min": 1,
-            "max": 20,
-            "step": 1
-        },
-        "m_sampleStepsTowardsLight": {
-            "dim": 1,
-            "value": 10,
-            "min": 1,
-            "max": 20,
-            "step": 1
-        },
-        "m_cloudAbsorbtion": {
-            "dim": 1,
-            "value": 6.391,
-            "min": 0,
-            "max": 10,
-            "step": 0.001
-        },
-        "m_densityOffset": {
-            "dim": 1,
-            "value": 4.194,
-            "min": 0,
-            "max": 10,
-            "step": 0.001
-        },
-        "m_cloudLightAbsorbtion": {
-            "dim": 1,
-            "value": 6,
-            "min": 0,
-            "max": 10,
-            "step": 0.001
-        },
-        "m_airLightAbsorbtion": {
-            "dim": 1,
-            "value": 0.2,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_g": {
-            "dim": 1,
-            "value": 0.18,
-            "min": 0,
-            "max": 1,
-            "step": 0.001
-        },
-        "m_texScale": {
-            "dim": 1,
-            "value": 0.057,
-            "min": 0,
-            "max": 20,
-            "step": 0.001
-        },
-        "m_minDensity": {
-            "dim": 1,
-            "value": 1.609,
-            "min": 0,
-            "max": 2,
-            "step": 0.001
-        },
-        "m_densityFactor": {
-            "dim": 1,
-            "value": 2.753,
-            "min": 0,
-            "max": 5,
-            "step": 0.001
-        },
-        "m_worly1Weight": {
-            "dim": 1,
-            "value": 1.977,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_worly2Weight": {
-            "dim": 1,
-            "value": 2.294,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_worly3Weight": {
-            "dim": 1,
-            "value": 1.635,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        }
+  "settings": {
+    "m_lightPos1": {
+      "dim": 3,
+      "value": [
+        -20,
+        15,
+        -10
+      ]
     },
+    "m_lightPos2": {
+      "dim": 3,
+      "value": [
+        20,
+        15,
+        10
+      ]
+    },
+    "m_lightPositionBlendFactor": {
+      "dim": 1,
+      "value": 0.622,
+      "min": 0,
+      "max": 1,
+      "step": 0.001
+    },
+    "m_lightPosition": {
+      "dim": 3,
+      "value": [
+        5,
+        5,
+        5
+      ]
+    },
+    "m_lightIntensity": {
+      "dim": 1,
+      "value": 2.425,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    "m_randomOffsetStrength": {
+      "dim": 1,
+      "value": 0,
+      "min": 0,
+      "max": 1,
+      "step": 0.001
+    },
+    "m_sampleSteps": {
+      "dim": 1,
+      "value": 10,
+      "min": 1,
+      "max": 20,
+      "step": 1
+    },
+    "m_sampleStepsTowardsLight": {
+      "dim": 1,
+      "value": 10,
+      "min": 1,
+      "max": 20,
+      "step": 1
+    },
+    "m_cloudAbsorbtion": {
+      "dim": 1,
+      "value": 6.391,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    "m_densityOffset": {
+      "dim": 1,
+      "value": 4.194,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    "m_cloudLightAbsorbtion": {
+      "dim": 1,
+      "value": 6,
+      "min": 0,
+      "max": 10,
+      "step": 0.001
+    },
+    "m_airLightAbsorbtion": {
+      "dim": 1,
+      "value": 0.2,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
+    },
+    "m_g": {
+      "dim": 1,
+      "value": 0.18,
+      "min": 0,
+      "max": 1,
+      "step": 0.001
+    },
+    "m_minDensity": {
+      "dim": 1,
+      "value": 1.609,
+      "min": 0,
+      "max": 2,
+      "step": 0.001
+    },
+    "m_densityFactor": {
+      "dim": 1,
+      "value": 2.753,
+      "min": 0,
+      "max": 5,
+      "step": 0.001
+    },
+    "m_shapeTexScale": {
+      "dim": 1,
+      "value": 0.057,
+      "min": 0,
+      "max": 0.1,
+      "step": 0.0001
+    },
+    "m_shape1Weight": {
+      "dim": 1,
+      "value": 1.977,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
+    },
+    "m_shape2Weight": {
+      "dim": 1,
+      "value": 2.294,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
+    },
+    "m_shape3Weight": {
+      "dim": 1,
+      "value": 1.635,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
+    }
+  },
     "shaderOrdering": [
         "m_lightPosition",
         "m_lightIntensity",
@@ -150,9 +150,9 @@
         "m_minDensity",
         "m_densityFactor",
         "m_densityOffset",
-        "m_texScale",
-        "m_worly1Weight",
-        "m_worly2Weight",
-        "m_worly3Weight"
+        "m_shapeTexScale",
+        "m_shape1Weight",
+        "m_shape2Weight",
+        "m_shape3Weight"
     ]
 }
