@@ -209,7 +209,13 @@ float sampleDetail(float3 coord)
 
 float sampleCloud(float3 coord)
 {
-    float res = sampleShape(coord) * m_densityFactor;
+    float shape = sampleShape(coord);
+    float detail = sampleDetail(coord);
+
+    float maxShape = float3(m_shape1Weight, m_shape2Weight, m_shape3Weight);
+    float erosion = shape * shape * shape / (maxShape * maxShape * maxShape);
+
+    float res = shape * m_densityFactor - detail * m_detailFactor * erosion;
     return res;
 }
 
