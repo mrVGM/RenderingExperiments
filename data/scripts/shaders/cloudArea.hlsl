@@ -204,7 +204,7 @@ float sampleDetail(float3 coord)
     float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
     float3 w = float3(m_detail1Weight, m_detail2Weight, m_detail3Weight);
     float worly = dot(1 - tex.yzw, w);
-    return res;
+    return worly;
 }
 
 float sampleCloud(float3 coord)
