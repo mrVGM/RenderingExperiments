@@ -24,6 +24,7 @@ cbuffer CloudAreaSettings : register(b1)
     float m_minDensity;
     float m_densityFactor;
     float m_densityOffset;
+    float m_detailFactor;
 
     float m_shapeTexScale;
     float m_shape1Weight;
