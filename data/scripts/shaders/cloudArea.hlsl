@@ -19,6 +19,7 @@ cbuffer CloudAreaSettings : register(b1)
     float m_g;
 
     float m_sampleSteps;
+    float m_sampleStepsTowardsLight;
     float m_randomOffsetStrength;
     float m_minDensity;
     float m_densityFactor;
@@ -253,9 +254,9 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
         float prevStep = pos;
         float cloudDist = length(hits[0] - pos);
         [unroll(10)]
-        for (int i = 1; i <= m_sampleSteps; ++i) {
-            float c0 = (i - 1) / m_sampleSteps;
-            float c1 = i / m_sampleSteps;
+        for (int i = 1; i <= m_sampleStepsTowardsLight; ++i) {
+            float c0 = (i - 1) / m_sampleStepsTowardsLight;
+            float c1 = i / m_sampleStepsTowardsLight;
             float c = c1;
             float3 testPoint = (1 - c) * hits[0] + c * pos;
 

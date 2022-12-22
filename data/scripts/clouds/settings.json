@@ -52,6 +52,13 @@
             "max": 20,
             "step": 1
         },
+        "m_sampleStepsTowardsLight": {
+            "dim": 1,
+            "value": 10,
+            "min": 1,
+            "max": 20,
+            "step": 1
+        },
         "m_cloudAbsorbtion": {
             "dim": 1,
             "value": 6.391,
@@ -138,6 +145,7 @@
         "m_cloudLightAbsorbtion",
         "m_g",
         "m_sampleSteps",
+        "m_sampleStepsTowardsLight",
         "m_randomOffsetStrength",
         "m_minDensity",
         "m_densityFactor",
