@@ -216,6 +216,7 @@ float sampleCloud(float3 coord)
     float erosion = shape * shape * shape / (maxShape * maxShape * maxShape);
 
     float res = shape * m_densityFactor - detail * m_detailFactor * erosion;
+    res = max(0, res);
     return res;
 }
 
@@ -316,7 +317,7 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
     cloudDist -= randOffset;
     stepSize = cloudDist / m_sampleSteps;
 
-    [unroll(10)]
+    [unroll(25)]
     for (int i = 1; i <= m_sampleSteps; ++i) {
         float c = i / m_sampleSteps;
         float3 testPoint = (1 - c) * hits[0] + c * hits[1];
