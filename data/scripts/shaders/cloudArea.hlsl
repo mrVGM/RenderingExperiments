@@ -37,8 +37,8 @@ cbuffer CloudAreaSettings : register(b1)
     float m_detail3Weight;
 };
 
-Texture3D p_detailTexture   : register(t0);
-Texture3D p_shapeTexture    : register(t1);
+Texture3D p_shapeTexture    : register(t0);
+Texture3D p_detailTexture   : register(t1);
 SamplerState p_sampler  : register(s0);
 
 float4 multiplyQuat(float4 q1, float4 q2)
@@ -183,18 +183,33 @@ float randNoise(float3 value) {
     random -= floor(random);
     return random;
 }
-float sampleCloud(float3 coord)
+float sampleShape(float3 coord)
 {
     float3 newCoord = m_shapeTexScale * coord;
     newCoord = newCoord - floor(newCoord);
-    float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
+    float4 tex = p_shapeTexture.Sample(p_sampler, newCoord);
     float3 w = float3(m_shape1Weight, m_shape2Weight, m_shape3Weight);
     float worly = dot(1 - tex.yzw, w);
     float res = tex.x * worly;
     if (res < m_minDensity) {
         res = 0;
     }
-    res *= m_densityFactor;
+    return res;
+}
+
+float sampleDetail(float3 coord)
+{
+    float3 newCoord = m_detailTexScale * coord;
+    newCoord = newCoord - floor(newCoord);
+    float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
+    float3 w = float3(m_detail1Weight, m_detail2Weight, m_detail3Weight);
+    float worly = dot(1 - tex.yzw, w);
+    return res;
+}
+
+float sampleCloud(float3 coord)
+{
+    float res = sampleShape(coord) * m_densityFactor;
     return res;
 }
 
