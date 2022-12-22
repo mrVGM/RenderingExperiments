@@ -283,6 +283,11 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
     float cloudDist = length(hits[1] - hits[0]);
     float stepSize = cloudDist / m_sampleSteps;
 
+    float randOffset = randNoise(hits[0]) * stepSize * m_randomOffsetStrength;
+    hits[0] += randOffset * normalize(hits[1] - hits[0]);
+    cloudDist -= randOffset;
+    stepSize = cloudDist / m_sampleSteps;
+
     [unroll(10)]
     for (int i = 1; i <= m_sampleSteps; ++i) {
         float c = i / m_sampleSteps;
