@@ -23,16 +23,22 @@ cbuffer CloudAreaSettings : register(b1)
     float m_randomOffsetStrength;
     float m_minDensity;
     float m_densityFactor;
+    float m_detailFactor;
     float m_densityOffset;
 
-    float m_texScale;
-    float m_worly1Weight;
-    float m_worly2Weight;
-    float m_worly3Weight;
+    float m_shapeTexScale;
+    float m_shape1Weight;
+    float m_shape2Weight;
+    float m_shape3Weight;
+
+    float m_detailTexScale;
+    float m_detail1Weight;
+    float m_detail2Weight;
+    float m_detail3Weight;
 };
 
-Texture3D p_detailTexture   : register(t0);
-Texture3D p_shapeTexture    : register(t1);
+Texture3D p_shapeTexture    : register(t0);
+Texture3D p_detailTexture   : register(t1);
 SamplerState p_sampler  : register(s0);
 
 float4 multiplyQuat(float4 q1, float4 q2)
@@ -177,17 +183,39 @@ float randNoise(float3 value) {
     random -= floor(random);
     return random;
 }
-float sampleCloud(float3 coord)
+
+float sampleDetail(float3 coord)
 {
-    float3 newCoord = m_texScale * coord;
+    float3 newCoord = m_detailTexScale * coord;
     newCoord = newCoord - floor(newCoord);
     float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
-    float worly = m_worly1Weight * (1 - tex.y) + m_worly2Weight * (1 - tex.z) + m_worly3Weight * (1 - tex.w);
+    float worly = dot(1 - tex.yzw, float3(m_detail1Weight, m_detail2Weight, m_detail3Weight));
+    return worly;
+}
+
+float sampleShape(float3 coord)
+{
+    float3 newCoord = m_shapeTexScale * coord;
+    newCoord = newCoord - floor(newCoord);
+    float4 tex = p_shapeTexture.Sample(p_sampler, newCoord);
+    float worly = dot(1 - tex.yzw, float3(m_shape1Weight, m_shape2Weight, m_shape3Weight));
     float res = tex.x * worly;
     if (res < m_minDensity) {
         res = 0;
     }
-    res *= m_densityFactor;
+    return res;
+}
+
+float sampleCloud(float3 coord)
+{
+    float shape = sampleShape(coord);
+    float detail = sampleDetail(coord);
+
+    float maxShape = dot(float3(m_shape1Weight, m_shape2Weight, m_shape3Weight), 1);
+    float erosionFactor = 1 - shape * shape * shape / (maxShape * maxShape * maxShape);
+
+    float res = shape * m_densityFactor - detail * m_detailFactor * erosionFactor;
+    res = max(0, res);
     return res;
 }
 
