@@ -10,6 +10,9 @@ cbuffer MVCMatrix : register(b0)
 
 cbuffer CloudAreaSettings : register(b1)
 {
+    float4 m_lightColor;
+    float4 m_darkColor;
+
     float3 m_lightPosition;
     float m_lightIntensity;
 
@@ -27,11 +30,15 @@ cbuffer CloudAreaSettings : register(b1)
     float m_detailFactor;
 
     float m_shapeTexScale;
+    float m_shapeTexOffset;
+    float m_shapeOffsetSpeed;
     float m_shape1Weight;
     float m_shape2Weight;
     float m_shape3Weight;
 
     float m_detailTexScale;
+    float m_detailTexOffset;
+    float m_detailOffsetSpeed;
     float m_detail1Weight;
     float m_detail2Weight;
     float m_detail3Weight;
@@ -185,7 +192,7 @@ float randNoise(float3 value) {
 }
 float sampleShape(float3 coord)
 {
-    float3 newCoord = m_shapeTexScale * coord;
+    float3 newCoord = m_shapeTexScale * coord + float3(m_time * m_shapeOffsetSpeed + m_shapeTexOffset, 0, 0);
     newCoord = newCoord - floor(newCoord);
     float4 tex = p_shapeTexture.Sample(p_sampler, newCoord);
     float3 w = float3(m_shape1Weight, m_shape2Weight, m_shape3Weight);
@@ -199,7 +206,7 @@ float sampleShape(float3 coord)
 
 float sampleDetail(float3 coord)
 {
-    float3 newCoord = m_detailTexScale * coord;
+    float3 newCoord = m_detailTexScale * coord + float3(0, 0, m_time * m_detailOffsetSpeed + m_detailTexOffset);
     newCoord = newCoord - floor(newCoord);
     float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
     float3 w = float3(m_detail1Weight, m_detail2Weight, m_detail3Weight);
@@ -371,6 +378,7 @@ float4 PSMain(
     float2 uv : UV,
     Wall walls[6] : WALLS) : SV_TARGET
 {
-    float2 marchResult = cloudMarch(walls, world_position); 
-    return float4(marchResult.x, marchResult.x, marchResult.x, 1 - marchResult.y); 
+    float2 marchResult = cloudMarch(walls, world_position);
+    float3 color = (1 - marchResult.x) * m_darkColor + marchResult.x * m_lightColor;
+    return float4(color, 1 - marchResult.y); 
 }
