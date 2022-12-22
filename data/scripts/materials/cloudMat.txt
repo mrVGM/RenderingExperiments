@@ -1,7 +1,7 @@
 let prepNoiseTex = require("compute/noiseTexture.txt");
 
 let prepNoise1 = func(device, commandQueue, onReady) {
-	let texSize = 256;
+	let texSize = 128;
 
 	let worlySizes = [];
 	worlySizes.push(3);
@@ -54,7 +54,7 @@ let prepNoise1 = func(device, commandQueue, onReady) {
 
 
 let prepNoise2 = func(device, commandQueue, onReady) {
-	let texSize = 128;
+	let texSize = 32;
 
 	let worlySizes = [];
 	worlySizes.push(2);
