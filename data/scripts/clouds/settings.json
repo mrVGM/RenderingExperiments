@@ -135,24 +135,56 @@
       "min": 0,
       "max": 3,
       "step": 0.001
+    },
+    "m_detailTexScale": {
+      "dim": 1,
+      "value": 0.057,
+      "min": 0,
+      "max": 0.1,
+      "step": 0.0001
+    },
+    "m_detail1Weight": {
+      "dim": 1,
+      "value": 1.977,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
+    },
+    "m_detail2Weight": {
+      "dim": 1,
+      "value": 2.294,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
+    },
+    "m_detail3Weight": {
+      "dim": 1,
+      "value": 1.635,
+      "min": 0,
+      "max": 3,
+      "step": 0.001
     }
   },
-    "shaderOrdering": [
-        "m_lightPosition",
-        "m_lightIntensity",
-        "m_cloudAbsorbtion",
-        "m_airLightAbsorbtion",
-        "m_cloudLightAbsorbtion",
-        "m_g",
-        "m_sampleSteps",
-        "m_sampleStepsTowardsLight",
-        "m_randomOffsetStrength",
-        "m_minDensity",
-        "m_densityFactor",
-        "m_densityOffset",
-        "m_shapeTexScale",
-        "m_shape1Weight",
-        "m_shape2Weight",
-        "m_shape3Weight"
-    ]
+  "shaderOrdering": [
+    "m_lightPosition",
+    "m_lightIntensity",
+    "m_cloudAbsorbtion",
+    "m_airLightAbsorbtion",
+    "m_cloudLightAbsorbtion",
+    "m_g",
+    "m_sampleSteps",
+    "m_sampleStepsTowardsLight",
+    "m_randomOffsetStrength",
+    "m_minDensity",
+    "m_densityFactor",
+    "m_densityOffset",
+    "m_shapeTexScale",
+    "m_shape1Weight",
+    "m_shape2Weight",
+    "m_shape3Weight",
+    "m_detailTexScale",
+    "m_detail1Weight",
+    "m_detail2Weight",
+    "m_detail3Weight"
+  ]
 }
