@@ -25,10 +25,10 @@ cbuffer CloudAreaSettings : register(b1)
     float m_densityFactor;
     float m_densityOffset;
 
-    float m_texScale;
-    float m_worly1Weight;
-    float m_worly2Weight;
-    float m_worly3Weight;
+    float m_shapeTexScale;
+    float m_shape1Weight;
+    float m_shape2Weight;
+    float m_shape3Weight;
 };
 
 Texture3D p_detailTexture   : register(t0);
@@ -179,10 +179,11 @@ float randNoise(float3 value) {
 }
 float sampleCloud(float3 coord)
 {
-    float3 newCoord = m_texScale * coord;
+    float3 newCoord = m_shapeTexScale * coord;
     newCoord = newCoord - floor(newCoord);
     float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
-    float worly = m_worly1Weight * (1 - tex.y) + m_worly2Weight * (1 - tex.z) + m_worly3Weight * (1 - tex.w);
+    float3 w = float3(m_shape1Weight, m_shape2Weight, m_shape3Weight);
+    float worly = dot(1 - tex.yzw, w);
     float res = tex.x * worly;
     if (res < m_minDensity) {
         res = 0;
