@@ -30,6 +30,11 @@ cbuffer CloudAreaSettings : register(b1)
     float m_shape1Weight;
     float m_shape2Weight;
     float m_shape3Weight;
+
+    float m_detailTexScale;
+    float m_detail1Weight;
+    float m_detail2Weight;
+    float m_detail3Weight;
 };
 
 Texture3D p_detailTexture   : register(t0);
