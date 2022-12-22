@@ -40,7 +40,7 @@
         },
         "m_randomOffsetStrength": {
             "dim": 1,
-            "value": 1,
+            "value": 0,
             "min": 0,
             "max": 1,
             "step": 0.001
@@ -68,7 +68,7 @@
         },
         "m_densityOffset": {
             "dim": 1,
-            "value": 4.474,
+            "value": 4.194,
             "min": 0,
             "max": 10,
             "step": 0.001
@@ -94,6 +94,13 @@
             "max": 1,
             "step": 0.001
         },
+        "m_texScale": {
+            "dim": 1,
+            "value": 0.057,
+            "min": 0,
+            "max": 20,
+            "step": 0.001
+        },
         "m_minDensity": {
             "dim": 1,
             "value": 1.609,
@@ -108,63 +115,21 @@
             "max": 5,
             "step": 0.001
         },
-        "m_detailFactor": {
-            "dim": 1,
-            "value": 0.371,
-            "min": 0,
-            "max": 5,
-            "step": 0.001
-        },
-        "m_shapeTexScale": {
-            "dim": 1,
-            "value": 0.0499,
-            "min": 0,
-            "max": 0.1,
-            "step": 0.0001
-        },
-        "m_shape1Weight": {
+        "m_worly1Weight": {
             "dim": 1,
             "value": 1.977,
             "min": 0,
             "max": 3,
             "step": 0.001
         },
-        "m_shape2Weight": {
+        "m_worly2Weight": {
             "dim": 1,
             "value": 2.294,
             "min": 0,
             "max": 3,
             "step": 0.001
         },
-        "m_shape3Weight": {
-            "dim": 1,
-            "value": 1.635,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_detailTexScale": {
-            "dim": 1,
-            "value": 0.0754,
-            "min": 0,
-            "max": 0.1,
-            "step": 0.0001
-        },
-        "m_detail1Weight": {
-            "dim": 1,
-            "value": 1.977,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_detail2Weight": {
-            "dim": 1,
-            "value": 2.294,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_detail3Weight": {
+        "m_worly3Weight": {
             "dim": 1,
             "value": 1.635,
             "min": 0,
@@ -184,15 +149,10 @@
         "m_randomOffsetStrength",
         "m_minDensity",
         "m_densityFactor",
-        "m_detailFactor",
         "m_densityOffset",
-        "m_shapeTexScale",
-        "m_shape1Weight",
-        "m_shape2Weight",
-        "m_shape3Weight",
-        "m_detailTexScale",
-        "m_detail1Weight",
-        "m_detail2Weight",
-        "m_detail3Weight"
+        "m_texScale",
+        "m_worly1Weight",
+        "m_worly2Weight",
+        "m_worly3Weight"
     ]
 }
