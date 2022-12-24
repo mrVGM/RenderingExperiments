@@ -292,6 +292,11 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
         float cloudDist = length(hits[0] - pos);
         float stepSize = cloudDist / m_sampleStepsTowardsLight;
 
+        float randOffset = randNoise(pos) * stepSize * m_randomOffsetStrength;
+        pos += randOffset * normalize(hits[0] - pos);
+        cloudDist -= randOffset;
+        stepSize = cloudDist / m_sampleStepsTowardsLight;
+
         [unroll(10)]
         for (int i = 1; i <= m_sampleStepsTowardsLight; ++i) {
             float c = i / m_sampleStepsTowardsLight;

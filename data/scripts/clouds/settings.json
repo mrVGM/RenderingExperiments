@@ -36,7 +36,7 @@
         },
         "m_lightPositionBlendFactor": {
             "dim": 1,
-            "value": 0.602,
+            "value": 0.599,
             "min": 0,
             "max": 1,
             "step": 0.001
@@ -100,7 +100,7 @@
         },
         "m_randomOffsetStrength": {
             "dim": 1,
-            "value": 0.976,
+            "value": 1.226,
             "min": 0,
             "max": 3,
             "step": 0.001
