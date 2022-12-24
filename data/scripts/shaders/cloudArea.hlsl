@@ -196,6 +196,7 @@ float sampleShape(float3 coord)
     newCoord = newCoord - floor(newCoord);
     float4 tex = p_shapeTexture.Sample(p_sampler, newCoord);
     float3 w = float3(m_shape1Weight, m_shape2Weight, m_shape3Weight);
+    w /= dot(w, 1);
     float worly = dot(1 - tex.yzw, w);
     float res = tex.x * worly;
     if (res < m_minDensity) {
@@ -210,6 +211,7 @@ float sampleDetail(float3 coord)
     newCoord = newCoord - floor(newCoord);
     float4 tex = p_detailTexture.Sample(p_sampler, newCoord);
     float3 w = float3(m_detail1Weight, m_detail2Weight, m_detail3Weight);
+    w /= dot(w, 1);
     float worly = dot(1 - tex.yzw, w);
     return worly;
 }
