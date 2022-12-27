@@ -2,8 +2,17 @@ cbuffer MVCMatrix : register(b0)
 {
     float4x4 m_matrix;
     float4 m_camPos;
+    float4 m_camRight;
+    float4 m_camFwd;
+    float4 m_camUp;
+
+    float m_camFov;
+    float m_aspect;
     float m_time;
     float m_airAbsorbtion;
+
+    float m_sunAzimuth;
+    float m_sunAltitude;
 };
 
 cbuffer Settings : register(b1)

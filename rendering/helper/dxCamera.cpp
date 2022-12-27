@@ -230,16 +230,9 @@ if (FAILED(hRes)) {\
 
 DirectX::XMMATRIX rendering::DXCamera::GetMVPMatrix() const
 {
-	DirectX::XMVECTOR fwd = DirectX::XMVectorSubtract(m_target, m_position);
+	DirectX::XMVECTOR right, fwd, up;
+	GetCoordinateVectors(right, fwd, up);
 	
-	DirectX::XMVECTOR up{ 0, 1, 0, 1 };
-	DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, fwd);
-	up = DirectX::XMVector3Cross(fwd, right);
-
-	fwd = DirectX::XMVector3Normalize(fwd);
-	right = DirectX::XMVector3Normalize(right);
-	up = DirectX::XMVector3Normalize(up);
-
 	float fovRad = DirectX::XMConvertToRadians(m_fov);
 
 	float h = tan(fovRad / 2);
@@ -271,11 +264,17 @@ DirectX::XMMATRIX rendering::DXCamera::GetMVPMatrix() const
 	return project * view * translate;
 }
 
-DirectX::XMVECTOR rendering::DXCamera::GetForwardVector() const
+void rendering::DXCamera::GetCoordinateVectors(DirectX::XMVECTOR& right, DirectX::XMVECTOR& fwd, DirectX::XMVECTOR& up) const
 {
-	DirectX::XMVECTOR res =  DirectX::XMVectorSubtract(m_target, m_position);
-	res = DirectX::XMVector3Normalize(res);
-	return res;
+	fwd = DirectX::XMVectorSubtract(m_target, m_position);
+
+	up = DirectX::XMVectorSet(0, 1, 0, 1);
+	right = DirectX::XMVector3Cross(up, fwd);
+	up = DirectX::XMVector3Cross(fwd, right);
+
+	fwd = DirectX::XMVector3Normalize(fwd);
+	right = DirectX::XMVector3Normalize(right);
+	up = DirectX::XMVector3Normalize(up);
 }
 
 void rendering::DXCamera::MoveCamera(double dt, const long cursorPos[2])
@@ -325,7 +324,7 @@ void rendering::DXCamera::MoveCamera(double dt, const long cursorPos[2])
 		m_target = DirectX::XMVectorAdd(m_position, fwdVector);
 	}
 
-	float matrixCoefs[22];
+	float matrixCoefs[38];
 	DirectX::XMMATRIX mvp = DirectX::XMMatrixTranspose(GetMVPMatrix());
 
 	int index = 0;
@@ -346,10 +345,32 @@ void rendering::DXCamera::MoveCamera(double dt, const long cursorPos[2])
 	matrixCoefs[index++] = DirectX::XMVectorGetZ(m_position);
 	matrixCoefs[index++] = 1;
 
+	DirectX::XMVECTOR right, fwd, up;
+	GetCoordinateVectors(right, fwd, up);
+
+	matrixCoefs[index++] = DirectX::XMVectorGetX(right);
+	matrixCoefs[index++] = DirectX::XMVectorGetY(right);
+	matrixCoefs[index++] = DirectX::XMVectorGetZ(right);
+	matrixCoefs[index++] = 1;
+
+	matrixCoefs[index++] = DirectX::XMVectorGetX(fwd);
+	matrixCoefs[index++] = DirectX::XMVectorGetY(fwd);
+	matrixCoefs[index++] = DirectX::XMVectorGetZ(fwd);
+	matrixCoefs[index++] = 1;
+
+	matrixCoefs[index++] = DirectX::XMVectorGetX(up);
+	matrixCoefs[index++] = DirectX::XMVectorGetY(up);
+	matrixCoefs[index++] = DirectX::XMVectorGetZ(up);
+	matrixCoefs[index++] = 1;
+
 	m_time += dt;
+	matrixCoefs[index++] = m_fov;
+	matrixCoefs[index++] = m_aspect;
 	matrixCoefs[index++] = static_cast<float>(m_time);
 	matrixCoefs[index++] = m_airAbsorbtion;
 
+	matrixCoefs[index++] = m_sunAzimuth;
+	matrixCoefs[index++] = m_sunAltitude;
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
@@ -431,15 +452,6 @@ void rendering::DXCamera::RunUpdaters(double dt)
 
 		cur->Update(dt);
 	}
-}
-
-DirectX::XMVECTOR rendering::DXCamera::GetRightVector() const
-{
-	DirectX::XMVECTOR up = DirectX::XMVectorSet(0, 1, 0, 0);
-	DirectX::XMVECTOR fwd = GetForwardVector();
-	DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, fwd);
-
-	return DirectX::XMVector3Normalize(right);
 }
 
 
