@@ -7,6 +7,7 @@
 #include "api.h"
 #include "dataLib.h"
 #include "json.hpp"
+#include "helper/dxCamera.h"
 
 #include <sstream>
 #include <list>
@@ -76,6 +77,24 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
 	Value& p_settingsBuffer = GetOrCreateProperty(nativeObject, "settingsBuffer");
+	Value& p_camera = GetOrCreateProperty(nativeObject, "camera");
+
+	Value& setCamera = GetOrCreateProperty(nativeObject, "setCamera");
+	setCamera = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXUpdater* self = static_cast<DXUpdater*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value cameraValue = scope.GetProperty("param0");
+		DXCamera* camera = dynamic_cast<DXCamera*>(NativeObject::ExtractNativeObject(cameraValue));
+		if (!camera) {
+			THROW_EXCEPTION("Please supply Camera!")
+		}
+
+		p_camera = cameraValue;
+		self->m_camera = camera;
+
+		return Value();
+	});
 
 	Value& setSettingsBuffer = GetOrCreateProperty(nativeObject, "setSettingsBuffer");
 	setSettingsBuffer = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
@@ -177,6 +196,13 @@ void rendering::helper::DXUpdater::Update(double dt)
 	using namespace DirectX;
 	m_totalTime += dt;
 
+	const Setting& sunAzimuth = m_settings["m_sunAzimuth"];
+	const Setting& sunAltitude = m_settings["m_sunAltitude"];
+
+	DXCamera* cam = static_cast<DXCamera*>(m_camera);
+	cam->m_sunAzimuth = sunAzimuth.m_value[0];
+	cam->m_sunAltitude = sunAltitude.m_value[0];
+
 	const Setting& sunPos1 = m_settings["m_lightPos1"];
 	const Setting& sunPos2 = m_settings["m_lightPos2"];
 
@@ -241,30 +267,6 @@ void rendering::helper::DXUpdater::Update(double dt)
 rendering::helper::DXUpdater::DXUpdater()
 {
 	UpdateSettings();
-	return;
-
-	AddSetting(Setting{ "m_lightPositionBlendFactor", 1, 0.5 });
-	AddSetting(Setting{ "m_lightPosition", 4, {5, 5, 5, 1} });
-	AddSetting(Setting{ "m_sampleSteps", 1, 15 });
-	AddSetting(Setting{ "m_cloudAbsorbtion", 1, 6 });
-	AddSetting(Setting{ "m_densityOffset", 1, 3 });
-	AddSetting(Setting{ "m_cloudLightAbsorbtion", 1, 6 });
-	AddSetting(Setting{ "m_airLightAbsorbtion", 1, 0.2 });
-	AddSetting(Setting{ "m_g", 1, 0.8 });
-	AddSetting(Setting{ "m_worly1Weight", 1, 0.625 });
-	AddSetting(Setting{ "m_worly2Weight", 1, 0.25 });
-	AddSetting(Setting{ "m_worly3Weight", 1, 0.125 });
-
-	m_shaderSettings.push_back("m_lightPosition");
-	m_shaderSettings.push_back("m_sampleSteps");
-	m_shaderSettings.push_back("m_cloudAbsorbtion");
-	m_shaderSettings.push_back("m_densityOffset");
-	m_shaderSettings.push_back("m_cloudLightAbsorbtion");
-	m_shaderSettings.push_back("m_airLightAbsorbtion");
-	m_shaderSettings.push_back("m_g");
-	m_shaderSettings.push_back("m_worly1Weight");
-	m_shaderSettings.push_back("m_worly2Weight");
-	m_shaderSettings.push_back("m_worly3Weight");
 }
 
 rendering::helper::DXUpdater::~DXUpdater()

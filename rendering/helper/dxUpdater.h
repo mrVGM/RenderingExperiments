@@ -3,6 +3,7 @@
 #include "nativeObject.h"
 
 #include "helper/iUpdater.h"
+#include "helper/inputHandler.h"
 
 #include <d3d12.h>
 #include <DirectXMath.h>
@@ -29,6 +30,7 @@ namespace rendering::helper
 		double m_updateTime = 1;
 
 		ID3D12Resource* m_settingsBuffer = nullptr;
+		InputHandler* m_camera = nullptr;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 

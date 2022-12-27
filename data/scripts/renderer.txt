@@ -144,6 +144,7 @@ simpleUnlit(device, "unlit.hlsl", func(mat) {
 cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 	let updater = api.aux.updater();
 	updater.setSettingsBuffer(mat.constantBuff);
+	updater.setCamera(cameraInputHandler);
 	cameraInputHandler.addUpdater(updater);
 
 	updater.connectToPipe();

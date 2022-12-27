@@ -401,7 +401,10 @@ float4 PSMain(float4 position : SV_POSITION, float3 world_pos : WORLD) : SV_Targ
 
 	float l;
 
-	float3 sunDir = normalize(float3(1,1,1));
+	float sunAzimuth = M_PI * m_sunAzimuth / 180.0;
+	float sunAltitude = M_PI * m_sunAltitude / 180.0;
+
+	float3 sunDir = float3(cos(sunAzimuth) * cos(sunAltitude), sin(sunAltitude), sin(sunAzimuth) * cos(sunAltitude));
 	sun_zenith = acos(dot(sunDir, float3(0, 1, 0)));
 
 	float3 viewProj = viewDir;

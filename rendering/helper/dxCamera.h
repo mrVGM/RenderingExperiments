@@ -26,9 +26,6 @@ namespace rendering
 		float m_nearPlane = 0.1;
 		float m_farPlane = 1000;
 
-		float m_sunAzimuth = 45;
-		float m_sunAltitude = 45;
-
 		DirectX::XMVECTOR m_position;
 		DirectX::XMVECTOR m_target;
 
@@ -50,6 +47,9 @@ namespace rendering
 		void MoveCamera(double dt, const long cursorPos[2]);
 
 	public:
+		float m_sunAzimuth = 45;
+		float m_sunAltitude = 45;
+
 		void HandleInput(double dt, const InputInfo& inputInfo) override;
 		void RunUpdaters(double dt) override;
 	};
