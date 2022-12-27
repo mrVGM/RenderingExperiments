@@ -58,6 +58,7 @@
 #include "materials/dxMaterialRepo.h"
 #include "materials/dxSimpleUnlitMat.h"
 #include "materials/dxCanvasMat.h"
+#include "materials/dxSkyMat.h"
 
 #include "renderstage/dxUnlitPass.h"
 #include "renderstage/dxClearDSRS.h"
@@ -389,6 +390,11 @@ namespace rendering
 		material.SetProperty("canvasMat", CreateNativeFunc(0, [](Value scope) {
 			material::DXCanvasMat* canvasMat = new material::DXCanvasMat();
 			return NativeObject::Create(canvasMat);
+		}));
+
+		material.SetProperty("skyMat", CreateNativeFunc(0, [](Value scope) {
+			material::DXSkyMat* skyMat = new material::DXSkyMat();
+			return NativeObject::Create(skyMat);
 		}));
 
 #pragma endregion

@@ -12,6 +12,7 @@ namespace rendering::material
 {
 	enum MaterialType
 	{
+		Sky,
 		Unlit,
 		Lit,
 		Cloud,

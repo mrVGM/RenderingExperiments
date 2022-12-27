@@ -26,7 +26,7 @@ let setup = func(device, addObjects, onReady) {
 
 	let plane = require("primitives/plane.txt");
 	let cube = require("primitives/cube.txt");
-	let canvas = require("primitives/cube.txt");
+	let canvas = require("primitives/canvas.txt");
 
 	let meshRepo = api.scene.meshRepo();
 	let scene = api.scene.scene();

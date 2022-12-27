@@ -95,16 +95,23 @@ let materialRepo = api.material.materialRepo();
 let simpleUnlit = require("materials/simpleUnlitMat.txt");
 let cloudMat = require("materials/cloudMat.txt");
 let canvasMat = require("materials/canvasMat.txt");
+let skyMat = require("materials/skyMat.txt");
 
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 5) {
+	if (materialsLoaded < 6) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
 	rendererReady();
 };
+
+skyMat(device, "card.hlsl", func(mat) {
+	materialRepo.addMaterial("sky", mat);
+	materialsLoaded = materialsLoaded + 1;
+	setMaterialRepo();
+});
 
 simpleUnlit(device, "unlit.hlsl", func(mat) {
 	let color = [];
