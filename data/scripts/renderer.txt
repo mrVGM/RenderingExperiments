@@ -52,8 +52,10 @@ let clearDS = api.renderer.clearDS();
 let unlitPass = api.renderer.unlitPass();
 let cloudPass = api.renderer.cloudPass();
 let canvasPass = api.renderer.canvasPass();
+let skyPass = api.renderer.skyPass();
 
 renderer.addRenderStage(clearRT);
+renderer.addRenderStage(skyPass);
 renderer.addRenderStage(clearDS);
 renderer.addRenderStage(unlitPass);
 renderer.addRenderStage(cloudPass);
@@ -107,7 +109,7 @@ let setMaterialRepo = func() {
 	rendererReady();
 };
 
-skyMat(device, "card.hlsl", func(mat) {
+skyMat(device, "hosek.hlsl", func(mat) {
 	materialRepo.addMaterial("sky", mat);
 	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
@@ -185,6 +187,10 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 let scene = require("setupScene.txt");
 
 let addObjects = func(scene) {
+
+	scene.addObject("sky", "canvas");
+	scene.addObjectMaterial("sky", "sky");
+
 	scene.addObject("ground", "plane");
 	scene.addObjectMaterial("ground", "default");
 	scene.setObjectScale("ground", math.vector3(1000, 1, 1000));

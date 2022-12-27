@@ -64,6 +64,7 @@
 #include "renderstage/dxClearDSRS.h"
 #include "renderstage/dxCloudPass.h"
 #include "renderstage/dxCanvasPass.h"
+#include "renderstage/dxSkyPass.h"
 
 #include "compute/dxNoiseTexture.h"
 
@@ -344,6 +345,11 @@ namespace rendering
 		renderer.SetProperty("canvasPass", CreateNativeFunc(0, [](Value scope) {
 			renderstage::DXCanvasPass* canvasPass = new renderstage::DXCanvasPass();
 			return NativeObject::Create(canvasPass);
+		}));
+
+		renderer.SetProperty("skyPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXSkyPass* skyPass = new renderstage::DXSkyPass();
+			return NativeObject::Create(skyPass);
 		}));
 #pragma endregion
 
