@@ -22,6 +22,8 @@ let generalInit = func() {
 generalInit();
 
 let cameraInputHandler = api.aux.camera();
+let updater = api.aux.updater();
+
 let initCamera = func() {
 	let pos = math.vector3(0, 2, -5);
 	let target = math.vector3(0, 2, 0);
@@ -110,6 +112,8 @@ let setMaterialRepo = func() {
 };
 
 skyMat(device, "hosek.hlsl", func(mat) {
+	updater.setHosekSettingsBuffer(mat.constantBuff);
+	
 	materialRepo.addMaterial("sky", mat);
 	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
@@ -142,7 +146,6 @@ simpleUnlit(device, "unlit.hlsl", func(mat) {
 });
 
 cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
-	let updater = api.aux.updater();
 	updater.setSettingsBuffer(mat.constantBuff);
 	updater.setCamera(cameraInputHandler);
 	cameraInputHandler.addUpdater(updater);

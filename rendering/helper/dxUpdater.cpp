@@ -77,6 +77,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
 	Value& p_settingsBuffer = GetOrCreateProperty(nativeObject, "settingsBuffer");
+	Value& p_hosekSettingsBuffer = GetOrCreateProperty(nativeObject, "hosekSettingsBuffer");
 	Value& p_camera = GetOrCreateProperty(nativeObject, "camera");
 
 	Value& setCamera = GetOrCreateProperty(nativeObject, "setCamera");
@@ -109,6 +110,23 @@ return Value();
 
 		p_settingsBuffer = bufferValue;
 		self->m_settingsBuffer = buffer->GetBuffer();
+
+		return Value();
+	});
+
+	Value& setHosekSettingsBuffer = GetOrCreateProperty(nativeObject, "setHosekSettingsBuffer");
+	setHosekSettingsBuffer = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXUpdater* self = static_cast<DXUpdater*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value bufferValue = scope.GetProperty("param0");
+		DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+		if (!buffer) {
+			THROW_EXCEPTION("Please supply Hosek Settings buffer!")
+		}
+
+		p_hosekSettingsBuffer = bufferValue;
+		self->m_hosekSettingsBuffer = buffer->GetBuffer();
 
 		return Value();
 	});
@@ -170,6 +188,11 @@ void rendering::helper::DXUpdater::UpdateSettings()
 	for (auto it = shaderOrdering.begin(); it != shaderOrdering.end(); ++it) {
 		m_shaderSettings.push_back(static_cast<std::string>(*it));
 	}
+
+	const nlohmann::json& hosekSettings = json["hosekSettings"];
+	for (auto it = hosekSettings.begin(); it != hosekSettings.end(); ++it) {
+		m_hosekSettings.push_back(static_cast<std::string>(*it));
+	}
 }
 
 void rendering::helper::DXUpdater::AddSetting(const Setting& setting)
@@ -221,6 +244,26 @@ void rendering::helper::DXUpdater::Update(double dt)
 
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
+
+	if (m_hosekSettingsBuffer) {
+		HRESULT hr = m_hosekSettingsBuffer->Map(0, &readRange, &dst);
+		if (FAILED(hr)) {
+			return;
+		}
+		float* floatData = reinterpret_cast<float*>(dst);
+
+		for (std::list<std::string>::iterator it = m_hosekSettings.begin(); it != m_hosekSettings.end(); ++it) {
+			const Setting& cur = m_settings[*it];
+
+			for (int i = 0; i < cur.m_dim; ++i) {
+				*floatData = cur.m_value[i];
+				++floatData;
+			}
+		}
+
+		m_hosekSettingsBuffer->Unmap(0, nullptr);
+	}
+
 
 	HRESULT hr = m_settingsBuffer->Map(0, &readRange, &dst);
 	if (FAILED(hr)) {

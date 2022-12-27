@@ -25,11 +25,13 @@ namespace rendering::helper
 
 		std::map<std::string, Setting> m_settings;
 		std::list<std::string> m_shaderSettings;
+		std::list<std::string> m_hosekSettings;
 
 		double m_totalTime = 0;
 		double m_updateTime = 1;
 
 		ID3D12Resource* m_settingsBuffer = nullptr;
+		ID3D12Resource* m_hosekSettingsBuffer = nullptr;
 		InputHandler* m_camera = nullptr;
 
 		void InitProperties(interpreter::NativeObject& nativeObject) override;

@@ -15,6 +15,12 @@ cbuffer MVCMatrix : register(b0)
 	float m_sunAltitude;
 };
 
+cbuffer HosekSettings : register(b1)
+{
+	float m_albedo;
+	float m_turbidity;
+};
+
 struct PSInput
 {
     float4 position         : SV_POSITION;
@@ -231,8 +237,9 @@ static const float kHosekRadZ[] = {
 #define CIE_Z 2
 
 float sample_coeff(int channel, int albedo, int turbidity, int quintic_coeff, int coeff) {
-	// int index = 540 * albedo + 54 * turbidity + 9 * quintic_coeff + coeff;
+	//int index = 540 * albedo + 54 * turbidity + 9 * quintic_coeff + coeff;
 	int index = 9 * quintic_coeff + coeff;
+
 	if (channel == CIE_X) return kHosekCoeffsX[index];
 	if (channel == CIE_Y) return kHosekCoeffsY[index];
 	if (channel == CIE_Z) return kHosekCoeffsZ[index];
@@ -343,7 +350,7 @@ float angle(float z1, float a1, float z2, float a2) {
 float3 sample_sky(float view_zenith, float view_azimuth, float sun_zenith, float sun_azimuth) {
 	float gamma = angle(view_zenith, view_azimuth, sun_zenith, sun_azimuth);
 	float theta = view_zenith;
-	return spectral_radiance(theta, gamma, ALBEDO, TURBIDITY, sun_zenith) * mean_spectral_radiance(ALBEDO, TURBIDITY, sun_zenith);
+	return spectral_radiance(theta, gamma, m_albedo, m_turbidity, sun_zenith) * mean_spectral_radiance(m_albedo, m_turbidity, sun_zenith);
 }
 
 // CIE-XYZ to linear RGB

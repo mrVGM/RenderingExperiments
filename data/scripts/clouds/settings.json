@@ -36,7 +36,7 @@
         },
         "m_sunAzimuth": {
             "dim": 1,
-            "value": 100.99,
+            "value": 199.92,
             "min": 0,
             "max": 360,
             "step": 0.01
@@ -47,6 +47,20 @@
             "min": -90,
             "max": 90,
             "step": 0.01
+        },
+        "m_albedo": {
+            "dim": 1,
+            "value": 3,
+            "min": 0,
+            "max": 10,
+            "step": 1
+        },
+        "m_turbidity": {
+            "dim": 1,
+            "value": 7,
+            "min": 0,
+            "max": 10,
+            "step": 1
         },
         "m_lightPositionBlendFactor": {
             "dim": 1,
@@ -260,5 +274,9 @@
         "m_detail1Weight",
         "m_detail2Weight",
         "m_detail3Weight"
+    ],
+    "hosekSettings": [
+        "m_albedo",
+        "m_turbidity"
     ]
 }
