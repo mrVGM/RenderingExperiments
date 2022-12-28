@@ -6,6 +6,63 @@
  * Based on "A Practical Analytic Model for Daylight"
  * aka The Preetham Model, the de facto standard analytic skydome model
  *
+ * 
+ * 
+ * [CPP constant buffer]:
+
+struct SkyCBuffer
+{
+  DirectX::XMFLOAT3 sunPosition;
+  float padding1;
+  float rayleigh;
+  DirectX::XMFLOAT3 padding2;
+  float turbidity;
+  DirectX::XMFLOAT3 padding3;
+  float mieCoefficient;
+  DirectX::XMFLOAT3 padding4;
+  DirectX::XMFLOAT3 vWorldPosition;
+  float padding5;
+  DirectX::XMFLOAT3 vSunDirection;
+  float padding6;
+  float vSunfade;
+  DirectX::XMFLOAT3 padding7;
+  DirectX::XMFLOAT3 vBetaR;
+  float padding8;
+  DirectX::XMFLOAT3 vBetaM;
+  float padding9;
+  float vSunE;
+  DirectX::XMFLOAT3 padding10;
+  float mieDirectionalG;
+  DirectX::XMFLOAT3 padding11;
+  float exposure;
+  DirectX::XMFLOAT3 padding12;
+};
+
+[Typical values]:
+
+SkyCBuffer skyData;
+
+//Compute sun position:
+float inclination = 0.4855;
+float azimuth = 0.25;
+
+float theta = 3.141592653589793238 * (inclination - 0.5);
+float phi = 2 * 3.141592653589793238 * (azimuth - 0.5);
+float sunX = cos(phi);
+float sunY = sin(phi) * sin(theta);
+float sunZ = sin(phi) * cos(theta);
+
+skyData.sunPosition.x = sunX;
+skyData.sunPosition.y = sunY;
+skyData.sunPosition.z = sunZ;
+skyData.rayleigh = 1;
+skyData.mieCoefficient = 0.005;
+skyData.mieDirectionalG = 0.7;
+skyData.turbidity = 1;
+skyData.exposure = 0.5;
+ * 
+ * 
+ * 
 */
 
 //Standard matrix buffer
@@ -132,7 +189,7 @@ PixelIn3 VSMain(
 
 	float sunAzimuth = M_PI * m_sunAzimuth / 180.0;
 	float sunAltitude = M_PI * m_sunAltitude / 180.0;
-	float3 sunPosition = float3(cos(sunAzimuth) * cos(sunAltitude), sin(sunAltitude), sin(sunAzimuth) * cos(sunAltitude)) * 450000.0;
+	float3 sunPosition = float3(cos(sunAzimuth) * sin(sunAltitude), cos(sunAltitude), sin(sunAzimuth) * sin(sunAltitude));
 
 	output.vSunDirection = normalize(sunPosition);
 	output.vSunE = sunIntensity(dot(output.vSunDirection, up));
