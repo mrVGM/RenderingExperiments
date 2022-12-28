@@ -43,7 +43,7 @@
         },
         "m_sunAltitude": {
             "dim": 1,
-            "value": 62.75,
+            "value": 43.14,
             "min": 0,
             "max": 180,
             "step": 0.01
@@ -107,7 +107,7 @@
         },
         "m_lightIntensity": {
             "dim": 1,
-            "value": 0.656,
+            "value": 0.086,
             "min": 0,
             "max": 10,
             "step": 0.001

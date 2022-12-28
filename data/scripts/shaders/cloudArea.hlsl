@@ -191,6 +191,18 @@ int findIntersections(Wall walls[6], float3 startPoint, float3 dir, out float3 i
 }
 
 
+float3 getSunPos()
+{
+    const float M_PI = 3.1415926535897932384626433832795;
+
+    float sunAzimuth = M_PI * m_sunAzimuth / 180.0;
+    float sunAltitude = M_PI * m_sunAltitude / 180.0;
+    float3 sunDir = float3(cos(sunAzimuth) * sin(sunAltitude), cos(sunAltitude), sin(sunAzimuth) * sin(sunAltitude));
+
+    float3 sunPos = m_camPos + 10000 * sunDir;
+
+    return sunPos;
+}
 
 float randNoise(float3 value) {
     float3 smallValue = sin(value);
@@ -250,8 +262,8 @@ float phase(float g, float cosAngle)
 float simpleScattering(float lightTransmittance, float angleCos)
 {
     return phase(m_g, angleCos)
-        * exp(-lightTransmittance * m_cloudLightAbsorbtion)
-        * (1 - exp(-2 * lightTransmittance * m_cloudLightAbsorbtion));
+        * exp(-lightTransmittance * m_cloudAbsorbtion)
+        * (1 - exp(-2 * lightTransmittance * m_cloudAbsorbtion));
 }
 float multipleOctaveScattering(float density, float angleCos)
 {
@@ -270,8 +282,8 @@ float multipleOctaveScattering(float density, float angleCos)
 
     for (float i = 0.0; i < scatteringOctaves; ++i) {
         float phaseFunction = phase(c * g, angleCos);
-        float beers = exp(-density * m_cloudLightAbsorbtion * a) *
-            (1 - exp(-2 * density * m_cloudLightAbsorbtion * a));
+        float beers = exp(-density * m_cloudAbsorbtion * a) *
+            (1 - exp(-2 * density * m_cloudAbsorbtion * a));
 
         luminance += b * phaseFunction * beers;
 
@@ -285,17 +297,19 @@ float multipleOctaveScattering(float density, float angleCos)
 
 float lightMarch(Wall walls[6], float3 pos, out float energy)
 {
+    float3 sunPos = getSunPos();
+
     float3 hits[2];
-    int num = findIntersections(walls, pos, normalize(m_lightPosition - pos), hits);
+    int num = findIntersections(walls, pos, normalize(sunPos - pos), hits);
 
     if (num != 1) {
         return 0;
     }
 
-    float distToLight = length(hits[0] - m_lightPosition);
-    energy = m_lightIntensity * exp(-distToLight * m_airLightAbsorbtion);
+    float distToLight = length(hits[0] - sunPos);
+    energy = m_lightIntensity;
 
-    float lightTransmittance = 0;
+    float transmittance = 0;
 
     {
         float cloudDist = length(hits[0] - pos);
@@ -312,15 +326,17 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
             float3 testPoint = (1 - c) * hits[0] + c * pos;
 
             float n = sampleCloud(testPoint) * stepSize;
-            lightTransmittance += n;
+            transmittance += n;
         }
     }
 
-    return lightTransmittance;
+    return transmittance;
 }
 
 float2 cloudMarch(Wall walls[6], float3 hitPoint)
 {
+    float3 sunPos = getSunPos();
+
     float3 hits[2];
     int intersections = findIntersections(walls, m_camPos.xyz, normalize(hitPoint - m_camPos.xyz), hits);
 
@@ -330,8 +346,7 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
 
     float light = 0;
     float transmittance = -m_densityOffset;
-    float lightTransmittance = -m_densityOffset;
-
+    
     float cloudDist = length(hits[1] - hits[0]);
     float stepSize = cloudDist / m_sampleSteps;
 
@@ -340,25 +355,34 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
     cloudDist -= randOffset;
     stepSize = cloudDist / m_sampleSteps;
 
+    const float transmittanceLimit = 4.5 / m_cloudAbsorbtion;
+
     [unroll(50)]
     for (int i = 1; i <= m_sampleSteps; ++i) {
+        if (transmittance > transmittanceLimit) {
+            break;
+        }
+
         float c = i / m_sampleSteps;
         float3 testPoint = (1 - c) * hits[0] + c * hits[1];
 
         float n = sampleCloud(testPoint) * stepSize;
-        lightTransmittance += n;
+
+        if (n <= 0) {
+            continue;
+        }
+
         transmittance += n;
 
         float energy;
         float l = lightMarch(walls, testPoint, energy);
 
         float angleCos = dot(
-            normalize(testPoint - m_lightPosition),
+            normalize(testPoint - sunPos),
             normalize(m_camPos - testPoint)
         );
 
-        //light += energy * simpleScattering(max(0, lightTransmittance + l), angleCos);
-        light += energy * multipleOctaveScattering(max(0, lightTransmittance + l), angleCos);
+        light += energy * multipleOctaveScattering(max(0, transmittance + l), angleCos);
     }
     return float2(light, exp(-transmittance * m_cloudAbsorbtion));
 }
