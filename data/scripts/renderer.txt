@@ -111,7 +111,7 @@ let setMaterialRepo = func() {
 	rendererReady();
 };
 
-skyMat(device, "hosek.hlsl", func(mat) {
+skyMat(device, "preetham.hlsl", func(mat) {
 	updater.setHosekSettingsBuffer(mat.constantBuff);
 	
 	materialRepo.addMaterial("sky", mat);

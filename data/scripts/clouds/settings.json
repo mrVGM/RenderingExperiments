@@ -36,35 +36,63 @@
         },
         "m_sunAzimuth": {
             "dim": 1,
-            "value": 199.92,
+            "value": 158.49,
             "min": 0,
             "max": 360,
             "step": 0.01
         },
         "m_sunAltitude": {
             "dim": 1,
-            "value": 53.24,
+            "value": -90,
             "min": -90,
             "max": 90,
             "step": 0.01
         },
-        "m_albedo": {
+        "rayleigh": {
             "dim": 1,
-            "value": 3,
+            "value": 5.28,
             "min": 0,
             "max": 10,
-            "step": 1
+            "step": 0.01
         },
-        "m_turbidity": {
+        "turbidity": {
             "dim": 1,
-            "value": 7,
+            "value": 3.88,
             "min": 0,
             "max": 10,
-            "step": 1
+            "step": 0.01
+        },
+        "mieCoefficient": {
+            "dim": 1,
+            "value": 1.49,
+            "min": 0,
+            "max": 10,
+            "step": 0.01
+        },
+        "vSunfade": {
+            "dim": 1,
+            "value": 5.48,
+            "min": 0,
+            "max": 10,
+            "step": 0.01
+        },
+        "mieDirectionalG": {
+            "dim": 1,
+            "value": 3.69,
+            "min": 0,
+            "max": 10,
+            "step": 0.01
+        },
+        "exposure": {
+            "dim": 1,
+            "value": 3.84,
+            "min": 0,
+            "max": 10,
+            "step": 0.01
         },
         "m_lightPositionBlendFactor": {
             "dim": 1,
-            "value": 0.599,
+            "value": 0.727,
             "min": 0,
             "max": 1,
             "step": 0.001
@@ -276,7 +304,11 @@
         "m_detail3Weight"
     ],
     "hosekSettings": [
-        "m_albedo",
-        "m_turbidity"
+        "rayleigh",
+        "turbidity",
+        "mieCoefficient",
+        "vSunfade",
+        "mieDirectionalG",
+        "exposure"
     ]
 }
