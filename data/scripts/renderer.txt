@@ -104,7 +104,7 @@ let skyMat = require("materials/skyMat.txt");
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 6) {
+	if (materialsLoaded < 5) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
@@ -128,19 +128,6 @@ simpleUnlit(device, "unlit.hlsl", func(mat) {
 	mat.constantBuff.copyData(color);
 
 	materialRepo.addMaterial("default", mat);
-	materialsLoaded = materialsLoaded + 1;
-	setMaterialRepo();
-});
-
-simpleUnlit(device, "unlit.hlsl", func(mat) {
-	let color = [];
-	color.push(1);
-	color.push(0);
-	color.push(0);
-
-	mat.constantBuff.copyData(color);
-
-	materialRepo.addMaterial("red", mat);
 	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
 });
@@ -203,11 +190,6 @@ let addObjects = func(scene) {
 	scene.addObjectMaterial("cloud", "cloudArea");
 	scene.setObjectPosition("cloud", math.vector3(0, 10, 0));
 	scene.setObjectScale("cloud", math.vector3(4, 1, 4));
-
-	scene.addObject("sun", "cube");
-	scene.addObjectMaterial("sun", "red");
-	scene.setObjectPosition("sun", math.vector3(5, 5, 5));
-	scene.setObjectScale("sun", math.vector3(0.1, 0.1, 0.1));
 
 	scene.addObject("card1", "canvas");
 	scene.addObjectMaterial("card1", "card1");

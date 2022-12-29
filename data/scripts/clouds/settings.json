@@ -18,22 +18,6 @@
                 1
             ]
         },
-        "m_lightPos1": {
-            "dim": 3,
-            "value": [
-                -10,
-                15,
-                0
-            ]
-        },
-        "m_lightPos2": {
-            "dim": 3,
-            "value": [
-                10,
-                15,
-                0
-            ]
-        },
         "m_sunAzimuth": {
             "dim": 1,
             "value": 97.57,
@@ -90,13 +74,6 @@
             "max": 10,
             "step": 0.01
         },
-        "m_lightPositionBlendFactor": {
-            "dim": 1,
-            "value": 0.727,
-            "min": 0,
-            "max": 1,
-            "step": 0.001
-        },
         "m_lightPosition": {
             "dim": 3,
             "value": [
@@ -115,20 +92,6 @@
         "m_cloudAbsorbtion": {
             "dim": 1,
             "value": 6.391,
-            "min": 0,
-            "max": 10,
-            "step": 0.001
-        },
-        "m_airLightAbsorbtion": {
-            "dim": 1,
-            "value": 0.231,
-            "min": 0,
-            "max": 3,
-            "step": 0.001
-        },
-        "m_cloudLightAbsorbtion": {
-            "dim": 1,
-            "value": 6,
             "min": 0,
             "max": 10,
             "step": 0.001
@@ -277,11 +240,8 @@
     "shaderOrdering": [
         "m_lightColor",
         "m_darkColor",
-        "m_lightPosition",
         "m_lightIntensity",
         "m_cloudAbsorbtion",
-        "m_airLightAbsorbtion",
-        "m_cloudLightAbsorbtion",
         "m_g",
         "m_sampleSteps",
         "m_sampleStepsTowardsLight",

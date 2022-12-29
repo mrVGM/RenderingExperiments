@@ -226,22 +226,6 @@ void rendering::helper::DXUpdater::Update(double dt)
 	cam->m_sunAzimuth = sunAzimuth.m_value[0];
 	cam->m_sunAltitude = sunAltitude.m_value[0];
 
-	const Setting& sunPos1 = m_settings["m_lightPos1"];
-	const Setting& sunPos2 = m_settings["m_lightPos2"];
-
-	DirectX::XMVECTOR p1 = DirectX::XMVectorSet(sunPos1.m_value[0], sunPos1.m_value[1], sunPos1.m_value[2], 0);
-	DirectX::XMVECTOR p2 = DirectX::XMVectorSet(sunPos2.m_value[0], sunPos2.m_value[1], sunPos2.m_value[2], 0);
-	Setting& blendFactor = m_settings["m_lightPositionBlendFactor"];
-
-	DirectX::XMVECTOR p = 
-		(1- blendFactor.m_value[0]) * p1
-		+ blendFactor.m_value[0] * p2;
-
-	Setting& lightPosition = m_settings["m_lightPosition"];
-	lightPosition.m_value[0] = DirectX::XMVectorGetX(p);
-	lightPosition.m_value[1] = DirectX::XMVectorGetY(p);
-	lightPosition.m_value[2] = DirectX::XMVectorGetZ(p);
-
 	CD3DX12_RANGE readRange(0, 0);
 	void* dst = nullptr;
 
@@ -281,30 +265,6 @@ void rendering::helper::DXUpdater::Update(double dt)
 	}
 
 	m_settingsBuffer->Unmap(0, nullptr);
-
-	Value api = GetAPI();
-	Value appContext = api.GetProperty("app_context");
-	Value rendererValue = appContext.GetProperty("renderer");
-	DXRenderer* renderer = nullptr;
-
-	if (!rendererValue.IsNone()) {
-		renderer = static_cast<DXRenderer*>(NativeObject::ExtractNativeObject(rendererValue));
-	}
-
-	if (!renderer) {
-		return;
-	}
-
-	scene::IScene* scene = renderer->GetScene();
-	std::map<std::string, scene::Object3D>::iterator sunIt = scene->m_objects.find("sun");
-
-	if (sunIt == scene->m_objects.end()) {
-		return;
-	}
-	scene::Object3D& sun = sunIt->second;
-	sun.m_transform.m_position[0] = lightPosition.m_value[0];
-	sun.m_transform.m_position[1] = lightPosition.m_value[1];
-	sun.m_transform.m_position[2] = lightPosition.m_value[2];
 }
 
 rendering::helper::DXUpdater::DXUpdater()

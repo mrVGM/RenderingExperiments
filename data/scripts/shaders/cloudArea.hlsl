@@ -22,12 +22,9 @@ cbuffer CloudAreaSettings : register(b1)
     float4 m_lightColor;
     float4 m_darkColor;
 
-    float3 m_lightPosition;
     float m_lightIntensity;
 
     float m_cloudAbsorbtion;
-    float m_airLightAbsorbtion;
-    float m_cloudLightAbsorbtion;
     float m_g;
 
     float m_sampleSteps;
