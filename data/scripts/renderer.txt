@@ -104,7 +104,7 @@ let skyMat = require("materials/skyMat.txt");
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 5) {
+	if (materialsLoaded < 3) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
@@ -141,38 +141,7 @@ cloudMat(device, "cloudArea.hlsl", commandQueue, func(mat) {
 
 	materialRepo.addMaterial("cloudArea", mat);
 	materialsLoaded = materialsLoaded + 1;
-	
-	canvasMat(device, "card.hlsl", func(cardMat) {
-		let settings = [];
-		settings.push(1);
-		cardMat.constantBuff.copyData(settings);
-		cardMat.setDescriptorHeap(mat.descriptorHeap);
-
-		materialRepo.addMaterial("card1", cardMat);
-		materialsLoaded = materialsLoaded + 1;
-		setMaterialRepo();
-	});
-
-
-	canvasMat(device, "card.hlsl", func(cardMat) {
-		let settings = [];
-		settings.push(1);
-		cardMat.constantBuff.copyData(settings);
-
-		let descriptors = [];
-		let texDesc = {};
-		texDesc.type = "srv_tex";
-		texDesc.texture = mat.noiseTextures[1];
-		descriptors.push(texDesc);
-		let descHeap = api.descriptorHeap();
-		descHeap.create(device, descriptors);
-
-		cardMat.setDescriptorHeap(descHeap);
-
-		materialRepo.addMaterial("card2", cardMat);
-		materialsLoaded = materialsLoaded + 1;
-		setMaterialRepo();
-	});
+	setMaterialRepo();
 });
 
 let scene = require("setupScene.txt");
@@ -190,16 +159,6 @@ let addObjects = func(scene) {
 	scene.addObjectMaterial("cloud", "cloudArea");
 	scene.setObjectPosition("cloud", math.vector3(0, 10, 0));
 	scene.setObjectScale("cloud", math.vector3(4, 1, 4));
-
-	scene.addObject("card1", "canvas");
-	scene.addObjectMaterial("card1", "card1");
-	scene.setObjectScale("card1", math.vector3(0.15, 0.15 * wnd.width() / wnd.height(), 1));
-	scene.setObjectPosition("card1", math.vector3(-0.8, -0.7, 0));
-
-	scene.addObject("card2", "canvas");
-	scene.addObjectMaterial("card2", "card2");
-	scene.setObjectScale("card2", math.vector3(0.15, 0.15 * wnd.width() / wnd.height(), 1));
-	scene.setObjectPosition("card2", math.vector3(-0.45, -0.7, 0));
 };
 
 scene(device, addObjects, func(data) {
