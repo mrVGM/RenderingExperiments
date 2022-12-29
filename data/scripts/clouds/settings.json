@@ -27,7 +27,7 @@
         },
         "m_sunAltitude": {
             "dim": 1,
-            "value": 26.19,
+            "value": 21.06,
             "min": 0,
             "max": 180,
             "step": 0.01
