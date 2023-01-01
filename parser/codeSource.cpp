@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <iostream>
+#include <set>
 
 void scripting::CodeSource::Tokenize()
 {
@@ -104,6 +105,125 @@ bool scripting::CodeSource::TokenizeForParser()
 	}
 
 	m_parserReady = tmp;
+	SimpleSymbol* terminal = CreateSimpleSymbol();
+	terminal->m_name = "Terminal";
+	terminal->m_codePosition = -1;
+	m_parserReady.push_back(terminal);
+
+	return true;
+}
+
+
+bool scripting::CodeSource::TokenizeForColladaReader()
+{
+	NewLineSymbolTokenizer newLineTokenizer;
+	StringTokenizer stringTokenizer;
+	BlankTokenizer blankTokenizer;
+	UnsignedNumberTokenizer numberTokenizer;
+	NameTokenizer nameTokenizer;
+
+	std::vector<ISymbol*> symbols = newLineTokenizer.Tokenize(m_symbols);
+	if (newLineTokenizer.m_error) {
+		return false;
+	}
+
+	symbols = stringTokenizer.Tokenize(symbols);
+	if (stringTokenizer.m_error) {
+		return false;
+	}
+
+	symbols = blankTokenizer.Tokenize(symbols);
+	if (blankTokenizer.m_error) {
+		return false;
+	}
+
+	symbols = nameTokenizer.Tokenize(symbols);
+	if (nameTokenizer.m_error) {
+		return false;
+	}
+
+	symbols = numberTokenizer.Tokenize(symbols);
+	if (numberTokenizer.m_error) {
+		return false;
+	}
+
+	std::vector<ISymbol*> tmp;
+	for (int i = 0; i < symbols.size(); ++i) {
+		if (symbols[i]->m_name == "Blank") {
+			continue;
+		}
+		tmp.push_back(symbols[i]);
+	}
+
+	symbols = tmp;
+	tmp.clear();
+
+	{
+		scripting::ISymbol* minus = nullptr;
+		for (int i = 0; i < symbols.size(); ++i) {
+			scripting::ISymbol* cur = symbols[i];
+			if (minus) {
+				if (cur->m_name == "Number") {
+					CompositeSymbol* cs = CreateCompositeSymbol();
+					cs->m_name = "Number";
+					cs->m_symbolData.m_number = -cur->m_symbolData.m_number;
+					cs->m_childSymbols.push_back(minus);
+					cs->m_childSymbols.push_back(cur);
+					tmp.push_back(cs);
+				}
+				else {
+					tmp.push_back(minus);
+					tmp.push_back(cur);
+				}
+				minus = nullptr;
+				continue;
+			}
+
+			if (cur->m_name == "-") {
+				minus = cur;
+				continue;
+			}
+
+			tmp.push_back(cur);
+		}
+
+		if (minus) {
+			tmp.push_back(minus);
+		}
+	}
+
+	symbols = tmp;
+	tmp.clear();
+
+	std::set<std::string> specialSymbols;
+	specialSymbols.insert("<");
+	specialSymbols.insert(">");
+	specialSymbols.insert("?");
+	specialSymbols.insert("/");
+	specialSymbols.insert("=");
+	specialSymbols.insert(":");
+
+	for (int i = 0; i < symbols.size(); ++i) {
+		scripting::ISymbol* cur = symbols[i];
+
+		if (cur->m_name.size() > 1) {
+			tmp.push_back(cur);
+			continue;
+		}
+
+		if (specialSymbols.contains(cur->m_name)) {
+			tmp.push_back(cur);
+			continue;
+		}
+
+		cur->m_symbolData.m_string = cur->m_name;
+		cur->m_name = "SingleSymbol";
+		tmp.push_back(cur);
+	}
+
+	symbols = tmp;
+
+	m_parserReady = symbols;
 	SimpleSymbol* terminal = CreateSimpleSymbol();
 	terminal->m_name = "Terminal";
 	terminal->m_codePosition = -1;

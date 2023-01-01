@@ -4,6 +4,10 @@
 #include "api.h"
 #include "utils.h"
 
+#include "collada.h"
+#include "codeSource.h"
+#include "symbol.h"
+
 #include <filesystem>
 #include <iostream>
 
@@ -28,6 +32,13 @@ int main(int args, const char** argv)
 #endif
 
 	data::Init(dataPath.string().c_str());
+
+	collada::IColladaReader* reader = collada::GetReader();
+	std::string colladaFile = dataPath.append("collada\\cube.dae").string();
+	reader->ReadColladaFile(colladaFile);
+
+	return 0;
+
 
 	std::filesystem::path scriptsDir = dataPath.append("scripts\\");
 

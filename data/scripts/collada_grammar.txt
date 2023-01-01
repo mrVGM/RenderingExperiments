@@ -1,0 +1,43 @@
+"Start" "Initial" "Terminal"
+
+"Initial" "InfoTag" "TagList"
+
+"InfoTag" "<" "?" "Name" "?" ">"
+"InfoTag" "<" "?" "Name" "TagParams" "?" ">"
+
+"ClosedTag" "<" "Name" "/" ">"
+"ClosedTag" "<" "Name" "TagParams" "/" ">"
+
+"OpeningTag" "<" "Name" ">"
+"OpeningTag" "<" "Name" "TagParams" ">"
+
+"ClosingTag" "<" "/" "Name" ">"
+
+"Tag" "OpeningTag" "AnyData" "ClosingTag"
+"Tag" "OpeningTag" "TagList" "ClosingTag"
+
+"AnyTag" "ClosedTag"
+"AnyTag" "Tag"
+
+"TagList" "AnyTag"
+"TagList" "TagList" "AnyTag"
+
+"AnyData" "AnyToken"
+"AnyData" "AnyData" "AnyToken"
+
+"AnyToken" "Number"
+"AnyToken" "Name"
+"AnyToken" "String"
+"AnyToken" "SingleSymbol"
+"AnyToken" "?"
+"AnyToken" "/"
+"AnyToken" "="
+"AnyToken" ":"
+
+"TagParams" "TagParam"
+"TagParams" "TagParams" "TagParam"
+
+"TagParam" "PropName" "=" "String"
+
+"PropName" "Name"
+"PropName" "PropName" ":" "Name"

@@ -3,6 +3,10 @@
     "grammar": {
       "path": "scripts/grammar.txt",
       "type": "text_file"
+    },
+    "collada_grammar": {
+      "path": "scripts/collada_grammar.txt",
+      "type": "text_file"
     }
   }
 }

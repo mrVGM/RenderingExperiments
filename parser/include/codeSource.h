@@ -8,6 +8,7 @@ namespace scripting
 	struct ISymbol;
 	struct SimpleSymbol;
 	struct CompositeSymbol;
+	
 	struct CodeSource
 	{
 		std::string m_filename;
@@ -17,6 +18,7 @@ namespace scripting
 
 		void Tokenize();
 		bool TokenizeForParser();
+		bool TokenizeForColladaReader();
 		SimpleSymbol* CreateSimpleSymbol();
 		CompositeSymbol* CreateCompositeSymbol();
 

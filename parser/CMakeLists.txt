@@ -21,7 +21,7 @@ add_library (Parser
 	"include/symbol.h"
 	"tokenizer.cpp"
 	"tokenizer.h"
-)
+ )
 
 target_include_directories(Parser INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Parser PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
