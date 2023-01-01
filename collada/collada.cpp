@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "grammar.h"
 #include "codeSource.h"
+#include "colladaTreeBuilder.h"
 
 #include <map>
 
@@ -74,7 +75,20 @@ namespace
 
 			return colladaFile.m_parsed;
 		}
+
+		bool ConstructColladaTree(scripting::ISymbol* symbol, std::list<collada::ColladaNode*>& nodes, std::list<collada::ColladaNode*>& allNodes) override;
 	};
+	
+
+
+	bool ColladaReader::ConstructColladaTree(scripting::ISymbol* symbol, std::list<collada::ColladaNode*>& nodes, std::list<collada::ColladaNode*>& allNodes)
+	{
+		collada::ColladaTreeBuilder builder(allNodes);
+		bool res = builder.BuildTree(symbol);
+		nodes = builder.m_rootNodes;
+		return res;
+	}
+
 }
 
 collada::IColladaReader* collada::GetReader()

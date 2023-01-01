@@ -7,6 +7,8 @@ cmake_minimum_required (VERSION 3.8)
 add_library (Collada
 	"include/collada.h"
 	"collada.cpp"
+	"colladaTreeBuilder.h"
+	"colladaTreeBuilder.cpp"
 )
 
 target_include_directories(Collada INTERFACE PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
