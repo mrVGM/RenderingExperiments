@@ -6,10 +6,11 @@ cmake_minimum_required (VERSION 3.8)
 # Add source to this project's executable.
 add_library (Collada
 	"include/collada.h"
+	"include/colladaEntities.h"
 	"collada.cpp"
 	"colladaTreeBuilder.h"
 	"colladaTreeBuilder.cpp"
-)
+	"colladaSceneBuilder.cpp")
 
 target_include_directories(Collada INTERFACE PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 

@@ -40,6 +40,9 @@ int main(int args, const char** argv)
 	std::list<collada::ColladaNode*> rootNodes, allNodes;
 	bool res = reader->ConstructColladaTree(read, rootNodes, allNodes);
 
+	collada::Scene scene;
+	collada::ConvertToScene(rootNodes, scene);
+
 	for (std::list<collada::ColladaNode*>::iterator it = allNodes.begin(); it != allNodes.end(); ++it) {
 		delete *it;
 	}

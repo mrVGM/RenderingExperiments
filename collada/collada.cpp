@@ -1,6 +1,5 @@
 #include "include/collada.h"
 
-#include "collada.h"
 #include "dataLib.h"
 #include "parserTable.h"
 #include "parser.h"
