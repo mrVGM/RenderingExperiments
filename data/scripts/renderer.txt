@@ -159,6 +159,9 @@ let addObjects = func(scene) {
 	scene.addObjectMaterial("cloud", "cloudArea");
 	scene.setObjectPosition("cloud", math.vector3(0, 10, 0));
 	scene.setObjectScale("cloud", math.vector3(4, 1, 4));
+
+
+	scene.readColladaScene("collada/cube.dae");
 };
 
 scene(device, addObjects, func(data) {

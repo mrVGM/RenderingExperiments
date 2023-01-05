@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nativeObject.h"
+#include "collada.h"
 
 #include <d3d12.h>
 #include <DirectXMath.h>
@@ -41,5 +42,7 @@ namespace rendering::scene
 	public:
 		std::map<std::string, Object3D> m_objects;
 		std::map<int, InstanceBuffer> m_instanceBuffers;
+
+		collada::Scene m_colladaScene;
 	};
 }

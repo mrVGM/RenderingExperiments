@@ -4,7 +4,6 @@
 #include "api.h"
 #include "utils.h"
 
-#include "collada.h"
 #include "codeSource.h"
 #include "symbol.h"
 
@@ -32,23 +31,6 @@ int main(int args, const char** argv)
 #endif
 
 	data::Init(dataPath.string().c_str());
-
-	collada::IColladaReader* reader = collada::GetReader();
-	std::string colladaFile = dataPath.append("collada\\cube.dae").string();
-	scripting::ISymbol* read = reader->ReadColladaFile(colladaFile);
-
-	std::list<collada::ColladaNode*> rootNodes, allNodes;
-	bool res = reader->ConstructColladaTree(read, rootNodes, allNodes);
-
-	collada::Scene scene;
-	collada::ConvertToScene(rootNodes, scene);
-
-	for (std::list<collada::ColladaNode*>::iterator it = allNodes.begin(); it != allNodes.end(); ++it) {
-		delete *it;
-	}
-
-	return 0;
-
 
 	std::filesystem::path scriptsDir = dataPath.append("scripts\\");
 

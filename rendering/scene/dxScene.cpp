@@ -3,6 +3,7 @@
 #include "nativeFunc.h"
 #include "utils.h"
 #include "dxBuffer.h"
+#include "api.h"
 
 #include <list>
 
@@ -237,6 +238,24 @@ return Value();
 		return Value();
 	});
 
+	Value& readColladaScene = GetOrCreateProperty(nativeObject, "readColladaScene");
+	readColladaScene = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value colladaFileValue = scope.GetProperty("param0");
+		if (colladaFileValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply Collada File!")
+		}
+		std::string error;
+		bool res = self->ReadColladaScene(colladaFileValue.GetString(), error);
+
+		if (!res) {
+			THROW_EXCEPTION(error)
+		}
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -279,6 +298,56 @@ void rendering::scene::DXScene::ConstructInstanceBuffersData()
 			tested->m_instanceBufferOffset = 0;
 		}
 	}
+}
+
+bool rendering::scene::DXScene::ReadColladaScene(const std::string& colladaFile, std::string& errorMessage)
+{
+	struct ColladaNodesContainer
+	{
+		std::list<collada::ColladaNode*> m_nodes;
+		~ColladaNodesContainer()
+		{
+			for (std::list<collada::ColladaNode*>::iterator it = m_nodes.begin();
+				it != m_nodes.end(); ++it) {
+				delete* it;
+			}
+			m_nodes.clear();
+		}
+	};
+
+	interpreter::Value api = GetAPI();
+	interpreter::Value appContext = api.GetProperty("app_context");
+	std::string filePath = appContext.GetProperty("root_dir").GetString() +  colladaFile;
+
+	collada::IColladaReader* reader = collada::GetReader();
+
+	scripting::ISymbol* symbol = reader->ReadColladaFile(filePath);
+	if (!symbol) {
+		errorMessage = "Can't parse Collada File!";
+		return false;
+	}
+
+	std::list<collada::ColladaNode*> nodes;
+	ColladaNodesContainer container;
+	bool res = reader->ConstructColladaTree(symbol, nodes, container.m_nodes);
+
+	if (!res) {
+		errorMessage = "Can't construct Collada Tree!";
+		return false;
+	}
+
+	res = collada::ConvertToScene(nodes, m_colladaScene);
+	if (!res) {
+		errorMessage = "Can't convert to Collada Scene!";
+		return false;
+	}
+
+	return true;
+}
+
+rendering::scene::DXScene::~DXScene()
+{
+	collada::ReleaseColladaReader();
 }
 
 

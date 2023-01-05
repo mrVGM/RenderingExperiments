@@ -16,6 +16,9 @@ namespace rendering::scene
 		void InitProperties(interpreter::NativeObject& nativeObject) override;
 
 		void ConstructInstanceBuffersData();
+
+		bool ReadColladaScene(const std::string& colladaFile, std::string& errorMessage);
 	public:
+		~DXScene();
 	};
 }
