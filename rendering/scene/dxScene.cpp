@@ -6,6 +6,8 @@
 #include "api.h"
 #include "utils.h"
 
+#include "d3dx12.h"
+
 #include <list>
 
 #define THROW_ERROR(hRes, error) \
@@ -23,6 +25,7 @@ scope.SetProperty("exception", Value(error));\
 return Value();
 
 	Value& p_instanceBuffers = GetOrCreateProperty(nativeObject, "instanceBuffers");
+	Value& p_colladaBuffersCache = GetOrCreateProperty(nativeObject, "colladaBuffersCache");
 
 	Value& addObject = GetOrCreateProperty(nativeObject, "addObject");
 	addObject = CreateNativeMethod(nativeObject, 2, [](Value scope) {
@@ -282,12 +285,11 @@ return Value();
 		for (std::map<std::string, collada::Geometry>::const_iterator it = self->m_colladaScene.m_geometries.begin();
 			it != self->m_colladaScene.m_geometries.end(); ++it) {
 			Value geo = interpreter::utils::GetEmptyObject();
-			IManagedValue* geoObj = geo.GetManagedValue();
 
-			geoObj->SetProperty("name", Value(it->first));
-			geoObj->SetProperty("indexSize", Value(it->second.m_indices.size() * sizeof(int)));
-			geoObj->SetProperty("vertexSize", Value(it->second.m_vertices.size()));
-			geoObj->SetProperty("vertexStride", Value(sizeof(collada::Vertex)));
+			geo.SetProperty("name", Value(it->first));
+			geo.SetProperty("indexSize", Value(it->second.m_indices.size() * sizeof(int)));
+			geo.SetProperty("vertexSize", Value(it->second.m_vertices.size() * sizeof(collada::Vertex)));
+			geo.SetProperty("vertexStride", Value(sizeof(collada::Vertex)));
 
 			geometries.push_back(geo);
 		}
@@ -295,19 +297,16 @@ return Value();
 		for (std::map<std::string, collada::InstanceBuffer>::const_iterator it = self->m_colladaScene.m_instanceBuffers.begin();
 			it != self->m_colladaScene.m_instanceBuffers.end(); ++it) {
 			Value ib = interpreter::utils::GetEmptyObject();
-			IManagedValue* ibObj = ib.GetManagedValue();
-
-			ibObj->SetProperty("name", Value(it->first));
-			ibObj->SetProperty("size", Value(it->second.m_data.size() * 16 * sizeof(int)));
-			ibObj->SetProperty("stride", Value(16 * sizeof(int)));
+			
+			ib.SetProperty("name", Value(it->first));
+			ib.SetProperty("size", Value(it->second.m_data.size() * 16 * sizeof(int)));
+			ib.SetProperty("stride", Value(16 * sizeof(int)));
 
 			instanceBuffers.push_back(ib);
 		}
 
-		IManagedValue* resObj = res.GetManagedValue();
-
-		resObj->SetProperty("geometries", Value::FromList(geometries));
-		resObj->SetProperty("instanceBuffers", Value::FromList(instanceBuffers));
+		res.SetProperty("geometries", Value::FromList(geometries));
+		res.SetProperty("instanceBuffers", Value::FromList(instanceBuffers));
 
 		return res;
 	});
@@ -400,6 +399,29 @@ return Value();
 		return Value();
 	});
 
+	Value& setColladaBuffersCache = GetOrCreateProperty(nativeObject, "setColladaBuffersCache");
+	setColladaBuffersCache = CreateNativeMethod(nativeObject, 1, [&](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		p_colladaBuffersCache = scope.GetProperty("param0");
+
+		return Value();
+	});
+
+	Value& updateColladaBuffers = GetOrCreateProperty(nativeObject, "updateColladaBuffers");
+	updateColladaBuffers = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		std::string error;
+		bool res = self->UpdateColladaBuffers(error);
+		if (!res) {
+			THROW_EXCEPTION("Can't update collada buffers!")
+		}
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -486,6 +508,54 @@ bool rendering::scene::DXScene::ReadColladaScene(const std::string& colladaFile,
 		return false;
 	}
 
+	return true;
+}
+
+bool rendering::scene::DXScene::UpdateColladaBuffers(std::string& errorMessage)
+{
+	for (std::map<std::string, collada::Geometry>::const_iterator it = m_colladaScene.m_geometries.begin();
+		it != m_colladaScene.m_geometries.end(); ++it) {
+
+		const collada::Geometry& curGeo = it->second;
+
+		CD3DX12_RANGE readRange(0, 0);
+
+		void* dst = nullptr;
+		{
+			ID3D12Resource* curBuff = m_colladaGeometryBuffers[it->first].m_vertexBuffer;
+			THROW_ERROR(
+				curBuff->Map(0, &readRange, &dst),
+				"Can't map Vertex Buffer!")
+
+				collada::Vertex* vertexArr = static_cast<collada::Vertex*>(dst);
+
+			for (std::list<collada::Vertex>::const_iterator vertIt = curGeo.m_vertices.begin();
+				vertIt != curGeo.m_vertices.end(); ++vertIt) {
+				*vertexArr = *vertIt;
+				++vertexArr;
+			}
+
+			curBuff->Unmap(0, nullptr);
+		}
+
+		{
+			ID3D12Resource* curBuff = m_colladaGeometryBuffers[it->first].m_indexBuffer;
+			THROW_ERROR(
+				curBuff->Map(0, &readRange, &dst),
+				"Can't map Vertex Buffer!")
+
+			int* indexArr = static_cast<int*>(dst);
+
+			for (std::list<int>::const_iterator indIt = curGeo.m_indices.begin();
+				indIt != curGeo.m_indices.end(); ++indIt) {
+				*indexArr = *indIt;
+				++indexArr;
+			}
+
+			curBuff->Unmap(0, nullptr);
+		}
+
+	}
 	return true;
 }
 

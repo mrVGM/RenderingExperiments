@@ -1,0 +1,121 @@
+let resources = require("resources/resourceUtils.txt");
+let utils = require("utils.txt");
+let math = require("math.txt");
+
+let scene = {};
+
+let loadColladaSceneBuffers = func(device, scene, onReady) {
+	let buffersInfo = scene.getColladaBufferInfo();
+
+	let uploadBuffersToCreate = 2 * buffersInfo.geometries.length;
+	let buffersToCreate = 2 * buffersInfo.geometries.length;
+
+	let geoBuffers = [];
+
+	let buffersProcessed = 0;
+	let callCopy = func() {
+		if (buffersProcessed == 0 || buffersToCreate > 0) {
+			return;
+		}
+
+		let copiesLeft = 2 * geoBuffers.length;
+
+		let callReady = func() {
+			if (copiesLeft > 0) {
+				return;
+			}
+			let toCache = [];
+
+			utils.foreach(geoBuffers, func(x) {
+				toCache.push(x.buffer);
+				toCache.push(x.iBuffer);
+			});
+
+			scene.setColladaBuffersCache(toCache);
+			onReady();
+		};
+
+		utils.foreach(geoBuffers, func(x) {
+			resources.copyBuffers(device, x.buffer, x.uploadBuffer, func() {
+				scene.setColladaGeometryVertexBuffer(x.name, x.buffer);
+				copiesLeft = copiesLeft - 1;
+				callReady();
+			});
+
+			resources.copyBuffers(device, x.iBuffer, x.uploadIBuffer, func() {
+				scene.setColladaGeometryIndexBuffer(x.name, x.buffer);
+				copiesLeft = copiesLeft - 1;
+				callReady();
+			});
+		});
+	};
+
+	let callUploadBuffersReady = func() {
+		if (uploadBuffersToCreate > 0) {
+			return;
+		}
+		scene.updateColladaBuffers();
+		buffersProcessed = 1;
+
+		callCopy();
+	};
+
+	utils.foreach(buffersInfo.geometries, func(x) {
+		let bufferPair = {};
+		bufferPair.name = x.name;
+		geoBuffers.push(bufferPair);
+
+
+		let uploadBB = resources.bufferBuilder();
+		uploadBB.upload(1);
+		uploadBB.setSize(x.vertexSize);
+		uploadBB.setStride(x.vertexStride);
+
+		let bb = resources.bufferBuilder();
+		bb.upload(0);
+		bb.setSize(x.vertexSize);
+		bb.setStride(x.vertexStride);
+
+		let uploadIBB = resources.bufferBuilder();
+		uploadIBB.upload(1);
+		uploadIBB.setSize(x.indexSize);
+		uploadIBB.setStride(x.indexSize);
+
+		let ibb = resources.bufferBuilder();
+		ibb.upload(0);
+		ibb.setSize(x.indexSize);
+		ibb.setStride(x.indexSize);
+
+		uploadBB.build(device, func(buff) {
+			bufferPair.uploadBuffer = buff;
+
+			scene.setColladaGeometryVertexBuffer(x.name, buff);
+			uploadBuffersToCreate = uploadBuffersToCreate - 1;
+			callUploadBuffersReady();
+		});
+
+		bb.build(device, func(buff) {
+			bufferPair.buffer = buff;
+			buffersToCreate = buffersToCreate - 1;
+
+			callCopy();
+		});
+
+		uploadIBB.build(device, func(buff) {
+			bufferPair.uploadIBuffer = buff;
+
+			scene.setColladaGeometryIndexBuffer(x.name, buff);
+			uploadBuffersToCreate = uploadBuffersToCreate - 1;
+			callUploadBuffersReady();
+		});
+
+		ibb.build(device, func(buff) {
+			bufferPair.iBuffer = buff;
+			buffersToCreate = buffersToCreate - 1;
+
+			callCopy();
+		});
+	});
+};
+
+export = loadColladaSceneBuffers;

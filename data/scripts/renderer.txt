@@ -162,6 +162,10 @@ let addObjects = func(scene) {
 
 
 	scene.readColladaScene("collada/cube.dae");
+	let colladaScene = require("scene/colladaScene.txt");
+	colladaScene(device, scene, func() {
+		print("oxoxox");
+	});
 };
 
 scene(device, addObjects, func(data) {

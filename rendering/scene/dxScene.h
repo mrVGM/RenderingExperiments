@@ -18,6 +18,7 @@ namespace rendering::scene
 		void ConstructInstanceBuffersData();
 
 		bool ReadColladaScene(const std::string& colladaFile, std::string& errorMessage);
+		bool UpdateColladaBuffers(std::string& errorMessage);
 	public:
 		~DXScene();
 	};
