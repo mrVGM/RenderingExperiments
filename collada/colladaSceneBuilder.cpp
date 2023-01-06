@@ -75,10 +75,78 @@ namespace
 		return *found.begin();
 	}
 
-	bool ReadMaterialTriangles(const ColladaNode* triangles, const ColladaNode* geometry, Object& object);
+	bool ReadMaterialTriangles(const ColladaNode* triangles, const ColladaNode* geometryNode, Geometry& geometry);
 
-	bool ReadObjectFromNode(const ColladaNode* node, const ColladaNode* rootDataNode, Object& object)
+	bool ReadGeometry(const std::string& id, const ColladaNode* geometry, Scene& scene)
 	{
+		if (scene.m_geometries.find(id) != scene.m_geometries.end()) {
+			return true;
+		}
+
+		scene.m_geometries.insert(std::pair<std::string, Geometry>(id, Geometry()));
+		Geometry& object = scene.m_geometries[id];
+
+		std::list<const ColladaNode*> trianglesTags;
+		FindChildTagsByName("triangles", geometry, trianglesTags);
+
+		int firstFreeIndex = 0;
+		for (std::list<const ColladaNode*>::const_iterator it = trianglesTags.begin();
+			it != trianglesTags.end(); ++it) {
+			const ColladaNode* trianglesTag = *it;
+
+			const std::string& materialName = trianglesTag->m_tagProps.find("material")->second;
+
+			if (!ReadMaterialTriangles(trianglesTag, geometry, object)) {
+				return false;
+			}
+
+			MaterialIndexRange mir;
+			mir.m_name = materialName;
+			mir.indexOffset = firstFreeIndex;
+			mir.indexCount = object.m_indices.size() - firstFreeIndex;
+			object.m_materials.push_back(mir);
+
+			firstFreeIndex = object.m_indices.size();
+		}
+
+		return true;
+	}
+
+	bool ReadObjectAndGeometryFromNode(const ColladaNode* node, const ColladaNode* rootDataNode, Scene& scene)
+	{
+		std::list<const ColladaNode*> matrixContainer;
+		FindChildNodes(node, [](const ColladaNode* x) {
+			if (x->m_tagName != "matrix") {
+				return false;
+			}
+			std::map<std::string, std::string>::const_iterator it = x->m_tagProps.find("sid");
+
+			if (it == x->m_tagProps.end()) {
+				return false;
+			}
+
+			if (it->second != "transform") {
+				return false;
+			}
+
+			return true;
+		}, matrixContainer);
+
+		if (matrixContainer.size() == 0) {
+			return false;
+		}
+		const ColladaNode* matrix = *matrixContainer.begin();
+		const std::string& objectName = node->m_tagProps.find("id")->second;
+
+		scene.m_objects.insert(std::pair<std::string, Object>(objectName, Object()));
+		Object& obj = scene.m_objects[objectName];
+
+		int index = 0;
+		for (std::list<scripting::ISymbol*>::const_iterator it = matrix->m_data.begin();
+			it != matrix->m_data.end(); ++it) {
+			obj.m_transform[index++] = (*it)->m_symbolData.m_number;
+		}
+
 		const ColladaNode* instanceGeometry = FindChildTagByName("instance_geometry", node);
 		if (!instanceGeometry) {
 			return false;
@@ -96,32 +164,15 @@ namespace
 			geometryURL = urlProp->second.substr(1);
 		}
 
+		obj.m_geometry = geometryURL;
+
 		const ColladaNode* geometry = FindChildTagByID(geometryURL, rootDataNode);
 		if (!geometry) {
 			return false;
 		}
 
-		std::list<const ColladaNode*> trianglesTags;
-		FindChildTagsByName("triangles", geometry, trianglesTags);
-
-		int firstFreeIndex = 0;
-		for (std::list<const ColladaNode*>::const_iterator it = trianglesTags.begin();
-			it != trianglesTags.end(); ++it) {
-			const ColladaNode* trianglesTag = *it;
-
-			const std::string& materialName = trianglesTag->m_tagProps.find("material")->second;
-
-			if (!ReadMaterialTriangles(trianglesTag, geometry, object)) {
-				return false;
-			}
-			
-			MaterialIndexRange mir;
-			mir.m_name = materialName;
-			mir.indexOffset = firstFreeIndex;
-			mir.indexCount = object.m_indices.size() - firstFreeIndex;
-			object.m_materials.push_back(mir);
-
-			firstFreeIndex = object.m_indices.size();
+		if (!ReadGeometry(geometryURL, geometry, scene)) {
+			return false;
 		}
 
 		return true;
@@ -247,11 +298,11 @@ namespace
 		return true;
 	}
 
-	int FindVertexIndex(const Vertex& vertex, const Object& object)
+	int FindVertexIndex(const Vertex& vertex, const Geometry& geometry)
 	{
 		int index = 0;
-		for (std::list<Vertex>::const_iterator it = object.m_vertices.begin();
-			it != object.m_vertices.end(); ++it) {
+		for (std::list<Vertex>::const_iterator it = geometry.m_vertices.begin();
+			it != geometry.m_vertices.end(); ++it) {
 			if (vertex.Equals(*it)) {
 				return index;
 			}
@@ -261,7 +312,7 @@ namespace
 		return -1;
 	}
 
-	bool ReadMaterialTriangles(const ColladaNode* triangles, const ColladaNode* geometry, Object& object)
+	bool ReadMaterialTriangles(const ColladaNode* triangles, const ColladaNode* geometryNode, Geometry& geometry)
 	{
 		std::list<const ColladaNode*> inputs;
 		FindChildTagsByName("input", triangles, inputs);
@@ -287,7 +338,7 @@ namespace
 			if (semantic == "VERTEX") {
 				ss >> vertexOffset;
 
-				const ColladaNode* vert = FindChildTagByID(source.substr(1), geometry);
+				const ColladaNode* vert = FindChildTagByID(source.substr(1), geometryNode);
 				if (!vert || vert->m_tagName != "vertices") {
 					return false;
 				}
@@ -316,7 +367,7 @@ namespace
 				std::map<std::string, std::string>::const_iterator sourceUrlIt = input->m_tagProps.find("source");
 				const std::string& sourceUrl = sourceUrlIt->second;
 
-				const ColladaNode* vertsSource = FindChildTagByID(sourceUrl.substr(1), geometry);
+				const ColladaNode* vertsSource = FindChildTagByID(sourceUrl.substr(1), geometryNode);
 
 				if (!ReadVectors3D(vertsSource, vertices)) {
 					return false;
@@ -326,7 +377,7 @@ namespace
 			if (semantic == "NORMAL") {
 				ss >> normalOffset;
 
-				const ColladaNode* norm = FindChildTagByID(source.substr(1), geometry);
+				const ColladaNode* norm = FindChildTagByID(source.substr(1), geometryNode);
 				if (!norm || norm->m_tagName != "source") {
 					return false;
 				}
@@ -339,7 +390,7 @@ namespace
 			if (semantic == "TEXCOORD") {
 				ss >> uvOffset;
 
-				const ColladaNode* uvNode = FindChildTagByID(source.substr(1), geometry);
+				const ColladaNode* uvNode = FindChildTagByID(source.substr(1), geometryNode);
 				if (!uvNode || uvNode->m_tagName != "source") {
 					return false;
 				}
@@ -393,12 +444,12 @@ namespace
 			vertRead = 0;
 
 			for (int j = 0; j < 3; ++j) {
-				int vertIndex = FindVertexIndex(triangle[j], object);
+				int vertIndex = FindVertexIndex(triangle[j], geometry);
 				if (vertIndex < 0) {
-					vertIndex = object.m_vertices.size();
-					object.m_vertices.push_back(triangle[j]);
+					vertIndex = geometry.m_vertices.size();
+					geometry.m_vertices.push_back(triangle[j]);
 				}
-				object.m_indices.push_back(vertIndex);
+				geometry.m_indices.push_back(vertIndex);
 			}
 		}
 
@@ -450,9 +501,7 @@ bool collada::ConvertToScene(const std::list<collada::ColladaNode*>& nodes, coll
 
 	for (std::list<const ColladaNode*>::const_iterator it = objectNodes.begin();
 		it != objectNodes.end(); ++it) {
-		scene.m_objects.push_back(Object());
-		Object& obj = scene.m_objects.back();
-		if (!ReadObjectFromNode(*it, dataContainerTag, obj)) {
+		if (!ReadObjectAndGeometryFromNode(*it, dataContainerTag, scene)) {
 			return false;
 		}
 	}

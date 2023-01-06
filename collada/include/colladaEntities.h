@@ -22,15 +22,22 @@ namespace collada
 		int indexCount = -1;
 	};
 
-	struct Object
+	struct Geometry
 	{
 		std::list<Vertex> m_vertices;
 		std::list<int> m_indices;
 		std::list<MaterialIndexRange> m_materials;
 	};
 
+	struct Object
+	{
+		float m_transform[16];
+		std::string m_geometry;
+	};
+
 	struct Scene
 	{
-		std::list<Object> m_objects;
+		std::map<std::string, Geometry> m_geometries;
+		std::map<std::string, Object> m_objects;
 	};
 }
