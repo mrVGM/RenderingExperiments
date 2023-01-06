@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "dxBuffer.h"
 #include "api.h"
+#include "utils.h"
 
 #include <list>
 
@@ -253,6 +254,149 @@ return Value();
 		if (!res) {
 			THROW_EXCEPTION(error)
 		}
+
+		for (std::map<std::string, collada::Geometry>::const_iterator it = self->m_colladaScene.m_geometries.begin();
+			it != self->m_colladaScene.m_geometries.end(); ++it) {
+			self->m_colladaGeometryBuffers.insert(
+				std::pair<std::string, ColladaGeometryBuffers>(it->first, ColladaGeometryBuffers()));
+		}
+
+		for (std::map<std::string, collada::InstanceBuffer>::const_iterator it = self->m_colladaScene.m_instanceBuffers.begin();
+			it != self->m_colladaScene.m_instanceBuffers.end(); ++it) {
+			self->m_colladaInstanceBuffers.insert(
+				std::pair<std::string, ID3D12Resource*>(it->first, nullptr));
+		}
+
+		return Value();
+	});
+
+	Value& getColladaBufferInfo = GetOrCreateProperty(nativeObject, "getColladaBufferInfo");
+	getColladaBufferInfo = CreateNativeMethod(nativeObject, 0, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value res = interpreter::utils::GetEmptyObject();
+		std::list<Value> geometries;
+		std::list<Value> instanceBuffers;
+
+		for (std::map<std::string, collada::Geometry>::const_iterator it = self->m_colladaScene.m_geometries.begin();
+			it != self->m_colladaScene.m_geometries.end(); ++it) {
+			Value geo = interpreter::utils::GetEmptyObject();
+			IManagedValue* geoObj = geo.GetManagedValue();
+
+			geoObj->SetProperty("name", Value(it->first));
+			geoObj->SetProperty("indexSize", Value(it->second.m_indices.size() * sizeof(int)));
+			geoObj->SetProperty("vertexSize", Value(it->second.m_vertices.size()));
+			geoObj->SetProperty("vertexStride", Value(sizeof(collada::Vertex)));
+
+			geometries.push_back(geo);
+		}
+
+		for (std::map<std::string, collada::InstanceBuffer>::const_iterator it = self->m_colladaScene.m_instanceBuffers.begin();
+			it != self->m_colladaScene.m_instanceBuffers.end(); ++it) {
+			Value ib = interpreter::utils::GetEmptyObject();
+			IManagedValue* ibObj = ib.GetManagedValue();
+
+			ibObj->SetProperty("name", Value(it->first));
+			ibObj->SetProperty("size", Value(it->second.m_data.size() * 16 * sizeof(int)));
+			ibObj->SetProperty("stride", Value(16 * sizeof(int)));
+
+			instanceBuffers.push_back(ib);
+		}
+
+		IManagedValue* resObj = res.GetManagedValue();
+
+		resObj->SetProperty("geometries", Value::FromList(geometries));
+		resObj->SetProperty("instanceBuffers", Value::FromList(instanceBuffers));
+
+		return res;
+	});
+
+	Value& setColladaGeometryVertexBuffer = GetOrCreateProperty(nativeObject, "setColladaGeometryVertexBuffer");
+	setColladaGeometryVertexBuffer = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value nameValue = scope.GetProperty("param0");
+		if (nameValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply geometry name!")
+		}
+
+		Value bufferValue = scope.GetProperty("param1");
+		DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+
+		if (!buffer) {
+			THROW_EXCEPTION("Please supply vertex buffer!")
+		}
+
+		std::map<std::string, ColladaGeometryBuffers>::iterator it =
+			self->m_colladaGeometryBuffers.find(nameValue.GetString());
+
+		if (it == self->m_colladaGeometryBuffers.end()) {
+			THROW_EXCEPTION("Invalid Geometry Name!")
+		}
+		ColladaGeometryBuffers& cgb = it->second;
+
+		cgb.m_vertexBuffer = buffer->GetBuffer();
+
+		return Value();
+	});
+
+	Value& setColladaGeometryIndexBuffer = GetOrCreateProperty(nativeObject, "setColladaGeometryIndexBuffer");
+	setColladaGeometryIndexBuffer = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value nameValue = scope.GetProperty("param0");
+		if (nameValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply geometry name!")
+		}
+
+		Value bufferValue = scope.GetProperty("param1");
+		DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+
+		if (!buffer) {
+			THROW_EXCEPTION("Please supply index buffer!")
+		}
+
+		std::map<std::string, ColladaGeometryBuffers>::iterator it =
+			self->m_colladaGeometryBuffers.find(nameValue.GetString());
+
+		if (it == self->m_colladaGeometryBuffers.end()) {
+			THROW_EXCEPTION("Invalid Geometry Name!")
+		}
+		ColladaGeometryBuffers& cgb = it->second;
+
+		cgb.m_indexBuffer = buffer->GetBuffer();
+
+		return Value();
+	});
+
+	Value& setColladaInstanceBuffer = GetOrCreateProperty(nativeObject, "setColladaInstanceBuffer");
+	setColladaInstanceBuffer = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value nameValue = scope.GetProperty("param0");
+		if (nameValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply geometry name!")
+		}
+
+		Value bufferValue = scope.GetProperty("param1");
+		DXBuffer* buffer = dynamic_cast<DXBuffer*>(NativeObject::ExtractNativeObject(bufferValue));
+
+		if (!buffer) {
+			THROW_EXCEPTION("Please supply instance buffer!")
+		}
+
+		std::map<std::string, ID3D12Resource*>::iterator it =
+			self->m_colladaInstanceBuffers.find(nameValue.GetString());
+
+		if (it == self->m_colladaInstanceBuffers.end()) {
+			THROW_EXCEPTION("Invalid Geometry Name!")
+		}
+
+		self->m_colladaInstanceBuffers[nameValue.GetString()] = buffer->GetBuffer();
 		return Value();
 	});
 

@@ -35,9 +35,15 @@ namespace collada
 		std::string m_geometry;
 	};
 
+	struct InstanceBuffer
+	{
+		std::list<float> m_data;
+	};
+
 	struct Scene
 	{
 		std::map<std::string, Geometry> m_geometries;
 		std::map<std::string, Object> m_objects;
+		std::map<std::string, InstanceBuffer> m_instanceBuffers;
 	};
 }

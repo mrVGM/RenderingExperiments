@@ -456,6 +456,22 @@ namespace
 		return true;
 	}
 
+	void ConstructInstanceBuffers(Scene& scene)
+	{
+		for (std::map<std::string, Geometry>::const_iterator it = scene.m_geometries.begin();
+			it != scene.m_geometries.end(); ++it) {
+			scene.m_instanceBuffers.insert(std::pair<std::string, InstanceBuffer>(it->first, InstanceBuffer()));
+		}
+
+		for (std::map<std::string, Object>::const_iterator it = scene.m_objects.begin();
+			it != scene.m_objects.end(); ++it) {
+			InstanceBuffer& cur = scene.m_instanceBuffers[it->second.m_geometry];
+			
+			for (int i = 0; i < 16; ++i) {
+				cur.m_data.push_back(it->second.m_transform[i]);
+			}
+		}
+	}
 }
 
 bool collada::ConvertToScene(const std::list<collada::ColladaNode*>& nodes, collada::Scene& scene)
@@ -505,6 +521,8 @@ bool collada::ConvertToScene(const std::list<collada::ColladaNode*>& nodes, coll
 			return false;
 		}
 	}
+
+	ConstructInstanceBuffers(scene);
 
 	return true;
 }

@@ -37,12 +37,20 @@ namespace rendering::scene
 		int m_objectsCount = 0;
 	};
 
+	struct ColladaGeometryBuffers
+	{
+		ID3D12Resource* m_vertexBuffer = nullptr;
+		ID3D12Resource* m_indexBuffer = nullptr;
+	};
+
 	class IScene
 	{
 	public:
 		std::map<std::string, Object3D> m_objects;
 		std::map<int, InstanceBuffer> m_instanceBuffers;
 
+		std::map<std::string, ColladaGeometryBuffers> m_colladaGeometryBuffers;
+		std::map<std::string, ID3D12Resource*> m_colladaInstanceBuffers;
 		collada::Scene m_colladaScene;
 	};
 }
