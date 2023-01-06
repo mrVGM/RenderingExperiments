@@ -33,6 +33,7 @@ namespace collada
 	{
 		float m_transform[16];
 		std::string m_geometry;
+		void InvertAxis();
 	};
 
 	struct InstanceBuffer

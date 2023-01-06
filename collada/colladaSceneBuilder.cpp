@@ -112,6 +112,26 @@ namespace
 		return true;
 	}
 
+	bool ShouldInvertAxis(const ColladaNode* rootDataNode)
+	{
+		const ColladaNode* upAxis = FindChildTagByName("up_axis", rootDataNode);
+
+		if (!upAxis) {
+			return false;
+		}
+
+		if (upAxis->m_data.size() != 1) {
+			return false;
+		}
+
+		const scripting::ISymbol* s = *upAxis->m_data.begin();
+		if (s->m_name == "Name" && s->m_symbolData.m_string == "Z_UP") {
+			return true;
+		}
+
+		return false;
+	}
+
 	bool ReadObjectAndGeometryFromNode(const ColladaNode* node, const ColladaNode* rootDataNode, Scene& scene)
 	{
 		std::list<const ColladaNode*> matrixContainer;
@@ -141,10 +161,16 @@ namespace
 		scene.m_objects.insert(std::pair<std::string, Object>(objectName, Object()));
 		Object& obj = scene.m_objects[objectName];
 
+
 		int index = 0;
 		for (std::list<scripting::ISymbol*>::const_iterator it = matrix->m_data.begin();
 			it != matrix->m_data.end(); ++it) {
 			obj.m_transform[index++] = (*it)->m_symbolData.m_number;
+		}
+
+		bool invertAxis = ShouldInvertAxis(rootDataNode);
+		if (invertAxis) {
+			obj.InvertAxis();
 		}
 
 		const ColladaNode* instanceGeometry = FindChildTagByName("instance_geometry", node);
@@ -549,4 +575,23 @@ bool collada::Vertex::Equals(const Vertex& other) const
 	}
 
 	return true;
+}
+
+void collada::Object::InvertAxis()
+{
+	float tmp[4];
+	tmp[0] = m_transform[4];
+	tmp[1] = m_transform[5];
+	tmp[2] = m_transform[6];
+	tmp[3] = m_transform[7];
+
+	m_transform[4] = m_transform[8];
+	m_transform[5] = m_transform[9];
+	m_transform[6] = m_transform[10];
+	m_transform[7] = m_transform[11];
+
+	m_transform[8] = tmp[0];
+	m_transform[9] = tmp[1];
+	m_transform[10] = tmp[2]; 
+	m_transform[11] = tmp[3];
 }
