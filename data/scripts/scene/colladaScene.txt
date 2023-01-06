@@ -7,12 +7,36 @@ let scene = {};
 let loadColladaSceneBuffers = func(device, scene, onReady) {
 	let buffersInfo = scene.getColladaBufferInfo();
 
+	let instanceBuffersToCreate = buffersInfo.instanceBuffers.length;
 	let uploadBuffersToCreate = 2 * buffersInfo.geometries.length;
 	let buffersToCreate = 2 * buffersInfo.geometries.length;
 
 	let geoBuffers = [];
+	let instanceBuffers = [];
 
 	let buffersProcessed = 0;
+	let copied = 0;
+
+	let callReady = func() {
+		if (copied == 0 || instanceBuffersToCreate > 0) {
+			return;
+		}
+
+		let toCache = [];
+
+		utils.foreach(geoBuffers, func(x) {
+			toCache.push(x.buffer);
+			toCache.push(x.iBuffer);
+		});
+
+		utils.foreach(instanceBuffers, func(x) {
+			toCache.push(x);
+		});
+
+		scene.setColladaBuffersCache(toCache);
+		onReady();
+	};
+
 	let callCopy = func() {
 		if (buffersProcessed == 0 || buffersToCreate > 0) {
 			return;
@@ -20,32 +44,25 @@ let loadColladaSceneBuffers = func(device, scene, onReady) {
 
 		let copiesLeft = 2 * geoBuffers.length;
 
-		let callReady = func() {
+		let callCopied = func() {
 			if (copiesLeft > 0) {
 				return;
 			}
-			let toCache = [];
-
-			utils.foreach(geoBuffers, func(x) {
-				toCache.push(x.buffer);
-				toCache.push(x.iBuffer);
-			});
-
-			scene.setColladaBuffersCache(toCache);
-			onReady();
+			copied = 1;
+			callReady();
 		};
 
 		utils.foreach(geoBuffers, func(x) {
 			resources.copyBuffers(device, x.buffer, x.uploadBuffer, func() {
 				scene.setColladaGeometryVertexBuffer(x.name, x.buffer);
 				copiesLeft = copiesLeft - 1;
-				callReady();
+				callCopied();
 			});
 
 			resources.copyBuffers(device, x.iBuffer, x.uploadIBuffer, func() {
 				scene.setColladaGeometryIndexBuffer(x.name, x.buffer);
 				copiesLeft = copiesLeft - 1;
-				callReady();
+				callCopied();
 			});
 		});
 	};
@@ -114,6 +131,20 @@ let loadColladaSceneBuffers = func(device, scene, onReady) {
 			buffersToCreate = buffersToCreate - 1;
 
 			callCopy();
+		});
+	});
+
+	utils.foreach(buffersInfo.instanceBuffers, func(x) {
+		let bb = resources.bufferBuilder();
+		bb.upload(1);
+		bb.setSize(x.size);
+		bb.setStride(x.stride);
+
+		bb.build(device, func(buff) {
+			instanceBuffers.push(buff);
+			scene.setColladaInstanceBuffer(x.name, buff);
+			instanceBuffersToCreate = instanceBuffersToCreate - 1;
+			callReady();
 		});
 	});
 };
