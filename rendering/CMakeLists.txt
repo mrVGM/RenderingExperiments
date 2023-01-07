@@ -115,7 +115,7 @@ add_library (Rendering
 	"materials/dxSkyMat.cpp"
 	"renderstage/dxSkyPass.h"
 	"renderstage/dxSkyPass.cpp"
-)
+ "renderstage/dxRenderPass.h" "renderstage/dxRenderPass.cpp")
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -51,10 +51,15 @@ renderer.setFence(fence);
 
 let clearRT = api.renderer.clearRT();
 let clearDS = api.renderer.clearDS();
-let unlitPass = api.renderer.unlitPass();
-let cloudPass = api.renderer.cloudPass();
-let canvasPass = api.renderer.canvasPass();
-let skyPass = api.renderer.skyPass();
+let unlitPass = api.renderer.renderPass();
+let cloudPass = api.renderer.renderPass();
+let canvasPass = api.renderer.renderPass();
+let skyPass = api.renderer.renderPass();
+
+unlitPass.setType("Unlit");
+cloudPass.setType("Cloud");
+canvasPass.setType("Canvas");
+skyPass.setType("Sky");
 
 renderer.addRenderStage(clearRT);
 renderer.addRenderStage(skyPass);

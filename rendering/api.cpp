@@ -60,11 +60,8 @@
 #include "materials/dxCanvasMat.h"
 #include "materials/dxSkyMat.h"
 
-#include "renderstage/dxUnlitPass.h"
 #include "renderstage/dxClearDSRS.h"
-#include "renderstage/dxCloudPass.h"
-#include "renderstage/dxCanvasPass.h"
-#include "renderstage/dxSkyPass.h"
+#include "renderstage/dxRenderPass.h"
 
 #include "compute/dxNoiseTexture.h"
 
@@ -327,29 +324,14 @@ namespace rendering
 			return NativeObject::Create(clearRT);
 		}));
 
-		renderer.SetProperty("unlitPass", CreateNativeFunc(0, [](Value scope) {
-			renderstage::DXUnlitPass* unlitPass = new renderstage::DXUnlitPass();
-			return NativeObject::Create(unlitPass);
-		}));
-
 		renderer.SetProperty("clearDS", CreateNativeFunc(0, [](Value scope) {
 			renderstage::DXClearDSRS* clearDS = new renderstage::DXClearDSRS();
 			return NativeObject::Create(clearDS);
 		}));
 
-		renderer.SetProperty("cloudPass", CreateNativeFunc(0, [](Value scope) {
-			renderstage::DXCloudPass* cloudPass = new renderstage::DXCloudPass();
-			return NativeObject::Create(cloudPass);
-		}));
-
-		renderer.SetProperty("canvasPass", CreateNativeFunc(0, [](Value scope) {
-			renderstage::DXCanvasPass* canvasPass = new renderstage::DXCanvasPass();
-			return NativeObject::Create(canvasPass);
-		}));
-
-		renderer.SetProperty("skyPass", CreateNativeFunc(0, [](Value scope) {
-			renderstage::DXSkyPass* skyPass = new renderstage::DXSkyPass();
-			return NativeObject::Create(skyPass);
+		renderer.SetProperty("renderPass", CreateNativeFunc(0, [](Value scope) {
+			renderstage::DXRenderPass* renderPass = new renderstage::DXRenderPass();
+			return NativeObject::Create(renderPass);
 		}));
 #pragma endregion
 
