@@ -4,6 +4,7 @@
 #include <functional>
 #include <sstream>
 #include <vector>
+#include <DirectXMath.h>
 
 namespace
 {
@@ -172,6 +173,7 @@ namespace
 		if (invertAxis) {
 			obj.InvertAxis();
 		}
+		obj.CalcPositionRotationScale();
 
 		const ColladaNode* instanceGeometry = FindChildTagByName("instance_geometry", node);
 		if (!instanceGeometry) {
@@ -493,10 +495,21 @@ namespace
 			it != scene.m_objects.end(); ++it) {
 			InstanceBuffer& cur = scene.m_instanceBuffers[it->second.m_geometry];
 			
-			for (int i = 0; i < 16; ++i) {
-				cur.m_data.push_back(it->second.m_transform[i]);
-			}
+			cur.m_data.push_back(it->second.m_instanceData);
 		}
+	}
+
+	float clamp(float x, float minValue, float maxValue)
+	{
+		if (x < minValue) {
+			x = minValue;
+		}
+
+		if (x > maxValue) {
+			x = maxValue;
+		}
+
+		return x;
 	}
 }
 
@@ -594,4 +607,68 @@ void collada::Object::InvertAxis()
 	m_transform[9] = tmp[1];
 	m_transform[10] = tmp[2]; 
 	m_transform[11] = tmp[3];
+}
+
+void collada::Object::CalcPositionRotationScale()
+{
+	using namespace DirectX;
+
+	XMVECTOR X = XMVectorSet(m_transform[0], m_transform[4], m_transform[8], m_transform[12]);
+	XMVECTOR Y = XMVectorSet(m_transform[1], m_transform[5], m_transform[9], m_transform[13]);
+	XMVECTOR Z = XMVectorSet(m_transform[2], m_transform[6], m_transform[10], m_transform[14]);
+	XMVECTOR Offset = XMVectorSet(m_transform[3], m_transform[7], m_transform[11], m_transform[15]);
+
+	m_instanceData.m_position[0] = XMVectorGetX(Offset);
+	m_instanceData.m_position[1] = XMVectorGetY(Offset);
+	m_instanceData.m_position[2] = XMVectorGetZ(Offset);
+
+	m_instanceData.m_scale[0] = XMVectorGetX(XMVector3Length(X));
+	m_instanceData.m_scale[1] = XMVectorGetX(XMVector3Length(Y));
+	m_instanceData.m_scale[2] = XMVectorGetX(XMVector3Length(Z));
+
+	XMVECTOR cross = XMVector3Cross(X, Y);
+	if (XMVectorGetX(XMVector3Dot(cross, Z)) > 0) {
+		m_instanceData.m_scale[0] *= -1;
+		X *= -1;
+	}
+
+	X /= m_instanceData.m_scale[0];
+	Y /= m_instanceData.m_scale[1];
+	Z /= m_instanceData.m_scale[2];
+
+	XMVECTOR X0 = XMVectorSet(1, 0, 0, 0);
+	XMVECTOR Y0 = XMVectorSet(0, 0, 1, 0);
+	XMVECTOR Z0 = XMVectorSet(0, 1, 0, 0);
+
+	XMVECTOR pole = XMVector3Cross(X0, X);
+	pole = XMVector3Normalize(pole);
+
+	if (XMVectorGetX(XMVector3Dot(pole, pole)) < 1) {
+		pole = Y0;
+	}
+
+	float cosXAngle = XMVectorGetX(XMVector3Dot(X0, X));
+	float xAngle = acos(clamp(cosXAngle, -1, 1));
+
+	XMVECTOR q1 = -sin(xAngle / 2) * pole;
+	q1 = XMVectorSetW(q1, cos(xAngle / 2));
+
+	XMVECTOR Y1 = XMQuaternionMultiply(XMQuaternionMultiply(q1, Y0), XMQuaternionConjugate(q1));
+	
+	float cosYAngle = XMVectorGetX(XMVector3Dot(Y1, Y));
+	float yAngle = acos(clamp(cosYAngle, -1, 1));
+	pole = XMVector3Cross(Y1, Y);
+	pole = XMVector3Normalize(pole);
+
+	if (XMVectorGetX(XMVector3Dot(pole, X)) < 0) {
+		pole *= -1;
+	}
+	XMVECTOR q2 = -sin(yAngle / 2) * pole;
+	q2 = XMVectorSetW(q2, cos(yAngle / 2));
+
+	XMVECTOR q = XMQuaternionMultiply(q2, q1);
+	m_instanceData.m_rotation[0] = XMVectorGetW(q);
+	m_instanceData.m_rotation[1] = XMVectorGetX(q);
+	m_instanceData.m_rotation[2] = XMVectorGetY(q);
+	m_instanceData.m_rotation[3] = XMVectorGetZ(q);
 }

@@ -29,16 +29,26 @@ namespace collada
 		std::list<MaterialIndexRange> m_materials;
 	};
 
+	struct GeometryInstanceData
+	{
+		float m_position[3];
+		float m_rotation[4];
+		float m_scale[3];
+	};
+
 	struct Object
 	{
 		float m_transform[16];
+		GeometryInstanceData m_instanceData;
+
 		std::string m_geometry;
 		void InvertAxis();
+		void CalcPositionRotationScale();
 	};
 
 	struct InstanceBuffer
 	{
-		std::list<float> m_data;
+		std::list<GeometryInstanceData> m_data;
 	};
 
 	struct Scene

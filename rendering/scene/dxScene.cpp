@@ -299,8 +299,8 @@ return Value();
 			Value ib = interpreter::utils::GetEmptyObject();
 			
 			ib.SetProperty("name", Value(it->first));
-			ib.SetProperty("size", Value(it->second.m_data.size() * 16 * sizeof(int)));
-			ib.SetProperty("stride", Value(16 * sizeof(int)));
+			ib.SetProperty("size", Value(it->second.m_data.size() * sizeof(collada::GeometryInstanceData)));
+			ib.SetProperty("stride", Value(sizeof(collada::GeometryInstanceData)));
 
 			instanceBuffers.push_back(ib);
 		}
