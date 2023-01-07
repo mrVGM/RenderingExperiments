@@ -94,14 +94,10 @@ add_library (Rendering
 	"scene/IScene.h"
 	"scene/IMeshRepo.h"
 	"materials/IMaterialRepo.h"
-	"renderstage/dxUnlitPass.h"
-	"renderstage/dxUnlitPass.cpp"
 	"renderstage/dxClearDSRS.h"
 	"renderstage/dxClearDSRS.cpp"
 	"materials/dxCloudMat.h"
-	"materials/dxCloudMat.cpp"
-	"renderstage/dxCloudPass.h"
-	"renderstage/dxCloudPass.cpp"
+	"materials/dxCloudMat.cpp"	
 	"compute/dxNoiseTexture.h"
 	"compute/dxNoiseTexture.cpp"
 	"helper/iUpdater.h"
@@ -109,13 +105,11 @@ add_library (Rendering
 	"helper/dxUpdater.cpp"
 	"materials/dxCanvasMat.h"
 	"materials/dxCanvasMat.cpp"
-	"renderstage/dxCanvasPass.h"
-	"renderstage/dxCanvasPass.cpp"
 	"materials/dxSkyMat.h"
 	"materials/dxSkyMat.cpp"
-	"renderstage/dxSkyPass.h"
-	"renderstage/dxSkyPass.cpp"
- "renderstage/dxRenderPass.h" "renderstage/dxRenderPass.cpp")
+	"renderstage/dxRenderPass.h"
+	"renderstage/dxRenderPass.cpp"
+)
 
 target_include_directories(Rendering INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(Rendering PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
