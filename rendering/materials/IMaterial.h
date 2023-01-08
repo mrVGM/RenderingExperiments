@@ -30,6 +30,9 @@ namespace rendering::material
 		int m_instanceBufferSize = -1;
 		int m_instanceBufferStride = -1;
 		int m_indexBufferSize = -1;
+
+		int m_startInstanceLocation = -1;
+		int m_startIndexLocation = -1;
 	};
 
 	class IMaterial

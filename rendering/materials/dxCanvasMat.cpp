@@ -163,15 +163,25 @@ bool rendering::material::DXCanvasMat::Render(
     m_commandList->IASetVertexBuffers(0, 2, vertexBufferViews);
     m_commandList->IASetIndexBuffer(&indexBufferView);
 
-    int numIndices = drawSettings.m_indexBufferSize / 4;
+    int numIndices = drawSettings.m_indexBufferSize / sizeof(int);
 
     int numInstances = drawSettings.m_instanceBufferSize / drawSettings.m_instanceBufferStride;
 
-    // TODO: Check why instance count 2 doesn't work?
-    for (int i = 0; i < numInstances; ++i) {
-        m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
+    if (drawSettings.m_startIndexLocation < 0) {
+        // TODO: Check why instance count 2 doesn't work?
+        for (int i = 0; i < numInstances; ++i) {
+            m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
+        }
     }
-
+    else {
+        m_commandList->DrawIndexedInstanced(
+            numIndices,
+            1,
+            drawSettings.m_startIndexLocation,
+            0,
+            drawSettings.m_startInstanceLocation
+        );
+    }
 
     THROW_ERROR(
         m_commandList->Close(),

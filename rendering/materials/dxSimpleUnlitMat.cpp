@@ -144,9 +144,20 @@ bool rendering::material::DXSimpleUnlitMatCL::Render(
 
     int numInstances = drawSettings.m_instanceBufferSize / drawSettings.m_instanceBufferStride;
 
-    // TODO: Check why instance count 2 doesn't work?
-    for (int i = 0; i < numInstances; ++i) {
-        m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
+    if (drawSettings.m_startIndexLocation < 0) {
+        // TODO: Check why instance count 2 doesn't work?
+        for (int i = 0; i < numInstances; ++i) {
+            m_commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, i);
+        }
+    }
+    else {
+        m_commandList->DrawIndexedInstanced(
+            numIndices,
+            1,
+            drawSettings.m_startIndexLocation,
+            0,
+            drawSettings.m_startInstanceLocation
+        );
     }
 
 

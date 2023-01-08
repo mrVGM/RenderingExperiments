@@ -217,6 +217,7 @@ bool rendering::renderstage::DXRenderPass::RenderMaterials(rendering::DXRenderer
         it != scene->m_colladaScene.m_objects.end(); ++it) {
         const collada::Object& curObject = it->second;
         collada::Geometry& curGeometry = scene->m_colladaScene.m_geometries[curObject.m_geometry];
+        int curInstanceObject = scene->m_colladaScene.m_objectInstanceMap[it->first];
 
         std::list<std::string>::const_iterator materialIt =
             curObject.m_materialOverrides.begin();
@@ -225,8 +226,11 @@ bool rendering::renderstage::DXRenderPass::RenderMaterials(rendering::DXRenderer
 
         while (materialIt != curObject.m_materialOverrides.end() &&
             materialRangeIt != curGeometry.m_materials.end()) {
-
             std::map<std::string, material::IMaterial*>::const_iterator curMat = materialRepo->m_materials.find(*materialIt);
+            const collada::MaterialIndexRange& curRange = *materialRangeIt;
+            ++materialRangeIt;
+            ++materialIt;
+
             if (curMat == materialRepo->m_materials.end()) {
                 continue;
             }
@@ -250,10 +254,10 @@ bool rendering::renderstage::DXRenderPass::RenderMaterials(rendering::DXRenderer
             ds.m_instanceBufferStride = sizeof(collada::GeometryInstanceData);
 
             ds.m_indexBuffer = buffers.m_indexBuffer;
-            ds.m_indexBufferSize = curGeometry.m_indices.size() * sizeof(int);
+            ds.m_indexBufferSize = curRange.indexCount * sizeof(int);
 
-            ++materialRangeIt;
-            ++materialIt;
+            ds.m_startIndexLocation = curRange.indexOffset;
+            ds.m_startInstanceLocation = curInstanceObject;
 
             bool res = curMat->second->Render(
                 &renderer,
