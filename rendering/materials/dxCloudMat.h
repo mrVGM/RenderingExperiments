@@ -33,16 +33,7 @@ namespace rendering::material
 		MaterialType GetMaterialType() const override;
 		bool Render(
 			rendering::DXRenderer* renderer,
-			ID3D12Resource* vertexBuffer,
-			int vertexBufferSize,
-			int vertexBufferStride,
-
-			ID3D12Resource* instanceBuffer,
-			int instanceBufferSize,
-			int instanceBufferStride,
-
-			ID3D12Resource* indexBuffer,
-			int indexBufferSize,
+			const DrawSettings& drawSettings,
 			std::string& errorMessage) override;
 
 		bool Init(DXRenderer& renderer, std::string& errorMessage) override;

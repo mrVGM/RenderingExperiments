@@ -19,6 +19,19 @@ namespace rendering::material
 		Canvas,
 	};
 
+	struct DrawSettings
+	{
+		ID3D12Resource* m_vertexBuffer = nullptr;
+		ID3D12Resource* m_instanceBuffer = nullptr;
+		ID3D12Resource* m_indexBuffer = nullptr;
+
+		int m_vertexBufferSize = -1;
+		int m_vertexBufferStride = -1;
+		int m_instanceBufferSize = -1;
+		int m_instanceBufferStride = -1;
+		int m_indexBufferSize = -1;
+	};
+
 	class IMaterial
 	{
 	public:
@@ -26,17 +39,7 @@ namespace rendering::material
 		virtual bool Init(DXRenderer& renderer, std::string& errorMessage) = 0;
 		virtual bool Render(
 			rendering::DXRenderer* renderer,
-
-			ID3D12Resource* vertexBuffer,
-			int vertexBufferSize,
-			int vertexBufferStride,
-
-			ID3D12Resource* instanceBuffer,
-			int instanceBufferSize,
-			int instanceBufferStride,
-
-			ID3D12Resource* indexBuffer,
-			int indexBufferSize,
+			const DrawSettings& drawSettings,
 			std::string& errorMessage) = 0;
 	};
 }

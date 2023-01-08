@@ -89,16 +89,7 @@ rendering::material::MaterialType rendering::material::DXSimpleUnlitMatCL::GetMa
 
 bool rendering::material::DXSimpleUnlitMatCL::Render(
     rendering::DXRenderer* renderer,
-    ID3D12Resource* vertexBuffer,
-    int vertexBufferSize,
-    int vertexBufferStride,
-
-    ID3D12Resource* instanceBuffer,
-    int instanceBufferSize,
-    int instanceBufferStride,
-
-    ID3D12Resource* indexBuffer,
-    int indexBufferSize,
+    const DrawSettings& drawSettings,
     std::string& errorMessage)
 {
     if (m_curRT == nullptr || m_curRT != renderer->GetISwapChain()->GetCurrentRenderTarget()) {
@@ -130,28 +121,28 @@ bool rendering::material::DXSimpleUnlitMatCL::Render(
 
     D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2];
     D3D12_VERTEX_BUFFER_VIEW& realVertexBufferView = vertexBufferViews[0];
-    realVertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    realVertexBufferView.StrideInBytes = vertexBufferStride;
-    realVertexBufferView.SizeInBytes = vertexBufferSize;
+    realVertexBufferView.BufferLocation = drawSettings.m_vertexBuffer->GetGPUVirtualAddress();
+    realVertexBufferView.StrideInBytes = drawSettings.m_vertexBufferStride;
+    realVertexBufferView.SizeInBytes = drawSettings.m_vertexBufferSize;
 
     D3D12_VERTEX_BUFFER_VIEW& instanceBufferView = vertexBufferViews[1];
-    instanceBufferView.BufferLocation = instanceBuffer->GetGPUVirtualAddress();
-    instanceBufferView.StrideInBytes = instanceBufferStride;
-    instanceBufferView.SizeInBytes = instanceBufferSize;
+    instanceBufferView.BufferLocation = drawSettings.m_instanceBuffer->GetGPUVirtualAddress();
+    instanceBufferView.StrideInBytes = drawSettings.m_instanceBufferStride;
+    instanceBufferView.SizeInBytes = drawSettings.m_instanceBufferSize;
 
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
-    indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+    indexBufferView.BufferLocation = drawSettings.m_indexBuffer->GetGPUVirtualAddress();
     indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-    indexBufferView.SizeInBytes = indexBufferSize;
+    indexBufferView.SizeInBytes = drawSettings.m_indexBufferSize;
 
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     m_commandList->IASetVertexBuffers(0, 2, vertexBufferViews);
     m_commandList->IASetIndexBuffer(&indexBufferView);
 
-    int numIndices = indexBufferSize / 4;
+    int numIndices = drawSettings.m_indexBufferSize / 4;
 
-    int numInstances = instanceBufferSize / instanceBufferStride;
+    int numInstances = drawSettings.m_instanceBufferSize / drawSettings.m_instanceBufferStride;
 
     // TODO: Check why instance count 2 doesn't work?
     for (int i = 0; i < numInstances; ++i) {

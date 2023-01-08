@@ -189,18 +189,22 @@ bool rendering::renderstage::DXRenderPass::RenderMaterials(rendering::DXRenderer
         for (std::list<material::IMaterial*>::iterator materialIt = materials.begin(); materialIt != materials.end(); ++materialIt) {
             material::IMaterial* curMat = *materialIt;
 
+            rendering::material::DrawSettings ds;
+
+            ds.m_vertexBuffer = mesh.m_vertexBuffer;
+            ds.m_vertexBufferSize = mesh.m_vertexBufferSize;
+            ds.m_vertexBufferStride = mesh.m_vertexBufferStride;
+
+            ds.m_instanceBuffer = instanceBuffer.m_buffer;
+            ds.m_instanceBufferSize = instanceBuffer.m_size;
+            ds.m_instanceBufferStride = instanceBuffer.m_stride;
+
+            ds.m_indexBuffer = mesh.m_indexBuffer;
+            ds.m_indexBufferSize = mesh.m_indexBufferSize;
+
             bool res = curMat->Render(
                 &renderer,
-                mesh.m_vertexBuffer,
-                mesh.m_vertexBufferSize,
-                mesh.m_vertexBufferStride,
-
-                instanceBuffer.m_buffer,
-                instanceBuffer.m_size,
-                instanceBuffer.m_stride,
-
-                mesh.m_indexBuffer,
-                mesh.m_indexBufferSize,
+                ds,
                 errorMessage);
 
             if (!res) {
