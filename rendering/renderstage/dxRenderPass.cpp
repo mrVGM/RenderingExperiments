@@ -213,6 +213,58 @@ bool rendering::renderstage::DXRenderPass::RenderMaterials(rendering::DXRenderer
         }
     }
 
+    for (std::map<std::string, collada::Object>::const_iterator it = scene->m_colladaScene.m_objects.begin();
+        it != scene->m_colladaScene.m_objects.end(); ++it) {
+        const collada::Object& curObject = it->second;
+        collada::Geometry& curGeometry = scene->m_colladaScene.m_geometries[curObject.m_geometry];
+
+        std::list<std::string>::const_iterator materialIt =
+            curObject.m_materialOverrides.begin();
+        std::list<collada::MaterialIndexRange>::const_iterator materialRangeIt =
+            curGeometry.m_materials.begin();
+
+        while (materialIt != curObject.m_materialOverrides.end() &&
+            materialRangeIt != curGeometry.m_materials.end()) {
+
+            std::map<std::string, material::IMaterial*>::const_iterator curMat = materialRepo->m_materials.find(*materialIt);
+            if (curMat == materialRepo->m_materials.end()) {
+                continue;
+            }
+
+            if (curMat->second->GetMaterialType() != m_type) {
+                continue;
+            }
+
+            const scene::ColladaGeometryBuffers& buffers = scene->m_colladaGeometryBuffers[curObject.m_geometry];
+            ID3D12Resource* instanceBuffer = scene->m_colladaInstanceBuffers[curObject.m_geometry];
+            const collada::InstanceBuffer& colladaInstBuffer = scene->m_colladaScene.m_instanceBuffers[curObject.m_geometry];
+
+            rendering::material::DrawSettings ds;
+
+            ds.m_vertexBuffer = buffers.m_vertexBuffer;
+            ds.m_vertexBufferSize = curGeometry.m_vertices.size() * sizeof(collada::Vertex);
+            ds.m_vertexBufferStride = sizeof(collada::Vertex);
+
+            ds.m_instanceBuffer = instanceBuffer;
+            ds.m_instanceBufferSize = colladaInstBuffer.m_data.size() * sizeof(collada::GeometryInstanceData);
+            ds.m_instanceBufferStride = sizeof(collada::GeometryInstanceData);
+
+            ds.m_indexBuffer = buffers.m_indexBuffer;
+            ds.m_indexBufferSize = curGeometry.m_indices.size() * sizeof(int);
+
+            ++materialRangeIt;
+            ++materialIt;
+
+            bool res = curMat->second->Render(
+                &renderer,
+                ds,
+                errorMessage);
+
+            if (!res) {
+                return false;
+            }
+        }
+    }
     return true;
 
 }

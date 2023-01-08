@@ -42,6 +42,8 @@ namespace collada
 		GeometryInstanceData m_instanceData;
 
 		std::string m_geometry;
+		std::list<std::string> m_materialOverrides;
+
 		void InvertAxis();
 		void CalcPositionRotationScale();
 	};
