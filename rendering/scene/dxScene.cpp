@@ -422,6 +422,33 @@ return Value();
 		return Value();
 	});
 
+	Value& bindColladaObjectMaterial = GetOrCreateProperty(nativeObject, "bindColladaObjectMaterial");
+	bindColladaObjectMaterial = CreateNativeMethod(nativeObject, 2, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXScene* self = static_cast<DXScene*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value objectNameValue = scope.GetProperty("param0");
+		if (objectNameValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply object name!")
+		}
+
+		Value materialNameValue = scope.GetProperty("param1");
+		if (materialNameValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply material name!")
+		}
+
+		std::map<std::string, collada::Object>::iterator objectIt = self->m_colladaScene.m_objects.find(objectNameValue.GetString());
+		
+		if (objectIt == self->m_colladaScene.m_objects.end()) {
+			THROW_EXCEPTION("Please supply valid object name!")
+		}
+
+		objectIt->second.m_materialOverrides.push_back(materialNameValue.GetString());
+
+		return Value();
+	});
+
+
 #undef THROW_EXCEPTION
 }
 

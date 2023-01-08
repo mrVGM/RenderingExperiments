@@ -109,7 +109,7 @@ let skyMat = require("materials/skyMat.txt");
 
 let materialsLoaded = 0;
 let setMaterialRepo = func() {
-	if (materialsLoaded < 3) {
+	if (materialsLoaded < 4) {
 		return;
 	}
 	renderer.setMaterialRepo(materialRepo);
@@ -133,6 +133,19 @@ simpleUnlit(device, "unlit.hlsl", func(mat) {
 	mat.constantBuff.copyData(color);
 
 	materialRepo.addMaterial("default", mat);
+	materialsLoaded = materialsLoaded + 1;
+	setMaterialRepo();
+});
+
+simpleUnlit(device, "unlit.hlsl", func(mat) {
+	let color = [];
+	color.push(1);
+	color.push(0);
+	color.push(0);
+
+	mat.constantBuff.copyData(color);
+
+	materialRepo.addMaterial("red", mat);
 	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();
 });
@@ -165,11 +178,10 @@ let addObjects = func(scene) {
 	scene.setObjectPosition("cloud", math.vector3(0, 10, 0));
 	scene.setObjectScale("cloud", math.vector3(4, 1, 4));
 
-
 	scene.readColladaScene("collada/cube.dae");
 	let colladaScene = require("scene/colladaScene.txt");
 	colladaScene(device, scene, func() {
-		print("oxoxox");
+		scene.bindColladaObjectMaterial("Cube", "red");
 	});
 };
 
