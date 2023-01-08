@@ -66,6 +66,10 @@ namespace
 			cur.m_buffer->Unmap(0, nullptr);
 		}
 
+		if (!scene->UpdateColladaSceneInstanceBuffers(errorMessage)) {
+			return false;
+		}
+
 		return true;
 	}
 }

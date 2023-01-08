@@ -565,6 +565,34 @@ rendering::scene::DXScene::~DXScene()
 }
 
 
+bool rendering::scene::IScene::UpdateColladaSceneInstanceBuffers(std::string& errorMessage)
+{
+	for (std::map<std::string, collada::InstanceBuffer>::const_iterator it = m_colladaScene.m_instanceBuffers.begin();
+		it != m_colladaScene.m_instanceBuffers.end(); ++it) {
+		ID3D12Resource* cur = m_colladaInstanceBuffers[it->first];
+		const collada::InstanceBuffer& curInstanceBuffer = it->second;
+
+		CD3DX12_RANGE readRange(0, 0);
+
+		void* dst = nullptr;
+
+		THROW_ERROR(
+			cur->Map(0, &readRange, &dst),
+			"Can't map Vertex Buffer!")
+
+		collada::GeometryInstanceData* ibArr = static_cast<collada::GeometryInstanceData*>(dst);
+		for (std::list<collada::GeometryInstanceData>::const_iterator geoIt = curInstanceBuffer.m_data.begin();
+			geoIt != curInstanceBuffer.m_data.end(); ++geoIt) {
+			*ibArr = *geoIt;
+			++ibArr;
+		}
+
+		cur->Unmap(0, nullptr);
+	}
+
+	return true;
+}
+
 #undef THROW_ERROR
 
 bool rendering::scene::Object3D::Similar(const Object3D& other) const

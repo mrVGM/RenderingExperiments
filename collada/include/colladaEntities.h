@@ -55,6 +55,7 @@ namespace collada
 	{
 		std::map<std::string, Geometry> m_geometries;
 		std::map<std::string, Object> m_objects;
+		std::map<std::string, int> m_objectInstanceMap;
 		std::map<std::string, InstanceBuffer> m_instanceBuffers;
 	};
 }

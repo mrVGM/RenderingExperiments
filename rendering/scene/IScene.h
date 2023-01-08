@@ -52,5 +52,7 @@ namespace rendering::scene
 		std::map<std::string, ColladaGeometryBuffers> m_colladaGeometryBuffers;
 		std::map<std::string, ID3D12Resource*> m_colladaInstanceBuffers;
 		collada::Scene m_colladaScene;
+
+		bool UpdateColladaSceneInstanceBuffers(std::string& errorMessage);
 	};
 }
