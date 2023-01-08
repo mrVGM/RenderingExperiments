@@ -60,7 +60,7 @@ let loadColladaSceneBuffers = func(device, scene, onReady) {
 			});
 
 			resources.copyBuffers(device, x.iBuffer, x.uploadIBuffer, func() {
-				scene.setColladaGeometryIndexBuffer(x.name, x.buffer);
+				scene.setColladaGeometryIndexBuffer(x.name, x.iBuffer);
 				copiesLeft = copiesLeft - 1;
 				callCopied();
 			});
