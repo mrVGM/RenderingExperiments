@@ -181,7 +181,8 @@ let addObjects = func(scene) {
 	scene.readColladaScene("collada/cube.dae");
 	let colladaScene = require("scene/colladaScene.txt");
 	colladaScene(device, scene, func() {
-		scene.bindColladaObjectMaterial("Cube", "red");
+		scene.bindColladaObjectMaterial("S1", "red");
+		scene.bindColladaObjectMaterial("S2", "red");
 	});
 };
 

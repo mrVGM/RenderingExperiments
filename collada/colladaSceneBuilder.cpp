@@ -522,13 +522,12 @@ namespace
 			scene.m_instanceBuffers.insert(std::pair<std::string, InstanceBuffer>(it->first, InstanceBuffer()));
 		}
 
-		int index = 0;
 		for (std::map<std::string, Object>::const_iterator it = scene.m_objects.begin();
 			it != scene.m_objects.end(); ++it) {
 			InstanceBuffer& cur = scene.m_instanceBuffers[it->second.m_geometry];
 			
 			cur.m_data.push_back(it->second.m_instanceData);
-			scene.m_objectInstanceMap[it->first] = index++;
+			scene.m_objectInstanceMap[it->first] = cur.m_data.size() - 1;
 		}
 	}
 
