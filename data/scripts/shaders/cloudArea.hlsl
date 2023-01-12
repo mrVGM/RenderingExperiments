@@ -48,11 +48,6 @@ cbuffer CloudAreaSettings : register(b1)
     float m_detail1Weight;
     float m_detail2Weight;
     float m_detail3Weight;
-
-    float m_heightFactor;
-    float m_heightLimit;
-    float m_heightFactorOffset;
-    float m_heightFactorStrength;
 };
 
 Texture3D p_shapeTexture    : register(t0);
@@ -206,28 +201,6 @@ float3 getSunPos()
     return sunPos;
 }
 
-float getHeightFactor(float height)
-{
-    float x = m_heightLimit;
-    float factor = m_heightFactor * sin(height / m_heightLimit + m_heightFactorOffset);
-    
-    float res = (1 - m_heightFactorStrength) * 1 + m_heightFactorStrength * factor;
-    res = clamp(res, 0, 1);
-
-    return res;
-}
-
-float getAreaBase(Wall walls[6])
-{
-    float lowest = walls[0].m_origin.y;
-    for (int i = 1; i < 6; ++i) {
-        if (walls[i].m_origin.y < lowest) {
-            lowest = walls[i].m_origin.y;
-        }
-    }
-    return lowest;
-}
-
 float randNoise(float3 value) {
     float3 smallValue = sin(value);
     float random = dot(smallValue, float3(12.9898, 78.233, 37.719));
@@ -235,7 +208,7 @@ float randNoise(float3 value) {
     random -= floor(random);
     return random;
 }
-float sampleShape(float3 coord, float height)
+float sampleShape(float3 coord)
 {
     float3 newCoord = m_shapeTexScale * coord + float3(m_time * m_shapeOffsetSpeed + m_shapeTexOffset, 0, 0);
     newCoord = newCoord - floor(newCoord);
@@ -244,16 +217,13 @@ float sampleShape(float3 coord, float height)
     w /= dot(w, 1);
     float worly = dot(1 - tex.yzw, w);
     float res = tex.x * worly;
-
-    res *= getHeightFactor(height);
-
     if (res < m_minDensity) {
         res = 0;
     }
     return res;
 }
 
-float sampleDetail(float3 coord, float height)
+float sampleDetail(float3 coord)
 {
     float3 newCoord = m_detailTexScale * coord + float3(0, 0, m_time * m_detailOffsetSpeed + m_detailTexOffset);
     newCoord = newCoord - floor(newCoord);
@@ -261,16 +231,13 @@ float sampleDetail(float3 coord, float height)
     float3 w = float3(m_detail1Weight, m_detail2Weight, m_detail3Weight);
     w /= dot(w, 1);
     float worly = dot(1 - tex.yzw, w);
-
-    worly *= getHeightFactor(height);
-
     return worly;
 }
 
-float sampleCloud(float3 coord, float height)
+float sampleCloud(float3 coord)
 {
-    float shape = sampleShape(coord, height);
-    float detail = sampleDetail(coord, height);
+    float shape = sampleShape(coord);
+    float detail = sampleDetail(coord);
 
     float maxShape = float3(m_shape1Weight, m_shape2Weight, m_shape3Weight);
     float erosion = shape * shape * shape / (maxShape * maxShape * maxShape);
@@ -327,8 +294,6 @@ float multipleOctaveScattering(float density, float angleCos)
 
 float lightMarch(Wall walls[6], float3 pos, out float energy)
 {
-    float areaBase = getAreaBase(walls);
-
     float3 sunPos = getSunPos();
 
     float3 hits[2];
@@ -357,7 +322,7 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
             float c = i / m_sampleStepsTowardsLight;
             float3 testPoint = (1 - c) * hits[0] + c * pos;
 
-            float n = sampleCloud(testPoint, testPoint.y - areaBase) * stepSize;
+            float n = sampleCloud(testPoint) * stepSize;
             transmittance += n;
         }
     }
@@ -368,8 +333,6 @@ float lightMarch(Wall walls[6], float3 pos, out float energy)
 float2 cloudMarch(Wall walls[6], float3 hitPoint)
 {
     float3 sunPos = getSunPos();
-
-    float areaBase = getAreaBase(walls);
 
     float3 hits[2];
     int intersections = findIntersections(walls, m_camPos.xyz, normalize(hitPoint - m_camPos.xyz), hits);
@@ -400,7 +363,7 @@ float2 cloudMarch(Wall walls[6], float3 hitPoint)
         float c = i / m_sampleSteps;
         float3 testPoint = (1 - c) * hits[0] + c * hits[1];
 
-        float n = sampleCloud(testPoint, testPoint.y - areaBase) * stepSize;
+        float n = sampleCloud(testPoint) * stepSize;
 
         if (n <= 0) {
             continue;
