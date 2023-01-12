@@ -5,7 +5,10 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("D3D12_Tests")
 
-add_definitions(-DDEBUG=1)
+IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+    add_definitions(-DDEBUG=1)
+ENDIF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+
 add_definitions(-DUNICODE)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
