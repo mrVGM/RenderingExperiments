@@ -1,5 +1,3 @@
-const settingsFile = path.join(__dirname, '../../../../data/scripts/clouds/settings.json');
-
 function loadSettings(onReady) {
     fs.readFile(settingsFile, function(err, data) {
         let str = data.toString();

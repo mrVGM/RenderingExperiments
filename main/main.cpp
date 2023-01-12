@@ -10,8 +10,6 @@
 #include <filesystem>
 #include <iostream>
 
-#define USE_LOCAL_DIR 1
-
 int main(int args, const char** argv)
 {
 	std::string executableName = argv[0];
@@ -24,7 +22,7 @@ int main(int args, const char** argv)
 	std::string executableDirectory = executableName.substr(0, index);
 	std::filesystem::path executableDirPath = std::filesystem::path(executableDirectory);
 
-#if USE_LOCAL_DIR
+#if DEBUG
 	std::filesystem::path dataPath = "..\\..\\..\\..\\data\\";
 #else
 	std::filesystem::path dataPath = executableDirPath.append("..\\data\\");

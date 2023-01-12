@@ -1,9 +1,6 @@
-const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const cp = require('child_process');
-
-const shadersDir = path.join(__dirname, '../../../../data/scripts/shaders');
 
 function getShaders(onReady) {
     fs.readdir(shadersDir, function (err, files) {

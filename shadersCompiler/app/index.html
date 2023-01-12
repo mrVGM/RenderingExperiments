@@ -23,6 +23,11 @@
         </div>
     </div>
 
+    <script>
+        const path = require('path');
+        const settingsFile = path.join(__dirname, '../../../../data/scripts/clouds/settings.json');
+        const shadersDir = path.join(__dirname, '../../../../data/scripts/shaders');
+    </script>
     <script src='compileServer.js'></script>
     <script src='pipeServer.js'></script>
     <script src="loadSettingsData.js"></script>
