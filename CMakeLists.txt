@@ -5,9 +5,9 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("D3D12_Tests")
 
-IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG=1)
-ENDIF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+ENDIF()
 
 add_definitions(-DUNICODE)
 
