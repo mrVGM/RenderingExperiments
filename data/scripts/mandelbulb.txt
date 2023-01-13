@@ -1,0 +1,129 @@
+let math = require("math.txt");
+let utils = require("utils.txt");
+let resources = require("resources/resourceUtils.txt");
+
+let wnd = api.window();
+wnd.create(1280, 720);
+
+let device = api.device();
+let swapChain = api.swapChain();
+let commandQueue = api.commandQueue();
+let fence = api.fence();
+
+let generalInit = func() {
+	device.create();
+	commandQueue.create(device);
+	swapChain.create(device, wnd, commandQueue);
+	fence.create(device);
+	api.app_context.root_dir = rootDir();
+	print("General Init!");
+};
+
+generalInit();
+
+let cameraInputHandler = api.aux.camera();
+let updater = api.aux.updater();
+
+let initCamera = func() {
+	let pos = math.vector3(0, 2, -5);
+	let target = math.vector3(0, 2, 0);
+
+	let aspect = wnd.width() / wnd.height();
+	cameraInputHandler.setPosition(pos);
+	cameraInputHandler.setTarget(target);
+	cameraInputHandler.setAspect(aspect);
+	cameraInputHandler.setNearPlane(0.1);
+	cameraInputHandler.setFarPlane(10000);
+	cameraInputHandler.setFOV(60);
+
+	api.app_context.inputHandler = cameraInputHandler;
+};
+initCamera();
+
+let renderer = api.renderer.renderer();
+
+renderer.setWindow(wnd);
+renderer.setDevice(device);
+renderer.setSwapChain(swapChain);
+renderer.setCommandQueue(commandQueue);
+renderer.setFence(fence);
+
+
+let clearRT = api.renderer.clearRT();
+let clearDS = api.renderer.clearDS();
+let skyPass = api.renderer.renderPass();
+
+skyPass.setType("Sky");
+
+renderer.addRenderStage(clearRT);
+renderer.addRenderStage(skyPass);
+renderer.addRenderStage(clearDS);
+
+let rendererReady = func() {
+	if (renderer.camBuff == none 
+		|| renderer.scene == none
+		|| renderer.materialRepo == none
+		|| renderer.dsTexture == none) {
+		return;
+	}
+
+	renderer.initRenderStages();
+	api.app_context.renderer = renderer;
+};
+
+let resources = require("resources/resourceUtils.txt");
+let camBB = resources.bufferBuilder();
+camBB.upload(1);
+camBB.setSize(256);
+camBB.setStride(256);
+
+camBB.build(device, func(buff) {
+	renderer.setCamBuff(buff);
+	rendererReady();
+});
+
+let dsTexBB = resources.textureBuilder();
+dsTexBB.setWidth(wnd.width());
+dsTexBB.setHeight(wnd.height());
+dsTexBB.setDS(1);
+
+dsTexBB.build(device, func(tex) {
+	renderer.setDSV(tex);
+	rendererReady();
+});
+
+let materialRepo = api.material.materialRepo();
+let simpleUnlit = require("materials/simpleUnlitMat.txt");
+let cloudMat = require("materials/cloudMat.txt");
+let canvasMat = require("materials/canvasMat.txt");
+let skyMat = require("materials/skyMat.txt");
+
+
+let materialsLoaded = 0;
+let setMaterialRepo = func() {
+	if (materialsLoaded < 1) {
+		return;
+	}
+	renderer.setMaterialRepo(materialRepo);
+	rendererReady();
+};
+
+skyMat(device, "mandelbulb.hlsl", func(mat) {
+	materialRepo.addMaterial("bulb", mat);
+	materialsLoaded = materialsLoaded + 1;
+	setMaterialRepo();
+});
+
+let scene = require("setupScene.txt");
+
+let addObjects = func(scene) {
+	scene.addObject("bulb", "canvas");
+	scene.addObjectMaterial("bulb", "bulb");
+};
+
+scene(device, addObjects, func(data) {
+	renderer.setScene(data.scene);
+	renderer.setMeshRepo(data.meshRepo);
+	rendererReady();
+});
+
