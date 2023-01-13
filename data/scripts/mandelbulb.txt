@@ -110,6 +110,12 @@ let setMaterialRepo = func() {
 };
 
 skyMat(device, "mandelbulb.hlsl", func(mat) {
+	updater.setSettingsBuffer(mat.constantBuff);
+	updater.setCamera(cameraInputHandler);
+	cameraInputHandler.addUpdater(updater);
+
+	updater.connectToPipe();
+
 	materialRepo.addMaterial("bulb", mat);
 	materialsLoaded = materialsLoaded + 1;
 	setMaterialRepo();

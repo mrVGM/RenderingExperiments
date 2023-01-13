@@ -32,8 +32,7 @@ struct PSInput
 float mandelbulbSDF(float3 pos)
 {
 	float power = m_mandelbulbPower;
-	power = 8;
-
+	
 	float3 z = pos;
 	float dr = 1;
 	float r;
