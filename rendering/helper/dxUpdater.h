@@ -23,6 +23,8 @@ namespace rendering::helper
 			float m_value[4];
 		};
 
+		std::string m_settingsFile;
+
 		std::map<std::string, Setting> m_settings;
 		std::list<std::string> m_shaderSettings;
 		std::list<std::string> m_hosekSettings;
@@ -45,7 +47,6 @@ namespace rendering::helper
 		std::thread* m_pipeThread = nullptr;
 
 		void Update(double dt) override;
-		DXUpdater();
 		~DXUpdater();
 	};
 }

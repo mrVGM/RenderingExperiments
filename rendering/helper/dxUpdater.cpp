@@ -142,6 +142,23 @@ return Value();
 		return Value();
 	});
 
+	Value& setSettingsFile = GetOrCreateProperty(nativeObject, "setSettingsFile");
+	setSettingsFile = CreateNativeMethod(nativeObject, 1, [](Value scope) {
+		Value selfValue = scope.GetProperty("self");
+		DXUpdater* self = static_cast<DXUpdater*>(NativeObject::ExtractNativeObject(selfValue));
+
+		Value settingsFileValue = scope.GetProperty("param0");
+		if (settingsFileValue.GetType() != ScriptingValueType::String) {
+			THROW_EXCEPTION("Please supply setting file name!")
+		}
+		
+		self->m_settingsFile = settingsFileValue.GetString();
+
+		self->UpdateSettings();
+
+		return Value();
+	});
+
 #undef THROW_EXCEPTION
 }
 
@@ -158,7 +175,7 @@ void rendering::helper::DXUpdater::UpdateSettings()
 	Value api = GetAPI();
 	Value appContext = api.GetProperty("app_context");
 	std::string rootDir = appContext.GetProperty("root_dir").GetString();
-	std::string dataFromFile = data::GetLibrary().ReadFileByPath(rootDir + "clouds/settings.json");
+	std::string dataFromFile = data::GetLibrary().ReadFileByPath(rootDir + m_settingsFile);
 
 	nlohmann::json json = nlohmann::json::parse(dataFromFile);
 	const nlohmann::json& settings = json["settings"];
@@ -248,7 +265,6 @@ void rendering::helper::DXUpdater::Update(double dt)
 		m_hosekSettingsBuffer->Unmap(0, nullptr);
 	}
 
-
 	HRESULT hr = m_settingsBuffer->Map(0, &readRange, &dst);
 	if (FAILED(hr)) {
 		return;
@@ -265,11 +281,6 @@ void rendering::helper::DXUpdater::Update(double dt)
 	}
 
 	m_settingsBuffer->Unmap(0, nullptr);
-}
-
-rendering::helper::DXUpdater::DXUpdater()
-{
-	UpdateSettings();
 }
 
 rendering::helper::DXUpdater::~DXUpdater()

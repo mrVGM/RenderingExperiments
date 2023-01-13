@@ -23,6 +23,7 @@ generalInit();
 
 let cameraInputHandler = api.aux.camera();
 let updater = api.aux.updater();
+updater.setSettingsFile("settings/mandelbulbSettings.json");
 
 let initCamera = func() {
 	let pos = math.vector3(0, 2, -5);
