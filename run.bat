@@ -1,1 +1,1 @@
-.\main\MainApp.exe
+.\main\MainApp.exe renderer.txt
