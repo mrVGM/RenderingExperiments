@@ -14,3 +14,8 @@ Here is a render preview:
 
 ![Clouds Preview](images/clouds.gif)
 
+Here is also a render of the Mandelbulb, made using the method of raymarching:
+
+![Clouds Preview](images/mandelbulb.gif)
+
+My next goals with this project are to implement deffered shading and be able to load custom geometry from COLLADA files.
