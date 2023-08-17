@@ -2,6 +2,9 @@
 
 A project, I made to play around with shaders and visual effects. It is entirely written in C++ and uses DirectX 12 to draw stuff on the screen.
 
+The most interesting aspect of the project is that it has an internal interpreter for a custom scripting language similar to JavaScript. It supports automatic garbage collection, which allow me to
+use it as a tool for resource management and also for synchronization of low level C++ tasks.
+
 One can compile the project, using Visual Studio 2022 and CMake 3.8. Binaries are also available in the release section of the repository.
 To run them, just download and unzip the archive and double-click on the *run.bat* file. Keep in mind, that you should be running a 64-bit Windows operating system.
 
